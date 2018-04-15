@@ -1,0 +1,191 @@
+﻿{
+  "id": "91008DAF-AFE5-3E2A-A6FF-8ACF9D229E3A",
+  "name": "PerformanceCenterTesting",
+  "friendlyName": "Performance Center Test Execution",
+  "description": "Run a Performance Center test from a task in a Team Foundation Server build process.",
+  "category": "Test",
+  "visibility": [
+    "Build",
+    "Release"
+  ],
+  "author": "MicroFocus",
+  "version": {
+    "Major": 1,
+    "Minor": 0,
+    "Patch": 0
+  },
+  "inputs": [
+    {
+      "name": "varPCServer",
+      "type": "string",
+      "label": "PC server and port",
+      "defaultValue": "http://mypcserver:80",
+      "required": true,
+      "helpMarkDown": "The address of your PC server and port, in the format http(s)://(PCServer):(port#)"
+    },
+    {
+      "name": "varUserName",
+      "type": "string",
+      "label": "User name",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "The PC username that will access this PC server."
+    },
+    {
+      "name": "varPassWord",
+      "type": "string",
+      "label": "Password",
+      "defaultValue": "$(PCPassword)",
+      "required": false,
+      "helpMarkDown": "The password for the PC username. You can create a variable of type secret in the TFS build to store the password (for example: 'PCPassword') and specify the variable instead (for example: '$(PCPassword)') to avoid exposing a password in the build configuration"
+    },
+    {
+      "name": "varDomain",
+      "type": "string",
+      "label": "Domain",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "The domain in which the tests to run are stored."
+    },
+    {
+      "name": "varProject",
+      "type": "string",
+      "label": "Project",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "The project in which the tests to run are stored."
+    },
+    {
+      "name": "varTestID",
+      "type": "string",
+      "label": "Test ID",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "The ID number (found in PC) of the Performance Center test."
+    },
+    {
+      "name": "varAutoTestInstance",
+      "type": "radio",
+      "label": "Test instance",
+      "defaultValue": "true",
+      "required": false,
+      "helpMarkDown": "To execute the test, an instance of it must be created in a TestSet and used .",
+      "options": {
+        "true": "Automatically select existing or create new if none exists",
+        "false": "Manual selection"
+      }
+    },
+    {
+      "name": "varTestInstID",
+      "type": "string",
+      "label": "Test Instance ID",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "The ID number (found in PC) of the Performance Center test instance.",
+      "visibleRule": "varAutoTestInstance = false"
+    },
+    {
+      "name": "varProxyUrl",
+      "type": "string",
+      "label": "Proxy URL",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Add your local proxy as following: http(s)://(host):(port#) or leave empty if not using a local proxy."
+    },
+    {
+      "name": "varProxyUser",
+      "type": "string",
+      "label": "Proxy user",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "The user of the local proxy."
+    },
+    {
+      "name": "varProxyPassword",
+      "type": "string",
+      "label": "Proxy password",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "The password of the Proxy User. You can create a variable of type secret in the TFS build to store the password (for example: 'ProxyPassword') and specify the variable instead (for example: '$(ProxyPassword)') to avoid exposing a password in the build configuration."
+    },
+    {
+      "name": "varPostRunAction",
+      "type": "radio",
+      "label": "Post Run Action",
+      "defaultValue": "CollateAndAnalyze",
+      "required": false,
+      "helpMarkDown": "What Action to perform once the Run is finished.",
+      "options": {
+        "CollateResults": "Collate results",
+        "CollateAndAnalyze": "Collate and analyze",
+        "DoNotCollate": "Do not collate"
+      }
+    },
+    {
+      "name": "varTrending",
+      "type": "radio",
+      "label": "Trending",
+      "defaultValue": "DoNotTrend",
+      "required": false,
+      "helpMarkDown": "Trending report action.",
+      "options": {
+        "DoNotTrend": "Do not trend",
+        "AssociatedTrend": "Use trend report associated with the test",
+        "UseTrendReportID": "Add run to trend report with ID"
+      }
+    },
+    {
+      "name": "varTrendReportID",
+      "type": "string",
+      "label": "Trend report ID",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "The Trend report ID if you do not want to use the trend report associated with the test.",
+      "visibleRule": "varTrending = TrendNonAssociated"
+    },
+    {
+      "name": "varTimeslotDuration",
+      "type": "string",
+      "label": "Timeslot Duration",
+      "defaultValue": "30",
+      "required": true,
+      "helpMarkDown": "The amount of time (in minutes) needed on the host to run this test"
+    },
+    {
+      "name": "varUseVUDs",
+      "type": "boolean",
+      "label": "Use VUDS",
+      "defaultValue": "false",
+      "required": false,
+      "helpMarkDown": "The type of Performance Center license used for the test execution."
+    },
+    {
+      "name": "varUseSLAInStatus",
+      "type": "boolean",
+      "label": "Status according to SLA",
+      "defaultValue": "false",
+      "required": false,
+      "helpMarkDown": "Set step status according to SLA."
+    },
+    {
+      "name": "varArtifactsDir",
+      "aliases": [ "artifactsDirectory" ],
+      "type": "filePath",
+      "label": "Artifacts directory",
+      "defaultValue": "$(Build.ArtifactStagingDirectory)/PCTest",
+      "required": true,
+      "helpMarkDown": "Where to place the Log file of the PC task and the analysis/trend report created by the loadtest execution."
+    }
+  ],
+  "instanceNameFormat": "Execute Performance Center test",
+  "execution": {
+    "PowerShell": {
+      "target": "$(currentDirectory)\\pcLocalTask.ps1",
+      "argumentFormat": "",
+      "workingDirectory": "$(currentDirectory)",
+      "platforms": [
+        "windows"
+      ]
+    }
+  }
+}

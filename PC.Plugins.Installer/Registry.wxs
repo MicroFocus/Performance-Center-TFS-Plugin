@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="INSTALLDIR">
+            <Component Id="cmpCA9F7FA5B5A699801D981656C2DA360C" Guid="fe2da74b-8bd8-491b-94c1-71ecba83ab31">
+                <RegistryKey Key="SYSTEM\CurrentControlSet\Control\Session Manager\Environment" Root="HKLM" ForceDeleteOnUninstall="no" >
+                    <RegistryValue Name="PC_Launcher" Value="[INSTALLDIR]" Type="string" />
+                </RegistryKey>
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+  <Fragment>
+    <ComponentGroup Id="ProductReg">
+        <ComponentRef Id="cmpCA9F7FA5B5A699801D981656C2DA360C" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

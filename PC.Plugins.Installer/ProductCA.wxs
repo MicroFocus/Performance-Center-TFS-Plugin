@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Fragment>
+		<!--Adding CA Dll to Binary Table-->
+		<Binary Id="ProductCA" SourceFile="$(var.SolutionDir)\PC.Plugins.Installer.CA\$(var.OutDir)PC.Plugins.Installer.CA.dll" />
+    
+		<InstallExecuteSequence>
+		</InstallExecuteSequence>
+
+    <InstallUISequence>
+    </InstallUISequence>
+    
+  </Fragment>
+</Wix>
