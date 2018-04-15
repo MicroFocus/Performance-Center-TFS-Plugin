@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{7AC5360E-670E-4CAF-B1EF-FDB484A21909}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>PC.Plugins.Common</RootNamespace>
+    <AssemblyName>PC.Plugins.Common</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Web" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Helper\EnumerationHelper.cs" />
+    <Compile Include="Helper\Serializer.cs" />
+    <Compile Include="Helper\StringHelper.cs" />
+    <Compile Include="PCEntities\PCErrorResponse.cs" />
+    <Compile Include="PCEntities\PCRunEventLog.cs" />
+    <Compile Include="PCEntities\PCRunEventLogRecord.cs" />
+    <Compile Include="PCEntities\PCRunRequest.cs" />
+    <Compile Include="PCEntities\PCRunResponse.cs" />
+    <Compile Include="PCEntities\PCRunResult.cs" />
+    <Compile Include="PCEntities\PCRunResults.cs" />
+    <Compile Include="PCEntities\PCScript.cs" />
+    <Compile Include="PCEntities\PCTest.cs" />
+    <Compile Include="PCEntities\PCTestInstance.cs" />
+    <Compile Include="PCEntities\PCTestInstances.cs" />
+    <Compile Include="PCEntities\PCTestSet.cs" />
+    <Compile Include="PCEntities\PCTestSets.cs" />
+    <Compile Include="PCEntities\PCTrendReport.cs" />
+    <Compile Include="PCEntities\PCPostRunActionsRequest.cs" />
+    <Compile Include="PCEntities\PCRunState.cs" />
+    <Compile Include="PCEntities\PCTestInstanceResponse.cs" />
+    <Compile Include="PCEntities\PCTestInstanceRequest.cs" />
+    <Compile Include="PCEntities\PCTimeInterval.cs" />
+    <Compile Include="PCEntities\PCTimseslotDuration.cs" />
+    <Compile Include="PCEntities\PCTrendedRange.cs" />
+    <Compile Include="PCEntities\PCTrendReportRequest.cs" />
+    <Compile Include="PCEntities\PCTrendReportRoot.cs" />
+    <Compile Include="PCEntities\PCTrendReports.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Client\Client.cs" />
+    <Compile Include="Client\ClientRequest.cs" />
+    <Compile Include="Client\ClientResponce.cs" />
+    <Compile Include="Rest\IPCRestProxy.cs" />
+    <Compile Include="Rest\PCRestProxy.cs" />
+    <Compile Include="Constants\PCConstants.cs" />
+    <Compile Include="Constants\RESTConstants.cs" />
+    <Compile Include="Rest\RestEntity.cs" />
+    <Compile Include="Utils\Utils.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

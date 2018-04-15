@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>1.0</ProductVersion>
+    <ProjectGuid>519d331a-4699-4444-b888-45a36d5fc1a7</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>PC.Plugins.Installer</OutputName>
+    <OutputType>Package</OutputType>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <Name>PC.Plugins.Installer</Name>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>Debug</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Files.wxs" />
+    <Compile Include="Product.wxs" />
+    <Compile Include="ProductCA.wxs" />
+    <Compile Include="Registry.wxs" />
+    <None Include="BannerBmp.bmp" />
+    <None Include="DialogBmp.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="License.rtf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" />
+  <Target Name="BeforeBuild" BeforeTargets="Build">
+    <!-- Harvest the installation list -->
+    <Message Importance="high" Text="Harvesting files list for WiX installation project" />
+    <HeatDirectory ToolPath="$(WixInstallPath)" AutogenerateGuids="true" OutputFile=".\Files.wxs" SuppressFragments="true" Directory=".\Files" ComponentGroupName="ProductComponents" DirectoryRefId="INSTALLDIR" PreprocessorVariable="wix.ProtocolBuildRoot" SuppressCom="true" SuppressRootDirectory="true" RunAsSeparateProcess="true" />
+    <!-- <Exec Command="&quot;C:\Program Files (x86)\WiX Toolset v3.10\bin\heat.exe&quot; reg RegFiles\environmentVariable.reg -out Registry.wxs" />-->
+  </Target>
+  <UsingTask AssemblyFile="$(WixInstallPath)\WixTasks.dll" TaskName="Microsoft.Tools.WindowsInstallerXml.Build.Tasks.HeatDirectory" />
+  <PropertyGroup>
+    <PreBuildEvent />
+  </PropertyGroup>
+  <!--
+	To modify your build process, add your task inside one of the targets below and uncomment it.
+	Other similar extension points exist, see Wix.targets.
+	<Target Name="BeforeBuild">
+	</Target>
+	<Target Name="AfterBuild">
+	</Target>
+	-->
+</Project>

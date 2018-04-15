@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  
+  <Product Id="70b27b3a-1db9-4b60-88bb-fcfe1357f255" Name="Performance Center Plugin" Language="1033" Version="1.0.0.0" Manufacturer="Micro Focus" UpgradeCode="d89463af-7749-4b63-a351-dd9e0547f49a">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of Performance Center Plugin is already installed." />
+		<MediaTemplate EmbedCab="yes" />
+
+		<Feature Id="ProductFeature" Title="PCPlugin" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="ProductReg" />
+    </Feature>
+
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+    <Property Id="MsiLogging" Value="v" />
+
+    <!--<CustomAction Id="SetInstallDir" Property="INSTALLDIR" Value="[%LG_PATH]" />
+    <CustomAction Id="SetInstallDir1" Property="INSTALLDIR" Value="[%VUGEN_PATH]" />
+    <CustomActionRef Id="check_duplicated_name" />-->
+
+    <WixVariable Id="WixUILicenseRtf" Overridable="yes" Value="License.rtf"/>
+    <WixVariable Id="ProtocolBuildRoot" Value=".\Files"/>
+    <WixVariable Id="WixUIBannerBmp" Value="BannerBmp.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="DialogBmp.bmp" />
+    
+    <UIRef Id="WixUI_InstallDir"/>
+
+    <InstallUISequence>
+    </InstallUISequence>
+    
+    <InstallExecuteSequence>
+    </InstallExecuteSequence>
+    
+	</Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir" >
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="MicroFocus" Name="Micro Focus">
+          <Directory Id="INSTALLDIR" Name="Performance Center Plugin" />
+        </Directory>
+      </Directory>
+    </Directory>
+  </Fragment>
+</Wix>
