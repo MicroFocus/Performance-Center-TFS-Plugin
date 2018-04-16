@@ -4,7 +4,7 @@ This extension enables you to include a Performance Center test execution as a t
 
 # Supported Product Versions
 
-This Extension supports Performance Center 12.56
+This Extension supports Performance Center 12.56.
 
 # What's New in this Release
 
@@ -13,10 +13,10 @@ This Extension supports Performance Center 12.56
 
 # Installation Instructions
 
-For full installation instructions, see the installation section on the [PerformanceCenter-TFS-Plugin Wiki](https://github.com/MicroFocus/PerformanceCenter-TFS-Plugin/wiki).
+For full installation instructions, see the installation section on the [Performance-Center-TFS-Plugin readme](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/blob/master/readme.md).
 
-NOTE: You must have Administrator privileges to install the Extension on your TFS server.
+++NOTE++: You must have Administrator privileges to install the Extension on your TFS server.
 
 # Documentation
 
-Please check the [PerformanceCenter-TFS-Plugin Wiki](https://github.com/MicroFocus/PerformanceCenter-TFS-Plugin/wiki).
+Please check the [Performance-Center-TFS-Plugin Wiki](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/wiki).
