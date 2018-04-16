@@ -15,7 +15,7 @@ This Extension supports Performance Center 12.56.
 
 For full installation instructions, see the installation section on the [Performance-Center-TFS-Plugin readme](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/blob/master/readme.md).
 
-++NOTE++: You must have Administrator privileges to install the Extension on your TFS server.
+<u>Note</u>: You must have Administrator privileges to install the Extension on your TFS server.
 
 # Documentation
 

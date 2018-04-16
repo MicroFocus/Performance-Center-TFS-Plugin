@@ -3,7 +3,7 @@
   "id": "PCIntegration",
   "name": "Performance Center Testing",
   "version": "1.0.0",
-  "publisher": "MicroFocus",
+  "publisher": "Micro-Focus",
   "targets": [
     {
       "id": "Microsoft.VisualStudio.Services"
