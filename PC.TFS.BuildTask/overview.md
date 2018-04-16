@@ -1,11 +1,6 @@
 ﻿# Overview
 
-This plugin allows the Microsoft Team Foundation Server CI system to trigger tests using Performance Center Server. In Addition, you can use the Extension to prepare the testing environment before running a test set from the Performance Center Server.
-
-## You can run the following tasks:
-
-* **Run a test from Performance Center server**
-You can run UFT tests saved in ALM Project Via a Performance Center server ([Wiki](<<<ling to project in github>>>)).
+This plugin allows Team Foundation Server build process to run a task executing Performance Center tests.
 
 ## This extension currently supports:
 
