@@ -69,7 +69,7 @@
       "label": "Test instance",
       "defaultValue": "true",
       "required": false,
-      "helpMarkDown": "To execute the test, an instance of it must be created in a TestSet and used .",
+      "helpMarkDown": "To execute the test, an instance of it must be created in a TestSet and used.",
       "options": {
         "true": "Automatically select existing or create new if none exists",
         "false": "Manual selection"
@@ -141,7 +141,7 @@
       "defaultValue": "",
       "required": true,
       "helpMarkDown": "The Trend report ID if you do not want to use the trend report associated with the test.",
-      "visibleRule": "varTrending = TrendNonAssociated"
+      "visibleRule": "varTrending = UseTrendReportID"
     },
     {
       "name": "varTimeslotDuration",
@@ -174,7 +174,7 @@
       "label": "Artifacts directory",
       "defaultValue": "$(Build.ArtifactStagingDirectory)/PCTest",
       "required": true,
-      "helpMarkDown": "Where to place the Log file of the PC task and the analysis/trend report created by the loadtest execution."
+      "helpMarkDown": "Where to place the Log file of the PC task and the analysis/trend report created by the load test execution."
     }
   ],
   "instanceNameFormat": "Execute Performance Center test",
