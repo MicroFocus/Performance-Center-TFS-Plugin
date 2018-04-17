@@ -167,11 +167,11 @@
                 <TextBox x:Name="ProxyUserName" Margin="32,2,147,2" Width="Auto" Height="40"/>
                 <PasswordBox x:Name="ProxyPassword" Margin="32,2,147,2" Width="Auto" Height="40" />
                 <ComboBox x:Name="PostRunAction" Margin="32,12,147,2" Width="Auto" Height="30" SelectedIndex="1" Background="White" BorderBrush="Gray" >
-                    <ComboBoxItem Name="CollateResults">Collate Results</ComboBoxItem>
-                    <ComboBoxItem Name="CollateAndAnalyze">Collate And Analyze</ComboBoxItem>
-                    <ComboBoxItem Name="DoNotCollate">Do Not Collate</ComboBoxItem>
+                    <ComboBoxItem Name="CollateResults" Selected="DoNotCollate_Not_Selected">Collate Results</ComboBoxItem>
+                    <ComboBoxItem Name="CollateAndAnalyze" Selected="DoNotCollate_Not_Selected">Collate And Analyze</ComboBoxItem>
+                    <ComboBoxItem Name="DoNotCollate" Selected="DoNotCollate_Selected">Do Not Collate</ComboBoxItem>
                 </ComboBox>
-                <StackPanel Grid.Row="4" Grid.Column="1" Margin="32,10,0,0">
+                <StackPanel x:Name="TrendPanel" Grid.Row="4" Grid.Column="1" Margin="32,10,0,0">
                     <RadioButton x:Name = "DoNotTrend" IsChecked="True" Checked = "HandleTrendCheck" GroupName="Trending" Content = "Do Not Trend" Margin="32,5,0,0" />
                     <RadioButton x:Name = "AssociatedTrend" Checked = "HandleTrendCheck" GroupName="Trending" Content = "Use trend report associated with the test" Margin="32,5,0,0" />
                     <RadioButton x:Name = "UseTrendReportID" Checked = "HandleTrendCheck" GroupName = "Trending"  HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="32,5,0,0" >

@@ -248,5 +248,20 @@ namespace PC.Plugins.ConfiguratorUI
             process.StartInfo = psi;
             process.Start();
         }
+
+        private void DoNotCollate_Selected(object sender, RoutedEventArgs e)
+        {
+            DoNotTrend.IsChecked = true;
+            TrendPanel.IsEnabled = false;
+        }
+
+        private void DoNotCollate_Not_Selected(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                TrendPanel.IsEnabled = true;
+            }
+            catch { }
+        }
     }
 }

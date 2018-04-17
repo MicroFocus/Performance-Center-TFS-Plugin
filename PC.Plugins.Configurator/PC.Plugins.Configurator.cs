@@ -238,8 +238,8 @@ namespace PC.Plugins.Configurator
             _proxyURL = proxyURL;
             _proxyUserName = proxyUserName;
             _proxyPassword = proxyPassword;
-            _trending = trending;
-            _trendReportID = (trending == "UseTrendReportID" && trendReportID != "Enter Trend Report ID") ? trendReportID : "";
+            _trending = (string.IsNullOrWhiteSpace(trending) || (pcPostRunAction.Equals("DoNotCollate")))? "DoNotTrend" : trending;
+            _trendReportID = (_trending == "UseTrendReportID" && trendReportID != "Enter Trend Report ID") ? trendReportID : "";
             _timeslotDurationHours = timeslotDurationHours;
             _timeslotDurationMinutes = String.IsNullOrWhiteSpace(timeslotDurationMinutes) ? "30" : timeslotDurationMinutes;
             _useSLAStatus = useSLAStatus;
