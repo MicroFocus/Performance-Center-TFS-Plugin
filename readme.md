@@ -13,7 +13,7 @@ To use this plugin you must have:
 - Performance Center server designed to run load tests on Performance Center hosts.
 - PowerShell version 4.0 or later.
 
-##### Install the Performance Center Testing TFS Extension
+##### Install the Performance Center Plugin Extension
 
 Before you can run Performance Center tests as part of your build on a
 TFS CI system, you have to install the Extension on your TFS server. 
@@ -29,7 +29,7 @@ TFS CI system, you have to install the Extension on your TFS server.
 
 ##### **GitHub repository projects**
 
-This GitHub repository contains the following projects which are used to build the Performance Center Testing Extension for TFS:
+This GitHub repository contains the following projects which are used to build the Performance Center Plugin Extension for TFS:
 
 
 | **Project Name** | **Description** |
