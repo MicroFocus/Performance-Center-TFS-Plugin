@@ -9,7 +9,7 @@
       "id": "Microsoft.VisualStudio.Services"
     }
   ],
-  "description": "Run a Performance Center test from a task in a Team Foundation Server build process.",
+  "description": "Run a Performance Center test from a task in a Microsoft Team Foundation Server CI build process.",
   "categories": [
     "Test"
   ],
