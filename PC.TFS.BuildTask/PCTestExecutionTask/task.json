@@ -132,7 +132,8 @@
         "DoNotTrend": "Do not trend",
         "AssociatedTrend": "Use trend report associated with the test",
         "UseTrendReportID": "Add run to trend report with ID"
-      }
+      },
+      "visibleRule": "varPostRunAction != DoNotCollate"
     },
     {
       "name": "varTrendReportID",
