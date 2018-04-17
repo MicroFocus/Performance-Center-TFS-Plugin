@@ -2,7 +2,7 @@
   "id": "91008DAF-AFE5-3E2A-A6FF-8ACF9D229E3A",
   "name": "PerformanceCenterTesting",
   "friendlyName": "Performance Center Test Execution",
-  "description": "Run a Performance Center test from a task in a Team Foundation Server build process.",
+  "description": "Run a Performance Center test from a task in a Microsoft Team Foundation Server CI build process.",
   "category": "Test",
   "visibility": [
     "Build",
@@ -21,7 +21,7 @@
       "label": "PC server and port",
       "defaultValue": "http://mypcserver:80",
       "required": true,
-      "helpMarkDown": "The address of your PC server and port, in the format http(s)://(PCServer):(port#)"
+      "helpMarkDown": "The address of your PC server and port, in the format of: http(s)://(PCServer):(port#)"
     },
     {
       "name": "varUserName",
@@ -45,7 +45,7 @@
       "label": "Domain",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "The domain in which the tests to run are stored."
+      "helpMarkDown": "The domain in which the Performance Center test is stored."
     },
     {
       "name": "varProject",
@@ -53,7 +53,7 @@
       "label": "Project",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "The project in which the tests to run are stored."
+      "helpMarkDown": "The project in which the Performance Center test is stored."
     },
     {
       "name": "varTestID",
@@ -61,7 +61,7 @@
       "label": "Test ID",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "The ID number (found in PC) of the Performance Center test."
+      "helpMarkDown": "The ID number of the Performance Center test (found in PC)."
     },
     {
       "name": "varAutoTestInstance",
@@ -81,7 +81,7 @@
       "label": "Test Instance ID",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "The ID number (found in PC) of the Performance Center test instance.",
+      "helpMarkDown": "The ID number of the Performance Center test instance (found in PC) .",
       "visibleRule": "varAutoTestInstance = false"
     },
     {
@@ -175,7 +175,7 @@
       "label": "Artifacts directory",
       "defaultValue": "$(Build.ArtifactStagingDirectory)/PCTest",
       "required": true,
-      "helpMarkDown": "Where to place the Log file of the PC task and the analysis/trend report created by the load test execution."
+      "helpMarkDown": "Where to place the Log file of the Performance Center task and the Performance Center analysis/trend report created by the load test execution."
     }
   ],
   "instanceNameFormat": "Execute Performance Center test",
