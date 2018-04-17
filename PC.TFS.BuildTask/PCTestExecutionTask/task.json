@@ -1,7 +1,7 @@
 ﻿{
   "id": "91008DAF-AFE5-3E2A-A6FF-8ACF9D229E3A",
   "name": "PerformanceCenterTesting",
-  "friendlyName": "Performance Center Test Execution",
+  "friendlyName": "Performance Center Test",
   "description": "Run a Performance Center test from a task in a Microsoft Team Foundation Server CI build process.",
   "category": "Test",
   "visibility": [
