@@ -47,6 +47,7 @@
   <ItemGroup>
     <Content Include="PCTestExecutionTask\icon.png" />
     <Content Include="resources\img\tfs.png" />
+    <Content Include="resources\screenshots\PCTestExecutionTaskAddingTask.png" />
     <Content Include="resources\screenshots\PCTestExecutionTaskConfiguration.png" />
     <Content Include="resources\screenshots\PCTestExecutionTaskResult.png" />
     <Content Include="resources\screenshots\PCTestExecutionTaskRunning.png" />
