@@ -255,16 +255,23 @@ namespace PC.Plugins.Configurator
                 _logFileName = logFileName;
             var _description = description;
 
-            _pcBuilder = new PCBuilder(_pcServerAndPort, _pcServername, _pcUserName, _pcPassword, _domain,
-                _project, _testID, _autoTestInstance.ToLower() == "true", _testInstanceID, _timeslotDurationHours, _timeslotDurationMinutes,
-                _pcPostRunAction, _useVUDs.ToLower() == "true", _useSLAStatus.ToLower() == "true", _description,
-                _trending, _trendReportID, _webProtocol == "https",
-                _proxyURL, _proxyUserName, _proxyPassword, _workDirectory, _logFileName);
-
-            _pcRestProxy = new PCRestProxy(_webProtocol, _pcServerAndPort, domain, project, proxyURL, proxyUserName, proxyPassword);
-
-            Perform();
-            return Path.Combine(_workDirectory, _logFileName);
+            string message = "";
+            ValidateInputFieldsSupposedToBePositiveInteger(ref message);
+            if (string.IsNullOrEmpty(message))
+            {
+                _pcBuilder = new PCBuilder(_pcServerAndPort, _pcServername, _pcUserName, _pcPassword, _domain,
+                    _project, _testID, _autoTestInstance.ToLower() == "true", _testInstanceID, _timeslotDurationHours, _timeslotDurationMinutes,
+                    _pcPostRunAction, _useVUDs.ToLower() == "true", _useSLAStatus.ToLower() == "true", _description,
+                    _trending, _trendReportID, _webProtocol == "https",
+                    _proxyURL, _proxyUserName, _proxyPassword, _workDirectory, _logFileName);
+                _pcRestProxy = new PCRestProxy(_webProtocol, _pcServerAndPort, domain, project, proxyURL, proxyUserName, proxyPassword);
+                Perform();
+                return Path.Combine(_workDirectory, _logFileName);
+            }
+            else
+            {
+                throw new Exception(message);
+            }
         }
 
         public static void Perform()
@@ -346,6 +353,8 @@ namespace PC.Plugins.Configurator
 
         public static string GetTaskStatus(string FullFilename)
         {
+            if (string.IsNullOrEmpty(FullFilename))
+                return "Task did not end correctly";
             string[] ContentArray;
             long position = 0;
             ContentArray = ReadAllLinesFromPosition(FullFilename, ref position);
@@ -362,6 +371,8 @@ namespace PC.Plugins.Configurator
 
         public static void DeleteUnusedFilesFromArtifact(string logFullFilename)
         {
+            if (string.IsNullOrEmpty(logFullFilename))
+                return;
             string logFullFileNamePreviouslyRead = Path.Combine(logFullFilename + PREVIOUSLYREAD);
             if (File.Exists(logFullFileNamePreviouslyRead))
                 File.Delete(logFullFileNamePreviouslyRead);
@@ -387,6 +398,48 @@ namespace PC.Plugins.Configurator
                     position = fileStream.Position;
                     return lines.ToArray();
                 }
+            }
+        }
+        private static void ValidateInputFieldsSupposedToBePositiveInteger(ref string message)
+        {
+            int intTestID=0;
+            bool isTestIDNumeric = int.TryParse(_testID, out intTestID);
+            if (!isTestIDNumeric || intTestID <= 0)
+            {
+                message = "Error: The Test ID value must be a positive number. ";
+            }
+
+            if (_autoTestInstance.ToLower() != "true")
+            {
+                int intTestInstanceID=0;
+                bool isTestInstanceIDNumeric = int.TryParse(_testInstanceID, out intTestInstanceID);
+                if (!isTestInstanceIDNumeric || intTestInstanceID<=0)
+                {
+                    string strTestInstanceIDError = "The Test Instance ID value must be a positive number when selecting the \"Manual Selection\" option for the \"Test Instance\" field. ";
+                    message = (!string.IsNullOrEmpty(message))? message + strTestInstanceIDError: "Error: " + strTestInstanceIDError;
+                }
+            }
+
+            if (_pcPostRunAction == "CollateAndAnalyze" && _trending == "UseTrendReportID")
+            {
+                int intTrendReportID=0;
+                bool isTrendReportIDNumeric = int.TryParse(_trendReportID, out intTrendReportID);
+                if (!isTrendReportIDNumeric || intTrendReportID <= 0)
+                {
+                    string strTrendReportIDError = "The Trend Report ID value must be a positive number when selecting the \"Collate And Analyze\" option for \"Post Run Action\" field and \"Add run to Trend report with ID\" option for \"Trending\" field.";
+                    message = (!string.IsNullOrEmpty(message)) ? message + strTrendReportIDError : "Error: " + strTrendReportIDError;
+                }
+            }
+
+            int intTimeSlotDuration;
+            bool isTimeSlotDurationNumeric = int.TryParse(_timeslotDurationMinutes, out intTimeSlotDuration);
+            if (!isTimeSlotDurationNumeric || intTimeSlotDuration <= 0)
+            {
+                _timeslotDurationMinutes = "30";
+            }
+            else if (intTimeSlotDuration> 28800)
+            {
+                _timeslotDurationMinutes = "28800";
             }
         }
     }

@@ -21,7 +21,7 @@
       "label": "PC server and port",
       "defaultValue": "http://mypcserver:80",
       "required": true,
-      "helpMarkDown": "The address of your PC server and port, in the format of: http(s)://(PCServer):(port#)"
+      "helpMarkDown": "Enter the hostname or IP address and port of a Performance Center server in the format: http(s)://(PCServer):(port#)"
     },
     {
       "name": "varUserName",
@@ -29,7 +29,7 @@
       "label": "User name",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "The PC username that will access this PC server."
+      "helpMarkDown": "Enter the user name required to connect to the Performance Center server."
     },
     {
       "name": "varPassWord",
@@ -37,7 +37,7 @@
       "label": "Password",
       "defaultValue": "$(PCPassword)",
       "required": false,
-      "helpMarkDown": "The password for the PC username. You can create a variable of type secret in the TFS build to store the password (for example: 'PCPassword') and specify the variable instead (for example: '$(PCPassword)') to avoid exposing a password in the build configuration"
+      "helpMarkDown": "<p>Enter the password required to connect to the Performance Center server.</p> <p><b><u>Note:</u></b> You can create a variable of type secret in the TFS build to store the password, and specify the variable to avoid exposing a password in the build configuration. For example, '$(PCPassword)').</p>"
     },
     {
       "name": "varDomain",
@@ -45,7 +45,7 @@
       "label": "Domain",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "The domain in which the Performance Center test is stored."
+      "helpMarkDown": "Enter the Performance Center domain in which the test to run is stored."
     },
     {
       "name": "varProject",
@@ -53,7 +53,7 @@
       "label": "Project",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "The project in which the Performance Center test is stored."
+      "helpMarkDown": "Enter the name of the Performance Center project in which the test to run is stored."
     },
     {
       "name": "varTestID",
@@ -61,7 +61,7 @@
       "label": "Test ID",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "The ID number of the Performance Center test (found in PC)."
+      "helpMarkDown": "Enter the Test ID. You can get the ID from <b>Performance Center</b> > <b>Test Management</b> > <b>Test Lab</b> > Select your test and find the ID in the General Details: <b>Test Name (Id)</b>."
     },
     {
       "name": "varAutoTestInstance",
@@ -69,7 +69,7 @@
       "label": "Test instance",
       "defaultValue": "true",
       "required": false,
-      "helpMarkDown": "To execute the test, an instance of it must be created in a TestSet and used.",
+      "helpMarkDown": "<p>Select an option for adding the Test Instance ID:</p><ul><li><b>Automatically select existing or create new if none exists</b>. If you select this option, Performance Center creates a test instance or locates the existing test instance.</li><li><b>Manual selection</b>. Enter the Test Instance ID (available from <b>Performance Center</b> > <b>Test Management</b> > <b>Test Lab</b> > <b>Performance Test Set</b> view).</li>",
       "options": {
         "true": "Automatically select existing or create new if none exists",
         "false": "Manual selection"
@@ -81,7 +81,7 @@
       "label": "Test Instance ID",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "The ID number of the Performance Center test instance (found in PC) .",
+      "helpMarkDown": "Enter the Test Instance ID (available from <b>Performance Center</b> > <b>Test Management</b> > <b>Test Lab</b> > <b>Performance Test Set</b> view).",
       "visibleRule": "varAutoTestInstance = false"
     },
     {
@@ -90,7 +90,7 @@
       "label": "Proxy URL",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "Add your local proxy as following: http(s)://(host):(port#) or leave empty if not using a local proxy."
+      "helpMarkDown": "Add your local proxy in the format http(s)://(host):(port#) or leave empty if not using a local proxy."
     },
     {
       "name": "varProxyUser",
@@ -98,7 +98,7 @@
       "label": "Proxy user",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "The user of the local proxy."
+      "helpMarkDown": "If you use a proxy requiring credentials, enter the user name."
     },
     {
       "name": "varProxyPassword",
@@ -106,7 +106,7 @@
       "label": "Proxy password",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "The password of the Proxy User. You can create a variable of type secret in the TFS build to store the password (for example: 'ProxyPassword') and specify the variable instead (for example: '$(ProxyPassword)') to avoid exposing a password in the build configuration."
+      "helpMarkDown": "<p>If you use a proxy requiring credentials, enter the password.</p><p><b><u>Note:</u></b> You can create a variable of type secret in the TFS build to store the password, and specify the variable to avoid exposing a password in the build configuration. For example, '$(ProxyPassword)').</p>"
     },
     {
       "name": "varPostRunAction",
@@ -114,7 +114,7 @@
       "label": "Post Run Action",
       "defaultValue": "CollateAndAnalyze",
       "required": false,
-      "helpMarkDown": "What Action to perform once the Run is finished.",
+      "helpMarkDown": "Choose an action to perform when the run is finished: <b>Collate Results</b>, <b>Collate and Analyze</b>, or <b>Do Not Collate</b>.",
       "options": {
         "CollateResults": "Collate results",
         "CollateAndAnalyze": "Collate and analyze",
@@ -127,13 +127,13 @@
       "label": "Trending",
       "defaultValue": "DoNotTrend",
       "required": false,
-      "helpMarkDown": "Trending report action.",
+      "helpMarkDown": "<p>Select a trend report option:</p><p><ul><li><b>Do Not Trend</b>. No trend report is created.</li><li><b>Use trend report associated with the test</b>. If Auto Trending is selected in the Load Test, select this option to automatically publish trend results.</li><li><b>Add run to trend report with ID</b>. If you select this option, enter the trend report ID.</li></p>",
       "options": {
         "DoNotTrend": "Do not trend",
         "AssociatedTrend": "Use trend report associated with the test",
         "UseTrendReportID": "Add run to trend report with ID"
       },
-      "visibleRule": "varPostRunAction != DoNotCollate"
+      "visibleRule": "varPostRunAction = CollateAndAnalyze"
     },
     {
       "name": "varTrendReportID",
@@ -141,7 +141,7 @@
       "label": "Trend report ID",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "The Trend report ID if you do not want to use the trend report associated with the test.",
+      "helpMarkDown": "Enter the trend report ID.",
       "visibleRule": "varTrending = UseTrendReportID"
     },
     {
@@ -150,15 +150,15 @@
       "label": "Timeslot Duration",
       "defaultValue": "30",
       "required": true,
-      "helpMarkDown": "The amount of time (in minutes) needed on the host to run this test"
+      "helpMarkDown": "Enter a duration for the Ad-Hoc timeslot (in minutes). The minimum time is 30 minutes. Maximum: 480 hours"
     },
     {
       "name": "varUseVUDs",
       "type": "boolean",
-      "label": "Use VUDS",
+      "label": "Use VUDs",
       "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "The type of Performance Center license used for the test execution."
+      "helpMarkDown": "<p>Choose whether to use a Virtual User Day (VUD) license. This provides you with a specified number of Vusers (VUDs) that you can run an unlimited number of times within a 24 hour period.</p><p>Before using this option, make sure that VUDs licenses are applied in your Performance Center environment.</p>"
     },
     {
       "name": "varUseSLAInStatus",
@@ -166,7 +166,7 @@
       "label": "Status according to SLA",
       "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "Set step status according to SLA."
+      "helpMarkDown": "<p>Select this option to set the build-step status according to a predefined SLA (Service Level Agreement) configured within your performance test.</p><p>If you do not select this option, the build-step will be labeled as \"Passed\" as long as no failures occurred.</p>"
     },
     {
       "name": "varArtifactsDir",
@@ -175,7 +175,7 @@
       "label": "Artifacts directory",
       "defaultValue": "$(Build.ArtifactStagingDirectory)/PCTest",
       "required": true,
-      "helpMarkDown": "Where to place the Log file of the Performance Center task and the Performance Center analysis/trend report created by the load test execution."
+      "helpMarkDown": "Enter the path to the artifacts directory where the result files are stored."
     }
   ],
   "instanceNameFormat": "Execute Performance Center test",
