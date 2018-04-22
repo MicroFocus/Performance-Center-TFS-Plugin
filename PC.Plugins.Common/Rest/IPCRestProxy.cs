@@ -40,5 +40,6 @@ namespace PC.Plugins.Common.Rest
         bool UpdateTrendReport(string trendReportId, PCTrendReportRequest trendReportRequest, ref PCErrorResponse pcErrorResponse);
         int UploadVugenScript(PCScript pcScript, string fullFileName);
         int UploadVugenScript(PCScript pcScript, string fullFileName, ref PCErrorResponse pcErrorResponse);
+        PCTest GetTest(int testId, ref PCErrorResponse pcErrorResponse);
     }
 }

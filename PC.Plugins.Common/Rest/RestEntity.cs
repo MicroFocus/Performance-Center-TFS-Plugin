@@ -14,7 +14,7 @@ namespace PC.Plugins.Common.Rest
 
         public Client.Client PCClient => pcClient;
 
-        public ClientRequest PCClientRequest(string webProtocol, string pcServer, string proxyHostName, string proxyPort, string proxyUser, string proxyPassword, string domain, string project, string url, bool isLoginOrLogout = false)
+        public ClientRequest PCClientRequest(string webProtocol, string pcServer, string proxyURL, string proxyUser, string proxyPassword, string domain, string project, string url, bool isLoginOrLogout = false)
         {
 
             string restUrl;
@@ -27,38 +27,27 @@ namespace PC.Plugins.Common.Rest
                 restUrl = string.Format("{0}://{1}/LoadTest/rest/domains/{2}/projects/{3}/{4}",
                                 webProtocol, pcServer, domain, project, url);
             }
-            string proxyUri = "";
             NetworkCredential proxyCreds = new NetworkCredential();
 
-            if (!string.IsNullOrWhiteSpace(proxyHostName))
+            if (!string.IsNullOrWhiteSpace(proxyURL) && !string.IsNullOrWhiteSpace(proxyUser))
             {
-                if (!string.IsNullOrWhiteSpace(proxyPort))
-                    proxyUri = string.Format("{0}:{1}", proxyHostName, proxyPort);
-                else
-                    proxyUri = string.Format("{0}", proxyHostName);
-
-
-
-                if (!string.IsNullOrWhiteSpace(proxyUser))
-                {
-                    proxyCreds = new NetworkCredential(
-                        proxyUser,
-                        proxyPassword
-                    );
-                }
+                proxyCreds = new NetworkCredential(
+                    proxyUser,
+                    proxyPassword
+                    );             
             }
-
 
             WebProxy proxy = new WebProxy();
 
-            if (!string.IsNullOrWhiteSpace(proxyHostName))
+            if (!string.IsNullOrWhiteSpace(proxyURL))
             {
-                proxy = new WebProxy(proxyUri, false)
+                proxy = new WebProxy(proxyURL, false)
                 {
                     UseDefaultCredentials = string.IsNullOrWhiteSpace(proxyUser),
                     Credentials = proxyCreds
                 };
             }
+
             ClientRequest clientRequest = PCClient.Request(restUrl)
                 .Proxy(proxy)
                 .ContentType(RESTConstants.APPLICATION_XML)

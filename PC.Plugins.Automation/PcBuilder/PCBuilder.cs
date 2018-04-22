@@ -162,17 +162,23 @@ namespace PC.Plugins.Automation
                     // Adding the trend report section if ID has been set
                     if (_pcModel.GetAddRunToTrendReport.Equals("UseTrendReportID") && !string.IsNullOrWhiteSpace(_pcModel.TrendReportId) && pcRunResponse.RunState != EnumerationHelper.GetEnumDescription(PCConstants.RunStates.RunFailure))
                     {
-                        pcClient.AddRunToTrendReport(runID, _pcModel.TrendReportId);
-                        pcClient.WaitForRunToPublishOnTrendReport(runID, _pcModel.TrendReportId);
-                        pcClient.DownloadTrendReportAsPdf(_pcModel.TrendReportId, _workDirectory);
+                        bool addRunToTrendReportSuccess = pcClient.AddRunToTrendReport(runID, _pcModel.TrendReportId);
+                        if (addRunToTrendReportSuccess)
+                        {
+                            pcClient.WaitForRunToPublishOnTrendReport(runID, _pcModel.TrendReportId);
+                            pcClient.DownloadTrendReportAsPdf(_pcModel.TrendReportId, _workDirectory);
+                        }
                     }
 
                     // Adding the trend report if the Associated Trend report is selected.
                     if (_pcModel.GetAddRunToTrendReport.Equals("AssociatedTrend") && pcRunResponse.RunState != EnumerationHelper.GetEnumDescription(PCConstants.RunStates.RunFailure))
                     {
-                        pcClient.AddRunToTrendReport(runID, _pcModel.TrendReportId);
-                        pcClient.WaitForRunToPublishOnTrendReport(runID, _pcModel.TrendReportId);
-                        pcClient.DownloadTrendReportAsPdf(_pcModel.TrendReportId, _workDirectory);
+                        bool addRunToTrendReportSuccess = pcClient.AddRunToTrendReport(runID, _pcModel.TrendReportId);
+                        if (addRunToTrendReportSuccess)
+                        {
+                            pcClient.WaitForRunToPublishOnTrendReport(runID, _pcModel.TrendReportId);
+                            pcClient.DownloadTrendReportAsPdf(_pcModel.TrendReportId, _workDirectory);
+                        }
                     }
                     if (_statusBySLA && pcRunResponse.RunState == EnumerationHelper.GetEnumDescription(PCConstants.RunStates.Finished))
                         pcClient.verifySlaStatus(pcRunResponse.RunSLAStatus);

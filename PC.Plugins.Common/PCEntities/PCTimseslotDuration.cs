@@ -47,7 +47,7 @@ namespace PC.Plugins.Common.PCEntities
 			try
 			{
 				int m = int.Parse(minutes);
-				int h = (string.IsNullOrWhiteSpace(hours))? 0 : int.Parse(hours) + m / 60;
+				int h = (string.IsNullOrWhiteSpace(hours)) ? m / 60 : int.Parse(hours) + m / 60;
 				if (h < 480)
 				{
 					this._hours = h;

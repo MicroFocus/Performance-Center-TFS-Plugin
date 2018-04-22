@@ -4,7 +4,7 @@ namespace PC.Plugins.Automation
 {
     interface IPCClient
     {
-        void AddRunToTrendReport(int runId, string trendReportId);
+        bool AddRunToTrendReport(int runId, string trendReportId);
         bool DownloadTrendReportAsPdf(string trendReportId, string directory);
         PCRunEventLog GetRunEventLog(int runId);
         string GetTestName();
