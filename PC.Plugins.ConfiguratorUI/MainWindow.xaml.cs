@@ -77,7 +77,7 @@ namespace PC.Plugins.ConfiguratorUI
             {
                 if (String.IsNullOrEmpty(PCServerURL.Text) || String.IsNullOrEmpty(PCUserName.Text))
                 {
-                    MessageBox.Show("To test the connection, the PC URL and Username (with adequate password) need to be specified.", "PC", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    MessageBox.Show("To test the connection, the PC URL and Username (with adequate password) need to be specified.", "PC.Plugins.ConfiguratorUI", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                     return;
                 }
                 Helper.CheckedConnection = _configurator.TestConnection();
@@ -85,13 +85,13 @@ namespace PC.Plugins.ConfiguratorUI
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "PC", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                MessageBox.Show(ex.Message, "PC.Plugins.ConfiguratorUI", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
             }
             if (Helper.CheckedConnection)
-                MessageBox.Show("Connection successfull", "PC", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                MessageBox.Show("Connection successfull", "PC.Plugins.ConfiguratorUI", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
             else
-                MessageBox.Show("Connection Failed", "PC", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                MessageBox.Show("Connection Failed", "PC.Plugins.ConfiguratorUI", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
         }
 
 
@@ -111,7 +111,7 @@ namespace PC.Plugins.ConfiguratorUI
             {
                 const string error = "Error while trying to run the test from the plugin. Error: {0}. \n {1}";
                 //Log.Error(error, ex);
-                MessageBox.Show(string.Format(error, ex.Message, ex), "PC", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                MessageBox.Show(string.Format(error, ex.Message, ex), "PC.Plugins.ConfiguratorUI", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
             }
         }
 

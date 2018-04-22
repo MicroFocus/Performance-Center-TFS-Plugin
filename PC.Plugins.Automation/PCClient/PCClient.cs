@@ -63,7 +63,7 @@ namespace PC.Plugins.Automation
                 {
                     fileLog.Write(LogMessageType.Info, "Using proxy: " + _pcModel.ProxyOutURL);
                 }
-                _pcRestProxy = new PCRestProxy(_pcModel.isHTTPSProtocol(), _pcModel.PCServerName, _pcModel.Domain, _pcModel.Project, _pcModel.ProxyOutURL, _pcModel.ProxyOutUser, _pcModel.ProxyOutPassword);
+                _pcRestProxy = new PCRestProxy(_pcModel.isHTTPSProtocol(), _pcModel.PCServerAndPort, _pcModel.Domain, _pcModel.Project, _pcModel.ProxyOutURL, _pcModel.ProxyOutUser, _pcModel.ProxyOutPassword);
                 
             }
             catch (Exception e)
@@ -78,7 +78,7 @@ namespace PC.Plugins.Automation
             PCErrorResponse pcErrorResponse = new PCErrorResponse("", 0);
             try
             {
-                _fileLog.Write(LogMessageType.Info, string.Format("Trying to login: [PCServer: '{0}://{1}', User: '{2}']", _pcModel.isHTTPSProtocol(), _pcModel.PCServerName, _pcModel.UserName));
+                _fileLog.Write(LogMessageType.Info, string.Format("Trying to login: [PCServer: '{0}://{1}', User: '{2}']", _pcModel.isHTTPSProtocol(), _pcModel.PCServerAndPort, _pcModel.UserName));
                 _loggedIn = _pcRestProxy.Authenticate(_pcModel.UserName, _pcModel.Password, ref pcErrorResponse);
             }
             catch (Exception e)
@@ -101,6 +101,8 @@ namespace PC.Plugins.Automation
             {
                 int testID = int.Parse(_pcModel.TestId);
                 int testInstance = GetCorrectTestInstanceID(testID);
+                if (testInstance == 0)
+                    return 0;
                 SetCorrectTrendReportID();
 
                 string msg = string.Format("Executing Load Test:\n====================\nTest ID: {0} \nTest Instance ID: {1} \nTimeslot Duration: {2} \nPost Run Action: {3} \nUse VUDS: {4}\n====================\n", 
@@ -135,6 +137,11 @@ namespace PC.Plugins.Automation
 
         private int GetCorrectTestInstanceID(int testID) {
             PCErrorResponse pcErrorResponse = new PCErrorResponse("", 0);
+            if (!TestExist(testID, ref pcErrorResponse))
+            {
+                _fileLog.Write(LogMessageType.Info, string.Format("Error: {0}", pcErrorResponse.ExceptionMessage));
+                return 0;
+            }
             if (_pcModel.AutoTestInstance){
                 try {
                     _fileLog.Write(LogMessageType.Info, "Searching for available Test Instance");
@@ -158,7 +165,10 @@ namespace PC.Plugins.Automation
                             int testSetID = pcTestSet.TestSetID;
                             _fileLog.Write(LogMessageType.Info, string.Format("Creating Test Instance with testID: {0} and TestSetID: {1}", testID, testSetID));
                             testInstanceID = _pcRestProxy.CreateTestInstance(testID, testSetID, ref pcErrorResponse);
-                            _fileLog.Write(LogMessageType.Info, string.Format("Test Instance with ID : {0} has been created successfully.", testInstanceID));
+                            if (testInstanceID==0)
+                                _fileLog.Write(LogMessageType.Info, string.Format("Test Instance could not be created for Test ID '", testID + "'"));
+                            else
+                                _fileLog.Write(LogMessageType.Info, string.Format("Test Instance with ID : {0} has been created successfully.", testInstanceID));
                         }
                         else
                         {
@@ -180,6 +190,14 @@ namespace PC.Plugins.Automation
                 }
             }
             return int.Parse(_pcModel.TestInstanceId);
+        }
+
+        private bool TestExist(int testID, ref PCErrorResponse pcErrorResponse)
+        {
+            PCTest pcTest = _pcRestProxy.GetTest(testID, ref pcErrorResponse);
+            if (pcTest == null)
+                return false;
+            return true;
         }
 
 
@@ -447,15 +465,27 @@ namespace PC.Plugins.Automation
             return null;
         }
 
-        public void AddRunToTrendReport(int runId, String trendReportId)
+        public bool AddRunToTrendReport(int runId, String trendReportId)
         {
-            PCErrorResponse pcErrorResponse = new PCErrorResponse("", 0);
-            PCTrendReportRequest pcTrendReportRequest = new PCTrendReportRequest(_pcModel.Project, runId, null);
-            _fileLog.Write(LogMessageType.Info, "Adding run: " + runId + " to trend report: " + trendReportId);
+           PCErrorResponse pcErrorResponse = new PCErrorResponse("", 0);
             try
             {
-                _pcRestProxy.UpdateTrendReport(trendReportId, pcTrendReportRequest, ref pcErrorResponse);
-                _fileLog.Write(LogMessageType.Info, "Publishing run: " + runId + " on trend report: " + trendReportId);
+                if (trendReportId == "0")
+                {
+                    pcErrorResponse.ErrorCode = 99999543;
+                    pcErrorResponse.ExceptionMessage = "The test is not associated with any tend Report";
+                    _fileLog.Write(LogMessageType.Info, "Error: " + pcErrorResponse.ExceptionMessage);
+                }
+                else
+                {
+                    PCTrendReportRequest pcTrendReportRequest = new PCTrendReportRequest(_pcModel.Project, runId, null);
+                    _fileLog.Write(LogMessageType.Info, "Adding run: " + runId + " to trend report: " + trendReportId);
+                    _pcRestProxy.UpdateTrendReport(trendReportId, pcTrendReportRequest, ref pcErrorResponse);
+                    if (pcErrorResponse.ErrorCode > 0)
+                        _fileLog.Write(LogMessageType.Info, "Error: " + pcErrorResponse.ExceptionMessage);
+                    else
+                        _fileLog.Write(LogMessageType.Info, "Publishing run: " + runId + " on trend report: " + trendReportId);
+                }
             }
             catch (Exception e)
             {
@@ -465,6 +495,7 @@ namespace PC.Plugins.Automation
                     _fileLog.Write(LogMessageType.Error, string.Format("AddRunToTrendReport failed, ExceptionMessage: {0}, ErrorCode: {1}", pcErrorResponse.ExceptionMessage, pcErrorResponse.ErrorCode));
                 }
             }
+            return pcErrorResponse.ErrorCode == 0;
         }
 
 

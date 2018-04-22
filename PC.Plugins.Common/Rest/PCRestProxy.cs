@@ -28,7 +28,7 @@ namespace PC.Plugins.Common.Rest
         protected internal static readonly IList<int> _validStatusCodes = new List<int> { (int)HttpStatusCode.OK, (int)HttpStatusCode.Created, (int)HttpStatusCode.Accepted, (int)HttpStatusCode.NoContent };
 
         private string _webProtocol = "http";
-        private string _pcServer;
+        private string _pcServerAndPort;
         private string _domain;
         private string _project;
         private string _proxyOutURL = "";
@@ -52,10 +52,10 @@ namespace PC.Plugins.Common.Rest
             get { return _webProtocol; }
             set { _webProtocol = value; }
         }
-        public string PCServer
+        public string PCServerAndPort
         {
-            get { return _pcServer; }
-            set { _pcServer = value; }
+            get { return _pcServerAndPort; }
+            set { _pcServerAndPort = value; }
         }
         public string Domain
         {
@@ -120,7 +120,7 @@ namespace PC.Plugins.Common.Rest
                 _webProtocol = webProtocolName;
 
             if (!string.IsNullOrWhiteSpace(pcServerNameAndPort))
-                _pcServer = pcServerNameAndPort;
+                _pcServerAndPort = pcServerNameAndPort;
 
             if (!string.IsNullOrWhiteSpace(domain))
                 _domain = domain;
@@ -179,7 +179,7 @@ namespace PC.Plugins.Common.Rest
         {
             _encodedCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(userName + ":" + password));
             _restEntity = new RestEntity();
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, true)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, true)
                 .ContentType(RESTConstants.APPLICATION_XML)
                 .Header("Authorization", string.Format("Basic {0}", _encodedCredentials))
                 .Get();
@@ -200,7 +200,7 @@ namespace PC.Plugins.Common.Rest
             {
                 _encodedCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(userName + ":" + password));
                 _restEntity = new RestEntity();
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, true)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, true)
                     .ContentType(RESTConstants.APPLICATION_XML)
                     .Header("Authorization", string.Format("Basic {0}", _encodedCredentials))
                     .Get();
@@ -209,7 +209,8 @@ namespace PC.Plugins.Common.Rest
                 authenticated = Client.Utils.Validate(clientResponse, _validStatusCodes);
                 if (authenticated == false)
                     if (clientResponse.Body != null)
-                        try {
+                        try
+                        {
                             pcErrorResponse = PCErrorResponse.XMLToObject(clientResponse.Body);
                         }
                         catch
@@ -217,8 +218,12 @@ namespace PC.Plugins.Common.Rest
                             pcErrorResponse = new PCErrorResponse(clientResponse.Body, 9999899);
                         }
                     else
-                        pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this PC URL {0}://{1}:{2}/LoadTest/ is indeed available", _webProtocol, _pcServer, _proxyPort > 0 ? _proxyPort.ToString() : _webProtocol.Equals("http") ? "80" : "433")), 999990);
-
+                    {
+                        if (!string.IsNullOrWhiteSpace(_proxyHostName))
+                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this Proxy URL {0} or this Perfomance Center URL {1}://{2}:{3}/LoadTest/ is indeed available", _proxyOutURL, _webProtocol, _pcServerAndPort, _proxyPort > 0 ? _proxyPort.ToString() : _webProtocol.Equals("http") ? "80" : "433")), 999890);
+                        else
+                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this PC URL {0}://{1}:{2}/LoadTest/ is indeed available", _webProtocol, _pcServerAndPort, _proxyPort > 0 ? _proxyPort.ToString() : _webProtocol.Equals("http") ? "80" : "433")), 999990);
+                    }
             }
             catch (Exception ex)
             {
@@ -232,7 +237,7 @@ namespace PC.Plugins.Common.Rest
         /// </summary>
         public virtual PCTestSets GetAllTestSets()
         {
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, PCConstants.TEST_SETS_NAME)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.TEST_SETS_NAME)
                 .Get();
             if (Client.Utils.Validate(clientResponse, _validStatusCodes))
             {
@@ -250,7 +255,7 @@ namespace PC.Plugins.Common.Rest
             PCTestSets pcTestSets = null;
             try
             {
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, PCConstants.TEST_SETS_NAME)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.TEST_SETS_NAME)
                     .Get();
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
                     pcTestSets = PCTestSets.XMLToObject(clientResponse.Body);
@@ -264,6 +269,31 @@ namespace PC.Plugins.Common.Rest
             return pcTestSets;
         }
 
+        /// <summary>
+        /// Get all TestSets (in PCTestSets object) in the ALM project
+        /// </summary>
+        /// <param name="pcErrorResponse">reference to PCErrorResponse object</param>
+        public virtual PCTest GetTest(int testId, ref PCErrorResponse pcErrorResponse)
+        {
+            PCTest pcTest = null;
+            try
+            {
+                string testQuery = string.Format("{0}/{1}", "tests",  testId );
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, testQuery)
+                    .Get();
+                if (Client.Utils.Validate(clientResponse, _validStatusCodes))
+                    pcTest = PCTest.XMLToObject(clientResponse.Body);
+                else
+                    pcErrorResponse = PCErrorResponse.XMLToObject(clientResponse.Body);
+            }
+            catch (Exception ex)
+            {
+                pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "GetAllTestSets", ex.Message), 999992);
+            }
+            return pcTest;
+        }
+
+
 
         /// <summary>
         /// Get all test instances (in PCTestInstances object) of a specific Test
@@ -272,7 +302,7 @@ namespace PC.Plugins.Common.Rest
         public virtual PCTestInstances GetTestInstancesByTestId(int testId)
         {
             string testInstancesByTestIdQuery = string.Format("{0}?{1}={2}", PCConstants.TEST_INSTANCES_NAME, "query", "{test-id[" + testId + "]}");
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, testInstancesByTestIdQuery)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, testInstancesByTestIdQuery)
                 .Get();
             if (Client.Utils.Validate(clientResponse, _validStatusCodes))
             {
@@ -293,10 +323,17 @@ namespace PC.Plugins.Common.Rest
             try
             {
                 string testInstancesByTestIdQuery = string.Format("{0}?{1}={2}", PCConstants.TEST_INSTANCES_NAME, "query", "{test-id[" + testId + "]}");
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, testInstancesByTestIdQuery)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, testInstancesByTestIdQuery)
                     .Get();
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
-                        pcTestInstances = PCTestInstances.XMLToObject(clientResponse.Body);
+                {
+                    pcTestInstances = PCTestInstances.XMLToObject(clientResponse.Body);
+                    if (pcTestInstances.TestInstancesList.Count==0)
+                    {
+                        pcErrorResponse.ErrorCode = 99978445;
+                        pcErrorResponse.ExceptionMessage = "No test instance was found for test ID '" + testId + "'";
+                    }
+                }
                 else
                     pcErrorResponse = PCErrorResponse.XMLToObject(clientResponse.Body);
             }
@@ -315,7 +352,7 @@ namespace PC.Plugins.Common.Rest
         public virtual PCRunResponse GetRunData(int runId)
         {
             string runDataQuery = string.Format("{0}/{1}", PCConstants.RUNS_RESOURCE_NAME, runId);
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, runDataQuery)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, runDataQuery)
                 .Get();
             if (Client.Utils.Validate(clientResponse, _validStatusCodes))
             {
@@ -335,7 +372,7 @@ namespace PC.Plugins.Common.Rest
             try
             { 
                 string runDataQuery = string.Format("{0}/{1}", PCConstants.RUNS_RESOURCE_NAME, runId);
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, runDataQuery)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, runDataQuery)
                     .Get();
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
                     pcRunResponse = PCRunResponse.XMLToObject(clientResponse.Body);
@@ -357,7 +394,7 @@ namespace PC.Plugins.Common.Rest
         public virtual PCTest GetTestData(int testId)
         {
             string testDataQuery = string.Format("{0}/{1}", PCConstants.TESTS_RESOURCE_NAME, testId);
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, testDataQuery)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, testDataQuery)
                 .Get();
             if (Client.Utils.Validate(clientResponse, _validStatusCodes))
             {
@@ -377,7 +414,7 @@ namespace PC.Plugins.Common.Rest
             try
             {
                 string testDataQuery = string.Format("{0}/{1}", PCConstants.TESTS_RESOURCE_NAME, testId);
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, testDataQuery)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, testDataQuery)
                   .Get();
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
                         pcTest = PCTest.XMLToObject(clientResponse.Body);
@@ -399,7 +436,7 @@ namespace PC.Plugins.Common.Rest
         {
 
             string getRunResultsUrl = string.Format("{0}/{1}/{2}", PCConstants.RUNS_RESOURCE_NAME, runId, PCConstants.RESULTS_RESOURCE_NAME);
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getRunResultsUrl)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getRunResultsUrl)
                 .Get();
             if (Client.Utils.Validate(clientResponse, _validStatusCodes))
             {
@@ -419,7 +456,7 @@ namespace PC.Plugins.Common.Rest
             try
             {
                 string getRunResultsUrl = string.Format("{0}/{1}/{2}", PCConstants.RUNS_RESOURCE_NAME, runId, PCConstants.RESULTS_RESOURCE_NAME);
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getRunResultsUrl)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getRunResultsUrl)
                     .Get();
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
                     pcRunResults = PCRunResults.XMLToObject(clientResponse.Body);
@@ -443,7 +480,7 @@ namespace PC.Plugins.Common.Rest
         {
             string getRunResultDataUrl = string.Format("{0}/{1}/{2}/{3}/data", PCConstants.RUNS_RESOURCE_NAME, runId, PCConstants.RESULTS_RESOURCE_NAME, resultId);
             GeneralHelper.CreateDirectoryForFileIfNotExisting(fullFileName);
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getRunResultDataUrl)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getRunResultDataUrl)
                 .GetFile(fullFileName);
             if (Client.Utils.Validate(clientResponse, _validStatusCodes))
             {
@@ -467,7 +504,7 @@ namespace PC.Plugins.Common.Rest
             {
                 string getRunResultDataUrl = string.Format("{0}/{1}/{2}/{3}/data", PCConstants.RUNS_RESOURCE_NAME, runId, PCConstants.RESULTS_RESOURCE_NAME, resultId);
                 GeneralHelper.CreateDirectoryForFileIfNotExisting(fullFileName);
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getRunResultDataUrl)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getRunResultDataUrl)
                     .GetFile(fullFileName);
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
                     getRunResultData = true;
@@ -488,7 +525,7 @@ namespace PC.Plugins.Common.Rest
         public virtual PCRunEventLog GetRunEventLog(int runId)
         {
             string getRunEventLogUrl = string.Format("{0}/{1}/{2}", PCConstants.RUNS_RESOURCE_NAME, runId, PCConstants.EVENTLOG_RESOURCE_NAME);
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getRunEventLogUrl)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getRunEventLogUrl)
                 .Get();
             if (Client.Utils.Validate(clientResponse, _validStatusCodes))
                 return PCRunEventLog.XMLToObject(clientResponse.Body);
@@ -507,7 +544,7 @@ namespace PC.Plugins.Common.Rest
             {
                 string getRunEventLogUrl = string.Format("{0}/{1}/{2}", PCConstants.RUNS_RESOURCE_NAME, runId, PCConstants.EVENTLOG_RESOURCE_NAME);
 
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getRunEventLogUrl)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getRunEventLogUrl)
                     .Get();
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
                     pcRunEventLog = PCRunEventLog.XMLToObject(clientResponse.Body);
@@ -527,7 +564,7 @@ namespace PC.Plugins.Common.Rest
         /// </summary>
         public virtual bool Logout()
         {
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGOUT_URL, true)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGOUT_URL, true)
                 .Get();
             return Client.Utils.Validate(clientResponse, _validStatusCodes);
         }
@@ -542,7 +579,7 @@ namespace PC.Plugins.Common.Rest
             bool logout = false;
             try
             {
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGOUT_URL, true)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGOUT_URL, true)
                     .Get();
                 logout = Client.Utils.Validate(clientResponse, _validStatusCodes);
                 if (logout == false)
@@ -584,7 +621,7 @@ namespace PC.Plugins.Common.Rest
             PCPostRunActionsRequest postRunActionsRequest = new PCPostRunActionsRequest(releaseTimeslot, postRunAction);
             string xmlpostRunActionsRequest = postRunActionsRequest.ObjectToXml();
 
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, stopUrl)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, stopUrl)
                 .Body(xmlpostRunActionsRequest)
                 .Post();
             if (Client.Utils.Validate(clientResponse, _validStatusCodes))
@@ -625,7 +662,7 @@ namespace PC.Plugins.Common.Rest
                 PCPostRunActionsRequest postRunActionsRequest = new PCPostRunActionsRequest(releaseTimeslot, postRunAction);
                 string xmlpostRunActionsRequest = postRunActionsRequest.ObjectToXml();
 
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, stopUrl)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, stopUrl)
                     .Body(xmlpostRunActionsRequest)
                     .Post();
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
@@ -654,7 +691,7 @@ namespace PC.Plugins.Common.Rest
             PCTestInstanceRequest testInstanceRequest = new PCTestInstanceRequest(testId, testSetId);
             string xmlTestInstanceRequest = testInstanceRequest.ObjectToXml();
 
-            var response = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, createTestInstanceUrl)
+            var response = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, createTestInstanceUrl)
                .Body(xmlTestInstanceRequest)
                .Post();
             if (Client.Utils.Validate(response, _validStatusCodes))
@@ -682,7 +719,7 @@ namespace PC.Plugins.Common.Rest
                     "</TestID><TestSetID>" + testSetId + "</TestSetID></TestInstance>";
                 PCTestInstanceRequest testInstanceRequest = new PCTestInstanceRequest(testId, testSetId);
                 string xmlTestInstanceRequest = testInstanceRequest.ObjectToXml();
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, createTestInstanceUrl)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, createTestInstanceUrl)
                    .Body(xmlTestInstanceRequest)
                    .Post();
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
@@ -711,7 +748,7 @@ namespace PC.Plugins.Common.Rest
             GeneralHelper.CreateDirectoryForFileIfNotExisting(fullFileName);
             string getTrendReportUrl = string.Format("{0}/{1}/{2}", PCConstants.TREND_REPORT_RESOURCE_NAME, trendReportId, PCConstants.TREND_REPORT_RESOURCE_SUFFIX);
 
-            var response = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getTrendReportUrl)
+            var response = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getTrendReportUrl)
                 .GetFile(fullFileName);
             if (Client.Utils.Validate(response, _validStatusCodes))
             {
@@ -733,7 +770,7 @@ namespace PC.Plugins.Common.Rest
             {
                 GeneralHelper.CreateDirectoryForFileIfNotExisting(fullFileName);
                 string getTrendReportUrl = string.Format("{0}/{1}/{2}", PCConstants.TREND_REPORT_RESOURCE_NAME, trendReportId, PCConstants.TREND_REPORT_RESOURCE_SUFFIX);
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getTrendReportUrl)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getTrendReportUrl)
                     .GetFile(fullFileName);
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
                     getTrendingPDF = true;
@@ -775,7 +812,7 @@ namespace PC.Plugins.Common.Rest
             string xmlPCRunRequest = pcRunRequest.ObjectToXml();
 
 
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, startRunURL)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, startRunURL)
                .Body(xmlPCRunRequest)
                .Post();
 
@@ -818,7 +855,7 @@ namespace PC.Plugins.Common.Rest
                 string xmlPCRunRequest = pcRunRequest.ObjectToXml();
 
 
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, startRunURL)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, startRunURL)
                    .Body(xmlPCRunRequest)
                    .Post();
 
@@ -843,7 +880,7 @@ namespace PC.Plugins.Common.Rest
         public virtual PCTrendReportRoot GetTrendReport(int trendReportId, int runId)
         {
             string getTrendReportByXMLUrl = string.Format("{0}/{1}/{2}", PCConstants.TREND_REPORT_RESOURCE_NAME, trendReportId, runId);
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getTrendReportByXMLUrl)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getTrendReportByXMLUrl)
                 .Get();
 
             if (Client.Utils.Validate(clientResponse, _validStatusCodes))
@@ -866,7 +903,7 @@ namespace PC.Plugins.Common.Rest
             try
             {
                 string getTrendReportByXMLUrl = string.Format("{0}/{1}/{2}", PCConstants.TREND_REPORT_RESOURCE_NAME, trendReportId, runId);
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getTrendReportByXMLUrl)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getTrendReportByXMLUrl)
                     .Get();
 
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
@@ -890,7 +927,7 @@ namespace PC.Plugins.Common.Rest
         public virtual PCTrendReports GetAllTrendReports()
         {
             string getTrendReportByXMLUrl = string.Format("{0}", PCConstants.TREND_REPORT_RESOURCE_NAME);
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getTrendReportByXMLUrl)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getTrendReportByXMLUrl)
                 .Get();
             if (Client.Utils.Validate(clientResponse, _validStatusCodes))
             {
@@ -911,7 +948,7 @@ namespace PC.Plugins.Common.Rest
             try
             {
                 string getTrendReportByXMLUrl = string.Format("{0}", PCConstants.TREND_REPORT_RESOURCE_NAME);
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getTrendReportByXMLUrl)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getTrendReportByXMLUrl)
                     .Get();
 
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
@@ -933,7 +970,7 @@ namespace PC.Plugins.Common.Rest
         public virtual PCTrendReport GetTrendReportMetaData(string trendReportId)
         {
             string getTrendReportMetaDataUrl = string.Format("{0}/{1}", PCConstants.TREND_REPORT_RESOURCE_NAME, trendReportId);
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getTrendReportMetaDataUrl)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getTrendReportMetaDataUrl)
                 .Get();
             if (Client.Utils.Validate(clientResponse, _validStatusCodes))
             {
@@ -954,7 +991,7 @@ namespace PC.Plugins.Common.Rest
             try
             {
                 string getTrendReportMetaDataUrl = string.Format("{0}/{1}", PCConstants.TREND_REPORT_RESOURCE_NAME, trendReportId);
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, getTrendReportMetaDataUrl)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, getTrendReportMetaDataUrl)
                     .Get();
                 if (Client.Utils.Validate(clientResponse, _validStatusCodes))
                     pcTrendReport = PCTrendReport.XMLToObject(clientResponse.Body);
@@ -1020,7 +1057,7 @@ namespace PC.Plugins.Common.Rest
         {
             string updateTrendReportUrl = string.Format("{0}/{1}", PCConstants.TREND_REPORT_RESOURCE_NAME, trendReportId);
 
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, updateTrendReportUrl)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, updateTrendReportUrl)
               .Body(trendReportRequest.ObjectToXml())
               .Post();
 
@@ -1046,7 +1083,7 @@ namespace PC.Plugins.Common.Rest
 
                 string updateTrendReportUrl = string.Format("{0}/{1}", PCConstants.TREND_REPORT_RESOURCE_NAME, trendReportId);
 
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServer, _proxyHostName, _proxyPort.ToString(), _proxyUser, _proxyPassword, _domain, _project, updateTrendReportUrl)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, updateTrendReportUrl)
                   .Body(trendReportRequest.ObjectToXml())
                   .Post();
 
