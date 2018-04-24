@@ -349,8 +349,6 @@ namespace PC.Plugins.Configurator
             return newContent;
         }
 
-        public static string SayCoucou() => "Coucou";
-
         public static string GetTaskStatus(string FullFilename)
         {
             if (string.IsNullOrEmpty(FullFilename))

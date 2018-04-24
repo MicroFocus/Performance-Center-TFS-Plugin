@@ -215,14 +215,21 @@ namespace PC.Plugins.Common.Rest
                         }
                         catch
                         {
-                            pcErrorResponse = new PCErrorResponse(clientResponse.Body, 9999899);
+                            string errorMessage = "Error: Failed to authenticate."; 
+                            errorMessage +=         "\n**** The response received to the authentication request is:";
+                            errorMessage +=         "\n=================================";
+                            errorMessage +=         "\n" + clientResponse.Body;
+                            errorMessage +=         "\n=================================";
+                            errorMessage += !string.IsNullOrEmpty(_proxyOutURL) ? "\n**** Verify if the proxy URL: " + _proxyOutURL + " is available and the proxy credentials are correct." : "";
+                            errorMessage += string.Format("\n**** Verify that this Performance Center URL {0}://{1}/LoadTest/ is indeed available from the Operating System running the test.", _webProtocol, _pcServerAndPort);
+                            pcErrorResponse = new PCErrorResponse(errorMessage, 9999899); 
                         }
                     else
                     {
                         if (!string.IsNullOrWhiteSpace(_proxyHostName))
-                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this Proxy URL {0} or this Perfomance Center URL {1}://{2}:{3}/LoadTest/ is indeed available", _proxyOutURL, _webProtocol, _pcServerAndPort, _proxyPort > 0 ? _proxyPort.ToString() : _webProtocol.Equals("http") ? "80" : "433")), 999890);
+                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this Proxy URL {0} or this Perfomance Center URL {1}://{2}/LoadTest/ is indeed available", _proxyOutURL, _webProtocol, _pcServerAndPort)), 999890);
                         else
-                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this PC URL {0}://{1}:{2}/LoadTest/ is indeed available", _webProtocol, _pcServerAndPort, _proxyPort > 0 ? _proxyPort.ToString() : _webProtocol.Equals("http") ? "80" : "433")), 999990);
+                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this PC URL {0}://{1}/LoadTest/ is indeed available", _webProtocol, _pcServerAndPort)), 999990);
                     }
             }
             catch (Exception ex)

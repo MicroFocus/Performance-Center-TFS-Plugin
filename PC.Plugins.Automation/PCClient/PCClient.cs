@@ -473,7 +473,7 @@ namespace PC.Plugins.Automation
                 if (trendReportId == "0")
                 {
                     pcErrorResponse.ErrorCode = 99999543;
-                    pcErrorResponse.ExceptionMessage = "The test is not associated with any tend Report";
+                    pcErrorResponse.ExceptionMessage = "The test is not associated with any trend Report";
                     _fileLog.Write(LogMessageType.Info, "Error: " + pcErrorResponse.ExceptionMessage);
                 }
                 else
