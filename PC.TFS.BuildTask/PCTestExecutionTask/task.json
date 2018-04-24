@@ -61,7 +61,7 @@
       "label": "Test ID",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "Enter the Test ID. You can get the ID from <b>Performance Center</b> > <b>Test Management</b> > <b>Test Lab</b> > Select your test and find the ID in the General Details: <b>Test Name (Id)</b>."
+      "helpMarkDown": "Enter the Test ID. You can get the ID from <b>Performance Center</b> > <b>Test Management</b> > <b>Test Plan</b> > Select your test and find the ID in the General Details: <b>Test Name (Id)</b>."
     },
     {
       "name": "varAutoTestInstance",
