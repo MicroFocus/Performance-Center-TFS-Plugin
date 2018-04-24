@@ -19,4 +19,4 @@ For full installation instructions, see the installation section in the [Perform
 
 # Documentation
 
-Please check the [Performance Center-TFS Plugin Wiki](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/wiki).
+Please check the [Performance Center-TFS Plugin Wiki](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/wiki) and search for the extension documentation in [Performance Center Help](https://admhelp.microfocus.com/pc).
