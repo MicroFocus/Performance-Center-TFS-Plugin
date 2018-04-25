@@ -1,6 +1,6 @@
 ﻿# Overview
 
-This plugin allows Team Foundation Server build process to run a task executing Performance Center tests.
+The <b>"Performance Center CI"</b> extension allows Team Foundation Server's CI build process to define and run a <b>"Performance Center Task"</b> to execute a Performance Center test.
 
 ## This extension currently supports:
 
@@ -8,6 +8,6 @@ This plugin allows Team Foundation Server build process to run a task executing 
 
 ## System prerequisites
 
-* Performance Center server available from TFS server
+* Performance Center server available from Team Foundation Server's agent pools.
 * Powershell version 4.0 or higher
 
