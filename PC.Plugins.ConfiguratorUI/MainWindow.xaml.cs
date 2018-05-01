@@ -135,7 +135,7 @@ namespace PC.Plugins.ConfiguratorUI
             string trending = (DoNotTrend.IsChecked == true) ? "DoNotTrend" : (AssociatedTrend.IsChecked == true) ? "AssociatedTrend" : "UseTrendReportID";
             string trendReportID = (trending == "UseTrendReportID" && TrendReportID.Text != "Enter Trend Report ID") ? TrendReportID.Text : "";
             string timeslotDurationHours = "";
-            string timeslotDurationMinutes = String.IsNullOrWhiteSpace(TimeslotDurationMinutes.Text) ? "30" : TimeslotDurationMinutes.Text;
+            string timeslotDurationMinutes = ValidateTimeSlotDuration();
             bool useSLAStatus = UseSLAStatus.IsChecked == true;
             bool useVUDs = UseVUDs.IsChecked == true;
             string description = "";
@@ -263,5 +263,44 @@ namespace PC.Plugins.ConfiguratorUI
             }
             catch { }
         }
+
+        private string ValidateTimeSlotDuration ()
+        {
+            string timeslotDurationMinutes = "30";
+            if (string.IsNullOrWhiteSpace(TimeslotDurationMinutes.Text))
+            {
+                TimeslotDurationMinutes.Text = timeslotDurationMinutes;
+            }
+            else
+            {
+                int n;
+                bool isTimeslotDurationMinutesNumeric = int.TryParse(TimeslotDurationMinutes.Text, out n);
+                if (!isTimeslotDurationMinutesNumeric)
+                {
+                    TimeslotDurationMinutes.Text = "30";
+                }
+                else
+                {
+                    if (int.Parse(TimeslotDurationMinutes.Text) < 30)
+                    {
+                        TimeslotDurationMinutes.Text = "30";
+                    }
+                    else
+                    {
+                        if (int.Parse(TimeslotDurationMinutes.Text) > 28800)
+                        {
+                            timeslotDurationMinutes = "28800";
+                            TimeslotDurationMinutes.Text = "28800";
+                        }
+                        else
+                        {
+                            timeslotDurationMinutes = TimeslotDurationMinutes.Text;
+                        }
+                    }
+                }
+            }
+            return timeslotDurationMinutes;
+        }
+
     }
 }
