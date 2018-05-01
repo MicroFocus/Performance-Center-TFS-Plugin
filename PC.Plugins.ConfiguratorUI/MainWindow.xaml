@@ -105,7 +105,7 @@
                     </Label>
                     <Button Style="{DynamicResource NoChromeButton}" x:Name="TipButtonTimeSlotDuration" >
                         <Button.ToolTip>
-                            <TextBlock>In minutes</TextBlock>
+                            <TextBlock>Value in minutes: The minimum time is 30 minutes. Maximum: 480 hours</TextBlock>
                         </Button.ToolTip>
                         <Image Source="qicon.png" Height="20" Width="20" Margin="0 5 20 0"></Image>
                     </Button>
