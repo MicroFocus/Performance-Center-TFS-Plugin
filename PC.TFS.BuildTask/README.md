@@ -4,12 +4,13 @@ This extension enables you to include a Performance Center test execution as a t
 
 # Supported Product Versions
 
-This extension supports Performance Center 12.56.
+This extension supports Performance Center 12.56 and later.
 
-# What's New in this Release
+# What's New in this Release (version 1.0.1)
 
-> **April 2018**
-> - Added task for running Performance Center tests in Team Foundation Server build process.
+> **January 2019**
+> - Ability to make multiple attempts to run the test on timeslot creation failure.
+> - Fixed defects.
 
 # Installation Instructions
 

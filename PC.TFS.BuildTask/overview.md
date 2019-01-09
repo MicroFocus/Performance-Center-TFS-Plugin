@@ -4,7 +4,7 @@ The <b>"Performance Center CI"</b> extension allows Team Foundation Server's CI 
 
 ## This extension currently supports:
 
-* Performance Center 12.56
+* Performance Center 12.56 and higher.
 
 ## System prerequisites
 

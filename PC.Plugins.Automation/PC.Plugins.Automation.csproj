@@ -53,7 +53,10 @@
     <Compile Include="PCClient\PCClient.cs" />
     <Compile Include="PCModel\IPCModel.cs" />
     <Compile Include="PCModel\PCModel.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />	
+	<Compile Include="..\include\version_info.cs">
+      <Link>Properties\version_info.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PC.Plugins.Common\PC.Plugins.Common.csproj">

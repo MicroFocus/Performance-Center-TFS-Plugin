@@ -13,24 +13,15 @@ namespace PC.Plugins.Automation
     //[ComVisible(true)]
     public class PCModel : IPCModel
     {
-
-
-
-        //public const string COLLATE         = "Collate Results";
-        //public const string COLLATE_ANALYZE = "Collate and Analyze";
-        //public const string DO_NOTHING      = "Do Not Collate";
-
         private string _pcServerAndPort;
         private string _pcServerName;
         private string _userName;
-        //private SecureString _password;
         private string _password;
         private string _domain;
         private string _project;
         private string _testId;
         private bool _autoTestInstance;
         private string _testInstanceId;
-        
         private PCTimeslotDuration _pcTimeslotDuration;
         private PCPostRunActionsRequest _pcPostRunActionsRequest;
         private bool _vudsMode;
@@ -42,21 +33,25 @@ namespace PC.Plugins.Automation
         private string _proxyOutUser;
         private string _proxyOutPassword;
         private string _buildParameters;
+        private string _timeslotRepeat;
+        private string _timeslotRepeatDelay;
+        private string _timeslotRepeatAttempts;
 
         public PCModel(string pcServerAndPort, string pcServerName, string userName, string password, string domain, string project,
                    String testId, bool autoTestInstanceID, string testInstanceId, string timeslotDurationHours, string timeslotDurationMinutes,
                    PCPostRunActionsRequest pcPostRunActionsRequest, bool vudsMode, string description, string addRunToTrendReport, string trendReportId,
-                   bool httpsProtocol, string proxyOutURL, string proxyOutUser, string proxyOutPassword)
+                   bool httpsProtocol, string proxyOutURL, string proxyOutUser, string proxyOutPassword,
+                   string timeslotRepeat, string timeslotRepeatDelay, string timeslotRepeatAttempts)
         {
 
             this._pcServerAndPort = pcServerAndPort;
-            this._pcServerName = pcServerName;
-            this._userName = userName;
+            this._pcServerName = pcServerName.Replace(" ", "");
+            this._userName = userName.Replace(" ", "");
             //this._password = setPassword(almPassword);
             this._password = password;
-            this._domain = domain;
-            this._project = project;
-            this._testId = testId;
+            this._domain = domain.Replace(" ", "");
+            this._project = project.Replace(" ", "");
+            this._testId = testId.Replace(" ", "");
             this._autoTestInstance = autoTestInstanceID;
             this._testInstanceId = testInstanceId;
             this._pcTimeslotDuration = new PCTimeslotDuration(timeslotDurationHours, timeslotDurationMinutes);
@@ -70,6 +65,9 @@ namespace PC.Plugins.Automation
             this._proxyOutUser = proxyOutUser;
             this._proxyOutPassword = proxyOutPassword;
             this._buildParameters = "";
+            this._timeslotRepeat = "RepeatWithParameters".Equals(timeslotRepeat) ? timeslotRepeat : "DoNotRepeat";
+            this._timeslotRepeatDelay = verifyIntegerAndlimits(timeslotRepeatDelay, 1, 10, 1);
+            this._timeslotRepeatAttempts = verifyIntegerAndlimits(timeslotRepeatAttempts, 2, 10, 2);
 
         }
 
@@ -135,8 +133,6 @@ namespace PC.Plugins.Automation
             set { _pcTimeslotDuration = value; }
         }
 
-
-
         public PCPostRunActionsRequest PCPostRunActionsRequest
         {
             get { return _pcPostRunActionsRequest; }
@@ -179,14 +175,11 @@ namespace PC.Plugins.Automation
             set { _proxyOutURL = value; }
         }
 
-
-
         public string ProxyOutUser
         {
             get { return _proxyOutUser; }
             set { _proxyOutUser = value; }
         }
-
 
         public string ProxyOutPassword
         {
@@ -194,11 +187,28 @@ namespace PC.Plugins.Automation
             set { _proxyOutPassword = value; }
         }
 
-
         public string BuildParameters
         {
             get { return _buildParameters; }
             set { _buildParameters = value; }
+        }
+
+        public string TimeslotRepeat
+        {
+            get { return _timeslotRepeat; }
+            set { _timeslotRepeat = value; }
+        }
+
+        public string TimeslotRepeatDelay
+        {
+            get { return _timeslotRepeatDelay; }
+            set { _timeslotRepeatDelay = value; }
+        }
+
+        public string TimeslotRepeatAttempts
+        {
+            get { return _timeslotRepeatAttempts; }
+            set { _timeslotRepeatAttempts = value; }
         }
 
         public string isHTTPSProtocol()
@@ -230,6 +240,25 @@ namespace PC.Plugins.Automation
                     vudsModeString, trendString, HTTPSProtocol);
         }
 
-
+        private string verifyIntegerAndlimits(string strValue, int min, int max, int defaultValue)
+        {
+            try
+            {
+                int intValue;
+                string newValue = defaultValue.ToString();
+                int.TryParse(strValue.Replace(" ", ""), out intValue);
+                if (intValue < min)
+                    newValue = min.ToString();
+                else if (intValue > max)
+                    newValue = max.ToString();
+                else
+                    newValue = intValue.ToString();
+                return newValue;
+            }
+            catch
+            {
+                return defaultValue.ToString();
+            }
+        }
     }
 }

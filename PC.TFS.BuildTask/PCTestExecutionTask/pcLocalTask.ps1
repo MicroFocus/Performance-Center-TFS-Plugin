@@ -1,8 +1,7 @@
 #
 # pcLocalTask.ps1
 #
-param(
-	[string][Parameter(Mandatory=$true)] $varPCServer, 
+param([string][Parameter(Mandatory=$true)] $varPCServer, 
 	[string][Parameter(Mandatory=$true)] $varUserName,
 	[string][Parameter(Mandatory=$false)]$varPassword,
 	[string][Parameter(Mandatory=$true)] $varDomain,
@@ -19,8 +18,10 @@ param(
 	[string] $varTimeslotDuration="30",
 	[string] $varUseVUDs="false",
 	[string] $varUseSLAInStatus="false",
-	[string] $varArtifactsDir=""
-)
+	[string] $varArtifactsDir="",
+	[string] $varTimeslotRepeat="DoNotRepeat",
+	[string] $varTimeslotRepeatDelay="1",
+	[string] $varTimeslotRepeatAttempts="3")
 
 #Write-Host "+++++++++Verifying required environment variable++++++++++"
 $pcworkdir = $PSScriptRoot
@@ -53,7 +54,7 @@ if ((Test-Path -Path ("{0}\{1}" -f $pcworkdir, $varAutomationDll)) -and (Test-Pa
 		$varTestID, $varAutoTestInstance, $varTestInstID, $varPostRunAction,
 		$varProxyUrl, $varProxyUser, $varProxyPassword, 
 		$varTrending, $varTrendReportID, "", $varTimeslotDuration,
-		$varUseSLAInStatus, $varUseVUDs, $varArtifactsDir, "", "")
+		$varUseSLAInStatus, $varUseVUDs, $varArtifactsDir, "", "", $varTimeslotRepeat, $varTimeslotRepeatDelay, $varTimeslotRepeatAttempts )
 
 	#Write-Host "+++++++++++++++++Log Content+++++++++++++++++++++"
 	

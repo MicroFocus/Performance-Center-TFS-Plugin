@@ -37,6 +37,9 @@ namespace PC.Plugins.ConfiguratorUI
         private string _useVUDs;
         private string _workDirectory = @"C:\Temp\PC.Plugins.Automation.Logs\{0}";
         private string _logFileName = "PC.Plugins.Automation.Logs.log";
+        private string _timeslotRepeat;
+        private string _timeslotRepeatDelay;
+        private string _timeslotRepeatAttempts;
         //private string _description;
 
 
@@ -167,6 +170,25 @@ namespace PC.Plugins.ConfiguratorUI
             set { _workDirectory = value; }
         }
 
+        public string TimeslotRepeat
+        {
+            get { return _timeslotRepeat; }
+            set { _timeslotRepeat = value; }
+        }
+
+
+        public string TimeslotRepeatDelay
+        {
+            get { return _timeslotRepeatDelay; }
+            set { _timeslotRepeatDelay = value; }
+        }
+
+        public string TimeslotRepeatAttempts
+        {
+            get { return _timeslotRepeatAttempts; }
+            set { _timeslotRepeatAttempts = value; }
+        }
+
 
 
 
@@ -174,7 +196,8 @@ namespace PC.Plugins.ConfiguratorUI
             string testID, string autoTestInstance, string testInstanceID, string pcPostRunAction,
             string proxyURL, string proxyUserName, string proxyPassword,
             string trending, string trendReportID, string timeslotDurationHours, string timeslotDurationMinutes,
-            string useSLAStatus, string useVUDs, string workDirectory = "", string logFileName = "", string description = "")
+            string useSLAStatus, string useVUDs, string workDirectory = "", string logFileName = "", string description = "", 
+            string timeslotRepeat = "DoNotRepeat", string timeslotRepeatDelay = "5", string timeslotRepeatAttempts = "3")
         {
             _pcServerAndPort = pcServerURL.Trim().Replace("https://", "").Replace("http://", "");
             _pcServername = (_pcServerAndPort.LastIndexOf(':') == -1) ? _pcServerAndPort : _pcServerAndPort.Substring(0, (_pcServerAndPort.LastIndexOf(':')));
@@ -207,13 +230,20 @@ namespace PC.Plugins.ConfiguratorUI
                 _logFileName = logFileName;
             var _description = description;
 
+            int intTimeslotRepeatDelay;
+            int intTimeslotRepeatAttempts;
+            _timeslotRepeat = "RepeatWithParameters".Equals(timeslotRepeat)? timeslotRepeat: "DoNotRepeat";
+            _timeslotRepeatDelay = int.TryParse(timeslotRepeatDelay, out intTimeslotRepeatDelay) && intTimeslotRepeatDelay > 1 ? timeslotRepeatDelay : "1";
+            _timeslotRepeatAttempts = int.TryParse(timeslotRepeatAttempts, out intTimeslotRepeatAttempts) && intTimeslotRepeatAttempts > 2 ? timeslotRepeatAttempts : "2";
+
             _pcBuilder = new PCBuilder(_pcServerAndPort, _pcServername, _pcUserName, _pcPassword, _domain,
                 _project, _testID, _autoTestInstance.ToLower() == "true", _testInstanceID, _timeslotDurationHours, _timeslotDurationMinutes,
                 _pcPostRunAction, _useVUDs.ToLower() == "true", _useSLAStatus.ToLower() == "true", _description,
                 _trending, _trendReportID, _webProtocol == "https",
-                _proxyURL, _proxyUserName, _proxyPassword, _workDirectory, _logFileName);
+                _proxyURL, _proxyUserName, _proxyPassword, _workDirectory, _logFileName, _timeslotRepeat, _timeslotRepeatDelay, _timeslotRepeatAttempts);
 
             _pcRestProxy = new PCRestProxy(_webProtocol, _pcServerAndPort, domain, project, proxyURL, proxyUserName, proxyPassword);
+
         }
 
         public void Perform()
