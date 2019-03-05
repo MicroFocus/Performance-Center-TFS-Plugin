@@ -8,7 +8,7 @@ This extension supports Performance Center 12.56 and later.
 
 # What's New in this Release (version 1.0.1)
 
-> **January 2019**
+> **Mars 2019**
 > - Ability to make multiple attempts to run the test on timeslot creation failure.
 > - Fixed defects.
 
