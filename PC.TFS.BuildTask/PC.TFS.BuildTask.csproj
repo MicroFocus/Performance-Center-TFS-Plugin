@@ -58,6 +58,9 @@
     <Content Include="PCTestExecutionTask\task.json" />
     <None Include="vss-extension.json" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+	<Compile Include="..\include\version_info.cs">
+      <Link>Properties\version_info.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup />
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

@@ -22,7 +22,6 @@ namespace PC.Plugins.Automation
         private IPCModel _pcModel = new PCModel();
         private IPCRestProxy _pcRestProxy;
         private bool _loggedIn;
-        //private PrintStream logger;
         private FileLog _fileLog;
         private string _workDirectory = @"C:\Temp\PC.Plugins.Automation.Logs\{0}";
         private string _logFileName = @"PC.Plugins.Automation.Logs.log";
@@ -104,10 +103,11 @@ namespace PC.Plugins.Automation
                 if (testInstance == 0)
                     return 0;
                 SetCorrectTrendReportID();
-
+                //if(_pcModel)
                 string msg = string.Format("Executing Load Test:\n====================\nTest ID: {0} \nTest Instance ID: {1} \nTimeslot Duration: {2} \nPost Run Action: {3} \nUse VUDS: {4}\n====================\n", 
                     int.Parse(_pcModel.TestId), testInstance, _pcModel.PCTimeslotDuration, _pcModel.PCPostRunActionsRequest.PostRunAction, _pcModel.isVudsMode());
                 _fileLog.Write(LogMessageType.Info, msg);
+
 
                 PCRunResponse response = _pcRestProxy.StartRun(testID,
                         testInstance,
@@ -117,8 +117,32 @@ namespace PC.Plugins.Automation
                         _pcModel.isVudsMode());
                 if (response == null && pcErrorResponse != null)
                 {
-                    _fileLog.Write(LogMessageType.Info, string.Format("{0}, Error Code: {1}",
-                        pcErrorResponse.ExceptionMessage, pcErrorResponse.ErrorCode));
+                    _fileLog.Write(LogMessageType.Info, string.Format("{0}. {1}Code: {2}",
+                     pcErrorResponse.ExceptionMessage, !"RepeatWithParameters".Equals(_pcModel.TimeslotRepeat) ? "Error " : "", pcErrorResponse.ErrorCode));
+                    if ("RepeatWithParameters".Equals(_pcModel.TimeslotRepeat))
+                    {
+                        int count = 1;
+                        while (count < Int32.Parse(_pcModel.TimeslotRepeatAttempts) && response == null)
+                        {
+                            count++;
+                            _fileLog.Write(LogMessageType.Info, string.Format("Repeating timeslot - Attempt # {0}. Waiting {1} minute(s) before trying once again to execute the test.", count, _pcModel.TimeslotRepeatDelay));                            
+                            System.Threading.Thread.Sleep(Int32.Parse(_pcModel.TimeslotRepeatDelay) * 1000 * 60);
+                            _fileLog.Write(LogMessageType.Info, string.Format("Repeating timeslot - Attempt # {0}. Executing the test:", count));
+                            response = _pcRestProxy.StartRun(testID,
+                                testInstance,
+                                _pcModel.PCTimeslotDuration,
+                                ref pcErrorResponse,
+                                _pcModel.PCPostRunActionsRequest.PostRunAction,
+                                _pcModel.isVudsMode());
+                            if (response == null && pcErrorResponse != null)
+                            {
+                                _fileLog.Write(LogMessageType.Info, string.Format("Repeating timeslot - Attempt # {0}. Exception - {1}, Code: {2}.", count, pcErrorResponse.ExceptionMessage, pcErrorResponse.ErrorCode));
+                                _fileLog.Write(LogMessageType.Info, string.Format("Repeating timeslot - Attempt # {0}. {1} remaining attempt(s).", count, Int32.Parse(_pcModel.TimeslotRepeatAttempts) - count));
+                            }
+                            if(count == Int32.Parse(_pcModel.TimeslotRepeatAttempts) && response == null)
+                                _fileLog.Write(LogMessageType.Info, string.Format("All attempts to create a timeslot failed. Exception - {0}, Error Code: {1}.", pcErrorResponse.ExceptionMessage, pcErrorResponse.ErrorCode));
+                        }
+                    }
                     return 0;
                 }
                 _fileLog.Write(LogMessageType.Info, string.Format("Run started (TestID: {0}, RunID: {1}, TimeslotID: {2})\n",

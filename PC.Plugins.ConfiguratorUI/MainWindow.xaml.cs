@@ -139,6 +139,9 @@ namespace PC.Plugins.ConfiguratorUI
             bool useSLAStatus = UseSLAStatus.IsChecked == true;
             bool useVUDs = UseVUDs.IsChecked == true;
             string description = "";
+            string timeslotRepeat = (DoNotRepeat.IsChecked ?? true) ? "DoNotRepeat" : "RepeatWithParameters";
+            string timeslotRepeatDelay = TimeslotRepeatDelay.Text;
+            string timeslotRepeatAttempts = TimeslotRepeatAttempts.Text;
 
             //_instanceId = string.IsNullOrEmpty(_instanceId) ? Guid.NewGuid().ToString() : _instanceId;
 
@@ -159,7 +162,8 @@ namespace PC.Plugins.ConfiguratorUI
                 autoTestInstance.ToString(), testInstanceID, pcPostRunAction, 
                 proxyURL, proxyUserName, proxyPassword,
                 trending, trendReportID, timeslotDurationHours, timeslotDurationMinutes,
-                useSLAStatus.ToString(), useVUDs.ToString(), _workDirectory, _logFileName, description);
+                useSLAStatus.ToString(), useVUDs.ToString(), _workDirectory, _logFileName, description,
+                timeslotRepeat, timeslotRepeatDelay, timeslotRepeatAttempts);
         }
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
@@ -213,6 +217,28 @@ namespace PC.Plugins.ConfiguratorUI
                     TrendReportID.IsEnabled = (rb.Name == "UseTrendReportID");
                     TrendReportID.Text = (rb.Name == "UseTrendReportID") ? "Enter Trend Report ID" : "";
                     TrendReportID.SelectAll();
+                    MoveToNextUIElement(e);
+                }
+            }
+            catch
+            { }
+        }
+
+        private void HandleTimeslotRepeat(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (TimeslotRepeatDelay != null && TimeslotRepeatAttempts != null)
+                {
+                    RadioButton rb = sender as RadioButton;
+                    TimeslotRepeatDelay.IsEnabled = (rb.Name == "RepeatWithParameters");
+                    TimeslotRepeatAttempts.IsEnabled = (rb.Name == "RepeatWithParameters");
+                    //TrendReportID.IsEnabled = (rb.Name == "UseTrendReportID");
+                    TimeslotRepeatDelay.Text = (rb.Name == "RepeatWithParameters") ? "Enter the delay between attempts" : "";
+                    TimeslotRepeatAttempts.Text = (rb.Name == "RepeatWithParameters") ? "Enter the number of attempts" : "";
+                    //TrendReportID.Text = (rb.Name == "UseTrendReportID") ? "Enter Trend Report ID" : "";
+                    TimeslotRepeatDelay.SelectAll();
+                    TimeslotRepeatAttempts.SelectAll();
                     MoveToNextUIElement(e);
                 }
             }

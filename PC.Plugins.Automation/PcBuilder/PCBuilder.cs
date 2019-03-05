@@ -36,22 +36,14 @@ namespace PC.Plugins.Automation
         public const string ERROR = "Error";
         private string _workDirectory = @"C:\Temp\PC.Plugins.Automation.Logs\{0}";
         private string _logFileName = @"PC.Plugins.Automation.Logs.log";
-
         private string _userName;
         private string _password;
         private string _timeslotDurationHours;
         private string _timeslotDurationMinutes;
         private bool _statusBySLA;
-        //private int _runId;
-        //private string _testName;
-        //private string _pcReportFile;
-        //private string _junitResultsFileName;
         private FileLog _fileLog;
-        //private string _workspacePath;
         private IPCModel _pcModel;
         private string _logFullFileName;
-        //private bool _trendReportReady = false;
-
 
         public string LogFullFileName => _logFullFileName;
 
@@ -78,7 +70,10 @@ namespace PC.Plugins.Automation
             string proxyOutUser,
             string proxyOutPassword,
             string workDirectory = "",
-            string logFileName = "")
+            string logFileName = "",
+            string timeslotRepeat = "DoNotRepeat",
+            string timeslotRepeatDelay = "5",
+            string timeslotRepeatAttempts = "3")
         {
 
             Int32 unixTimestamp = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
@@ -86,7 +81,6 @@ namespace PC.Plugins.Automation
             _logFileName = !String.IsNullOrWhiteSpace(logFileName) ? logFileName : _logFileName; ;
             _logFullFileName = Path.Combine(_workDirectory, _logFileName);
             _fileLog = new FileLog(_logFullFileName);
-
             _userName = userName;
             _password = password; 
             _timeslotDurationHours = timeslotDurationHours;
@@ -114,7 +108,10 @@ namespace PC.Plugins.Automation
                             HTTPSProtocol,
                             proxyOutURL,
                             proxyOutUser,
-                            proxyOutPassword);
+                            proxyOutPassword,
+                            timeslotRepeat,
+                            timeslotRepeatDelay,
+                            timeslotRepeatAttempts);
         }
 
 
@@ -165,7 +162,9 @@ namespace PC.Plugins.Automation
                         bool addRunToTrendReportSuccess = pcClient.AddRunToTrendReport(runID, _pcModel.TrendReportId);
                         if (addRunToTrendReportSuccess)
                         {
+                            System.Threading.Thread.Sleep(5000);
                             pcClient.WaitForRunToPublishOnTrendReport(runID, _pcModel.TrendReportId);
+                            System.Threading.Thread.Sleep(5000);
                             pcClient.DownloadTrendReportAsPdf(_pcModel.TrendReportId, _workDirectory);
                         }
                     }
@@ -176,7 +175,9 @@ namespace PC.Plugins.Automation
                         bool addRunToTrendReportSuccess = pcClient.AddRunToTrendReport(runID, _pcModel.TrendReportId);
                         if (addRunToTrendReportSuccess)
                         {
+                            System.Threading.Thread.Sleep(5000);
                             pcClient.WaitForRunToPublishOnTrendReport(runID, _pcModel.TrendReportId);
+                            System.Threading.Thread.Sleep(5000);
                             pcClient.DownloadTrendReportAsPdf(_pcModel.TrendReportId, _workDirectory);
                         }
                     }

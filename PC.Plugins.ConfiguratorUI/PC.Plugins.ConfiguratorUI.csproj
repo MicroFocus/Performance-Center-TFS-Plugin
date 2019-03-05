@@ -80,6 +80,9 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+	<Compile Include="..\include\version_info.cs">
+      <Link>Properties\version_info.cs</Link>
+    </Compile>	
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

@@ -25,9 +25,9 @@ using System.Windows;
 [assembly: AssemblyTitle("PC.Plugins.ConfiguratorUI")]
 [assembly: AssemblyDescription("Configuration UI for PC.Plugins")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Micro Focus")]
-[assembly: AssemblyProduct("PC.Plugins.ConfiguratorUI")]
-[assembly: AssemblyCopyright("Copyright © Micro Focus 2018")]
+//[assembly: AssemblyCompany("Micro Focus")]
+//[assembly: AssemblyProduct("PC.Plugins.ConfiguratorUI")]
+//[assembly: AssemblyCopyright("Copyright © Micro Focus 2018")]
 [assembly: AssemblyTrademark("Micro Focus")]
 [assembly: AssemblyCulture("")]
 
@@ -66,5 +66,5 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+//[assembly: AssemblyVersion("1.0.1.0")]
+//[assembly: AssemblyFileVersion("1.0.1.0")]

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PC.Plugins.ConfiguratorUI"
         mc:Ignorable="d"
-        Title="TFS Plugin for PC - Configuration" Height="925" Width="894.962"
+        Title="TFS Plugin for PC - Configuration" Height="1125" Width="894.962"
         ResizeMode="NoResize" 
         WindowStartupLocation="CenterScreen"
         Closing="MainWindow_OnClosing" Icon="MicroFocusIcon.ico" FontSize="14px"
@@ -64,7 +64,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="73"/>
-                <RowDefinition Height="770"/>
+                <RowDefinition Height="970"/>
                 <RowDefinition Height="20"/>
                 <RowDefinition Height="70"/>
             </Grid.RowDefinitions>
@@ -137,6 +137,9 @@
                         <Image Source="qicon.png" Height="20" Width="20" Margin="0 5 20 0"></Image>
                     </Button>
                 </DockPanel>
+                <Label Height="60" Margin="10,10,0,2" >
+                    <TextBlock Text="On Timeslot &#x0a;creation failure:" />
+                </Label>
                 <!--<Label >Use SLA Status:</Label>-->
                 <!--<DockPanel>
                     <Label >TFS PAT:</Label>
@@ -149,9 +152,9 @@
                 <TextBox x:Name="PCServerURL" Margin="32,12,147,2" Width="Auto" Height="40">http://myPCserver</TextBox>
                 <TextBox x:Name="PCUserName" Margin="32,2,147,2" Width="Auto" Height="40">sa</TextBox>
                 <PasswordBox x:Name="PCPassword" Margin="32,2,147,2" Width="Auto" Height="40" />
-                <TextBox x:Name="Domain" Margin="32,2,147,2" Width="Auto" Height="40">DEFAULT</TextBox>
-                <TextBox x:Name="Project" Margin="32,2,147,2" Width="Auto" Height="40">PC</TextBox>
-                <TextBox x:Name="TestID" Margin="32,2,147,2" Width="Auto" Height="40">36</TextBox>
+                <TextBox x:Name="Domain" Margin="32,2,147,2" Width="Auto" Height="40" Text="DANIEL"/>
+                <TextBox x:Name="Project" Margin="32,2,147,2" Width="Auto" Height="40" Text="git_sync"/>
+                <TextBox x:Name="TestID" Margin="32,2,147,2" Width="Auto" Height="40" Text="525 "/>
 
                 <StackPanel Grid.Row="4" Grid.Column="1" Margin="32,10,0,0">
                     <RadioButton x:Name = "AutoTestInstance" IsChecked="True" Checked = "HandleTestInstanceCheck" GroupName="TestInstance" Content = "Automatically select existing or create new if none exists" Margin="32,5,0,0" />
@@ -187,6 +190,24 @@
                 <CheckBox x:Name="UseVUDs" Margin="32,1,147,1" />
                 <Line Stroke="red" X1="0" Y1="25" X2="{Binding Width, ElementName=root}" Y2="25" />
                 <CheckBox x:Name="UseSLAStatus" Margin="32,1,147,1"/>
+                <StackPanel x:Name="TimeslotCreationFailure" Grid.Row="4" Grid.Column="1" Margin="32,10,0,0">
+                    <RadioButton x:Name = "DoNotRepeat" IsChecked="True" Checked = "HandleTimeslotRepeat" GroupName="TimeslotRepeat" Content = "Do Not Repeat" Margin="32,5,0,0" />
+                    <RadioButton x:Name = "RepeatWithParameters" Checked = "HandleTimeslotRepeat" GroupName = "TimeslotRepeat"  HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="32,5,0,0" >
+                        <DockPanel  LastChildFill="True">
+                            <TextBlock Margin="0" ><Run Text="Repeat:"/></TextBlock>
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Height="52" Margin="0,10,0,0" MinWidth="160">Delay between attempts:</Label>
+                                    <TextBox x:Name="TimeslotRepeatDelay" IsEnabled="False"  Margin="9,0,0,0" Width="230" Height="42" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Height="52" Margin="0,10,0,0" MinWidth="160" >Number of attempts:</Label>
+                                    <TextBox x:Name="TimeslotRepeatAttempts" IsEnabled="False" Grid.Column="1"  Margin="9,0,0,0" Width="230" Height="42" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DockPanel>
+                    </RadioButton>
+                </StackPanel>
             </StackPanel>
 
             <Line Grid.Row="2" Stroke="#EEEEEE" StrokeThickness="2" X1="0" Y1="15" X2="620" Y2="15" Grid.ColumnSpan="2"/>

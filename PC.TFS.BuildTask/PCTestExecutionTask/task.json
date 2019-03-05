@@ -12,7 +12,7 @@
   "version": {
     "Major": 1,
     "Minor": 0,
-    "Patch": 0
+    "Patch": 1
   },
   "inputs": [
     {
@@ -167,6 +167,36 @@
       "defaultValue": "false",
       "required": false,
       "helpMarkDown": "<p>Select this option to set the build-step status according to a predefined SLA (Service Level Agreement) configured within your performance test.</p><p>If you do not select this option, the build-step will be labeled as \"Passed\" as long as no failures occurred.</p>"
+    },
+    {
+      "name": "vartimeslotRepeat",
+      "type": "radio",
+      "label": "On Timeslot creation failure",
+      "defaultValue": "DoNotRepeat",
+      "required": false,
+      "helpMarkDown": "<p>If the timeslot cannot be created:</p><p><ul><li><b>Do not repeat</b>: the task ends.</li><li><b>Repeat with the following parameters</b>: the task will try several times (according to the value set in the 'Number of attempts'parameter below) to recreate the timeslot in order to run the test once again. The task will wait a fixed delay (according to the value set to the 'Delay between attempts' parameter below) between each failing attempt and the next attempt.</li></p>",
+      "options": {
+        "DoNotRepeat": "Do not repeat",
+        "RepeatWithParameters": "Repeat with the following parameters"
+      }
+    },
+    {
+      "name": "varTimeslotRepeatDelay",
+      "type": "string",
+      "label": "Delay between attempts",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "Time (in minutes) to wait between a failed attempt and the next attempt (the minimum is 1 and the maximum is 10).",
+      "visibleRule": "vartimeslotRepeat = RepeatWithParameters"
+    },
+    {
+      "name": "varTimeslotRepeatAttempts",
+      "type": "string",
+      "label": "Number of attempts",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "How many attempts to run the test (the minimum is 2 and the maximum is 10).",
+      "visibleRule": "vartimeslotRepeat = RepeatWithParameters"
     },
     {
       "name": "varArtifactsDir",
