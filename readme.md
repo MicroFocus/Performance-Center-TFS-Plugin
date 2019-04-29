@@ -1,4 +1,4 @@
-# Performance Center CI extension for Azure DevOps / Microsoft Team Foundation Server
+# Performance Center CI plugin for Azure DevOps / Microsoft Team Foundation Server
 
 The "<b>Performance Center CI</b>" extension integrates Performance Center with Azure DevOps / Microsoft Team Foundation Server (TFS), enabling the Azure DevOps / TFS CI build process to trigger the execution of load tests designed on a Performance Center server.
 
