@@ -2,7 +2,7 @@
   "id": "91008DAF-AFE5-3E2A-A6FF-8ACF9D229E3A",
   "name": "PerformanceCenterTesting",
   "friendlyName": "Performance Center Test",
-  "description": "Run a Performance Center test from a task in a Microsoft Team Foundation Server CI build process.",
+  "description": "Run a Performance Center test from a task in a Azure DevOps / Microsoft Team Foundation Server CI build process.",
   "category": "Test",
   "visibility": [
     "Build",
@@ -12,7 +12,7 @@
   "version": {
     "Major": 1,
     "Minor": 0,
-    "Patch": 1
+    "Patch": 2
   },
   "inputs": [
     {
@@ -37,7 +37,7 @@
       "label": "Password",
       "defaultValue": "$(PCPassword)",
       "required": false,
-      "helpMarkDown": "<p>Enter the password required to connect to the Performance Center server.</p> <p><b><u>Note:</u></b> You can create a variable of type secret in the TFS build to store the password, and specify the variable to avoid exposing a password in the build configuration. For example, '$(PCPassword)').</p>"
+      "helpMarkDown": "<p>Enter the password required to connect to the Performance Center server.</p> <p><b><u>Note:</u></b> You can create a variable of type secret in the CI build to store the password, and specify the variable to avoid exposing a password in the build configuration. For example, '$(PCPassword)').</p>"
     },
     {
       "name": "varDomain",
@@ -106,7 +106,7 @@
       "label": "Proxy password",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "<p>If you use a proxy requiring credentials, enter the password.</p><p><b><u>Note:</u></b> You can create a variable of type secret in the TFS build to store the password, and specify the variable to avoid exposing a password in the build configuration. For example, '$(ProxyPassword)').</p>"
+      "helpMarkDown": "<p>If you use a proxy requiring credentials, enter the password.</p><p><b><u>Note:</u></b> You can create a variable of type secret in the CI build to store the password, and specify the variable to avoid exposing a password in the build configuration. For example, '$(ProxyPassword)').</p>"
     },
     {
       "name": "varPostRunAction",

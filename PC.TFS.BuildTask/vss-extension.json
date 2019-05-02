@@ -2,14 +2,14 @@
   "manifestVersion": 1,
   "id": "PCIntegration",
   "name": "Performance Center CI",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "Micro-Focus",
   "targets": [
     {
       "id": "Microsoft.VisualStudio.Services"
     }
   ],
-  "description": "Run a Performance Center test from a task in a Microsoft Team Foundation Server CI build process.",
+  "description": "Run a Performance Center test from a task in a Azure DevOps / Microsoft Team Foundation Server CI build process.",
   "categories": [
     "Test"
   ],
@@ -17,8 +17,10 @@
     ""
   ],
   "tags": [
-    "PC",
-    "ALM"
+    "Performance Center",
+    "Performance Testing",
+    "LoadRunner",
+    "Continuous Integration"
   ],
   "icons": {
     "default": "resources/img/tfs.png"
