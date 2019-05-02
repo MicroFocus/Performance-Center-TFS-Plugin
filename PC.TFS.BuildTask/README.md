@@ -19,4 +19,4 @@ For full installation instructions, see the installation section in the [Perform
 
 # Documentation
 
-Please check the [Performance Center CI Plugin for Azure DevOps / Microsoft Team Foundation Server Wiki](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/wiki) and search for the extension documentation in [Performance Center Help](https://admhelp.microfocus.com/pc).
+Please check the [Performance Center CI Plugin for Azure DevOps / Microsoft Team Foundation Server Wiki](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/wiki) and search for the extension documentation in [Performance Center Help](https://admhelp.microfocus.com/pc/en/latest/online_help/Content/PC/Microsoft-Team-Foundation-Plugin.htm).
