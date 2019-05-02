@@ -21,12 +21,15 @@ $varUseSLAStatus = "false"
 $varUseVUDs = "false"
 $varWorkDirectory = ""
 $varLogFileName = ""
+$varTimeslotRepeat = "DoNotRepeat"
+$varTimeslotRepeatDelay = "1"
+$varTimeslotRepeatAttempts = "3"
 
 $report = [PC.Plugins.Configurator.Configurator]::Perform($varPCServer, $varUserName, $varPassword, $varDomain, $varProject,
 	 $varTestID, 	$varAutoTestInstance, $varTestInstID, $varPostRunAction,
 	 $varProxyUrl, $varProxyUserName, $varProxyPassword,
 	 $varTrending,	 $varTrendReportID, "", $varTimeslotDurationMinutes,
-	 $varUseSLAStatus, $varUseVUDs, $varWorkDirectory, $varLogFileName, "")
+	 $varUseSLAStatus, $varUseVUDs, $varWorkDirectory, $varLogFileName, "", $varTimeslotRepeat, $varTimeslotRepeatDelay, $varTimeslotRepeatAttempts)
 
 Start-Sleep -s 2
 

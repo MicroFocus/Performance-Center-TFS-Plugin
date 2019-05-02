@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>1.0</ProductVersion>
+    <ProductVersion>1.0.1</ProductVersion>
     <ProjectGuid>519d331a-4699-4444-b888-45a36d5fc1a7</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
     <OutputName>PC.Plugins.Installer</OutputName>

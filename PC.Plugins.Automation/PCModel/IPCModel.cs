@@ -25,8 +25,12 @@ namespace PC.Plugins.Automation
         string UserName { get; set; }
         bool VUDsMode { get; set; }
         string GetAddRunToTrendReport { get; }
-
         string isHTTPSProtocol();
         bool isVudsMode();
+        string TimeslotRepeat { get; set; }
+        string TimeslotRepeatDelay { get; set; }
+        string TimeslotRepeatAttempts { get; set; }
+
+
     }
 }

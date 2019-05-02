@@ -42,6 +42,9 @@
   <ItemGroup>
     <Compile Include="PC.Plugins.Configurator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+	<Compile Include="..\include\version_info.cs">
+      <Link>Properties\version_info.cs</Link>
+    </Compile>	
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PC.Plugins.Common\PC.Plugins.Common.csproj">

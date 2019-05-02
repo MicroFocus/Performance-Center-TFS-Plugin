@@ -17,7 +17,7 @@ To use this plugin you must have:
 
 Before you can run Performance Center tests as part of your build on a TFS CI build process, you have to install the Performance Center CI extension on your TFS. 
 
-1. Download the "<b>Performance Center CI</b>" extension: you can either download the file "[Micro-Focus.PCIntegration-1.0.0.vsix](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/blob/master/Extension/Micro-Focus.PCIntegration-1.0.0.vsix) and upload it to your TFS Manage Extensions section (http://&lt;tfs_server_and_port&gt;/tfs/_gallery/manage)" or download it from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/).
+1. Download the "<b>Performance Center CI</b>" extension: you can either download the file "[Micro-Focus.PCIntegration-1.0.2.vsix](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/blob/master/Extension/Micro-Focus.PCIntegration-1.0.2.vsix) and upload it to your TFS Manage Extensions section (http://&lt;tfs_server_and_port&gt;/tfs/_gallery/manage)" or download it from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/).
 2. Install the "<b>Performance Center CI</b>" extension to your team project collection.
 
 ##### **Run a Performance Center test from TFS build process’s task**
