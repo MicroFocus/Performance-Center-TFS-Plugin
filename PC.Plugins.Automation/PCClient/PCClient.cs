@@ -196,7 +196,7 @@ namespace PC.Plugins.Automation
                         }
                         else
                         {
-                            string msg = "No TestSetID available in project, please create a testset from Performance Center UI";
+                            string msg = "No TestSetID available in project, please create a testset from LoadRunner Enterprise UI";
                             _fileLog.Write(LogMessageType.Info, msg);
 
                         }
@@ -232,7 +232,7 @@ namespace PC.Plugins.Automation
             {
                 // If the user selected "Use trend report associated with the test" we want the report ID to be the one from the test
                 string msg = "No trend report ID is associated with the test.\n" +
-                    "Please turn Automatic Trending on for the test through Performance Center UI.\n" +
+                    "Please turn Automatic Trending on for the test through LoadRunner Enterprise UI.\n" +
                     "Alternatively you can check 'Add run to trend report with ID' on Jenkins job configuration.";
                 if (_pcModel.AddRunToTrendReport.Equals("AssociatedTrend"))
                 {
@@ -332,7 +332,7 @@ namespace PC.Plugins.Automation
                         counter++;
                         System.Threading.Thread.Sleep(1000);
                         if (counter > 60) {
-                            _fileLog.Write(LogMessageType.Info, string.Format("RunID: {0}  - Stopped from Performance Center side with state = {1}", runId, currentState.Value));
+                            _fileLog.Write(LogMessageType.Info, string.Format("RunID: {0}  - Stopped from LoadRunner Enterprise side with state = {1}", runId, currentState.Value));
                             break;
                         }
                     }

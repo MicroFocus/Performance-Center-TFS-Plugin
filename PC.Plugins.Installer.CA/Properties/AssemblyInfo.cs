@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("PC.Plugins.Installer.CA")]
-[assembly: AssemblyDescription("Performance Center Plugin Installer")]
+[assembly: AssemblyDescription("LoadRunner Enterprise Plugin Installer")]
 //[assembly: AssemblyCompany("Micro Focus")]
 //[assembly: AssemblyProduct("PC.Plugins.Installer.CA")]
 //[assembly: AssemblyCopyright("Copyright ֲ© Micro Focus 2018")]

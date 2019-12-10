@@ -1,22 +1,22 @@
-# Integration with Performance Center
+# Integration with LoadRunner Enterprise
 
-This extension enables you to include a Performance Center test execution as a task in a Azure DevOps / Microsoft Team Foundation Server CI build process. 
+This extension enables you to include a LoadRunner Enterprise test execution as a task in a Azure DevOps / Microsoft Team Foundation Server CI build process. 
 
 # Supported Product Versions
 
 This extension supports Performance Center 12.56 and later.
 
-# What's New in this Release (version 1.0.2)
+# What's New in this Release (version 1.0.3)
 
-> **May 2019**
-> - Azure DevOps rebranding
+> **December 2019**
+> - Rebranding "Performance Center" product name to "LoadRunner Enterprise"
 
 # Installation Instructions
 
-For full installation instructions, see the installation section in the [Performance Center-TFS Plugin readme](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/blob/master/readme.md).
+For full installation instructions, see the installation section in the [LoadRunner Enterprise-TFS Plugin readme](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/blob/master/readme.md).
 
 <u>Note</u>: You must have Administrator privileges to install the Extension on your Azure DevOps / Team Foundation server.
 
 # Documentation
 
-Please check the [Performance Center CI Plugin for Azure DevOps / Microsoft Team Foundation Server Wiki](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/wiki) and search for the extension documentation in [Performance Center Help](https://admhelp.microfocus.com/pc/en/latest/online_help/Content/PC/Microsoft-Team-Foundation-Plugin.htm).
+Please check the [LoadRunner Enterprise CI Plugin for Azure DevOps / Microsoft Team Foundation Server Wiki](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/wiki) and search for the extension documentation in [LoadRunner Enterprise Help](https://admhelp.microfocus.com/pc/en/latest/online_help/Content/PC/Microsoft-Team-Foundation-Plugin.htm).

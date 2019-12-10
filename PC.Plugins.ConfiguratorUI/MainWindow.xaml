@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PC.Plugins.ConfiguratorUI"
         mc:Ignorable="d"
-        Title="TFS Plugin for PC - Configuration" Height="1125" Width="894.962"
+        Title="TFS Plugin for PC - Configuration" Height="1050" Width="894.962"
         ResizeMode="NoResize" 
         WindowStartupLocation="CenterScreen"
         Closing="MainWindow_OnClosing" Icon="MicroFocusIcon.ico" FontSize="14px"
@@ -63,9 +63,9 @@
     <Border BorderBrush="Gray" BorderThickness="2">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="73"/>
-                <RowDefinition Height="970"/>
-                <RowDefinition Height="20"/>
+                <RowDefinition Height="70"/>
+                <RowDefinition Height="900"/>
+                <RowDefinition Height="15"/>
                 <RowDefinition Height="70"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
@@ -74,7 +74,7 @@
             </Grid.ColumnDefinitions>
             <DockPanel Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="890">
                 <Image Source="pc-logo.png"  Width="48" Height="45" Margin="5 0 0 5"></Image>
-                <Label FontSize="18" FontWeight="Bold" Margin="10 0 2 15">Plugin For Performance Center</Label>
+                <Label FontSize="18" FontWeight="Bold" Margin="10 0 2 15">Plugin For LoadRunner Enterprise</Label>
                 <Button Style="{StaticResource CloseButtons}" FontSize="20" FontWeight="Bold"  Margin="470,12,0,12" Width="40" Height="50" Click="CancelButton_OnClick"
                         Content="X"/>
             </DockPanel>
@@ -117,7 +117,7 @@
                             <TextBlock>
                             A Virtual User Day (VUD) license provides you with a specified number of Vusers (VUDs) that you can run an unlimited number of times within a 24 hour period.
                             <LineBreak /> 
-                             Before using this option, make sure that VUDs licenses are applied in your HPE Performance Center environment.
+                             Before using this option, make sure that VUDs licenses are applied in your Micro Focus LoadRunner Enterprise environment.
                             </TextBlock>
                         </Button.ToolTip>
                         <Image Source="qicon.png" Height="20" Width="20" Margin="0 5 20 0"></Image>

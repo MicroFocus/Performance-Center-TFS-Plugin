@@ -1,6 +1,6 @@
 ﻿# Overview
 
-The <b>"Performance Center CI"</b> extension allows Team Foundation Server's CI build process to define and run a <b>"Performance Center Task"</b> to execute a Performance Center test.
+The <b>"LoadRunner Enterprise CI"</b> extension allows Azure Devops \ Team Foundation Server's CI build process to define and run a <b>"LoadRunner Enterprise Task"</b> to execute a LoadRunner Enterprise test.
 
 ## This extension currently supports:
 
@@ -8,6 +8,6 @@ The <b>"Performance Center CI"</b> extension allows Team Foundation Server's CI 
 
 ## System prerequisites
 
-* Performance Center server available from Team Foundation Server's agent pools.
+* LoadRunner Enterprise \ Performance Center server available from Team Foundation Server's agent pools.
 * Powershell version 4.0 or higher
 

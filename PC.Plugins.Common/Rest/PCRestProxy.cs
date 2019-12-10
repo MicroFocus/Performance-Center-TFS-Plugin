@@ -221,7 +221,7 @@ namespace PC.Plugins.Common.Rest
                             errorMessage +=         "\n" + clientResponse.Body;
                             errorMessage +=         "\n=================================";
                             errorMessage += !string.IsNullOrEmpty(_proxyOutURL) ? "\n**** Verify if the proxy URL: " + _proxyOutURL + " is available and the proxy credentials are correct." : "";
-                            errorMessage += string.Format("\n**** Verify that this Performance Center URL {0}://{1}/LoadTest/ is indeed available from the Operating System running the test.", _webProtocol, _pcServerAndPort);
+                            errorMessage += string.Format("\n**** Verify that this LoadRunner Enterprise URL {0}://{1}/LoadTest/ is indeed available from the Operating System running the test.", _webProtocol, _pcServerAndPort);
                             pcErrorResponse = new PCErrorResponse(errorMessage, 9999899); 
                         }
                     else
