@@ -24,11 +24,9 @@ namespace PC.Plugins.Common.Rest
     /// </summary>
     public class PCRestProxy : IPCRestProxy
     {
-
-        protected internal static readonly IList<int> _validStatusCodes = new List<int> { (int)HttpStatusCode.OK, (int)HttpStatusCode.Created, (int)HttpStatusCode.Accepted, (int)HttpStatusCode.NoContent };
-
         private string _webProtocol = "http";
         private string _pcServerAndPort;
+        private string _tenant;
         private string _domain;
         private string _project;
         private string _proxyOutURL = "";
@@ -38,70 +36,12 @@ namespace PC.Plugins.Common.Rest
         private string _proxyUser = "";
         private string _proxyPassword = "";
         private string _encodedCredentials;
-
         private HttpClient _httpClient;
-        //private HttpContext _context;
         private CookieContainer _cookieContainer = new CookieContainer();
         private WebProxy _proxy;
         private RestEntity _restEntity;
         private PCErrorResponse _pcErrorResponse = new PCErrorResponse("General error caused by the function \"{0}\" in PCRestProxy. Error: {1}", 99999);
-
-
-        public string WebProtocol
-        {
-            get { return _webProtocol; }
-            set { _webProtocol = value; }
-        }
-        public string PCServerAndPort
-        {
-            get { return _pcServerAndPort; }
-            set { _pcServerAndPort = value; }
-        }
-        public string Domain
-        {
-            get { return _domain; }
-            set { _domain = value; }
-        }
-        public string Project
-        {
-            get { return _project; }
-            set { _project = value; }
-        }
-        public string ProxyOutURL
-        {
-            get { return _proxyOutURL; }
-            set
-            {
-                _proxyOutURL = value;
-                if(string.IsNullOrWhiteSpace(_proxyOutURL))
-                    SetProxyDataFromURL(_proxyOutURL);
-            }
-        }
-        //public string ProxyScheme
-        //{
-        //    get { return _proxyScheme; }
-        //    set { _proxyScheme = value; }
-        //}
-        //public string ProxyHostName
-        //{
-        //    get { return _proxyHostName; }
-        //    set { _proxyHostName = value; }
-        //}
-        //public int ProxyPort
-        //{
-        //    get { return _proxyPort; }
-        //    set { _proxyPort = value; }
-        //}
-        public string ProxyUser
-        {
-            get { return _proxyUser; }
-            set { _proxyUser = value; }
-        }
-        public string ProxyPassword
-        {
-            get { return _proxyPassword; }
-            set { _proxyPassword = value; }
-        }
+        protected internal static readonly IList<int> _validStatusCodes = new List<int> { (int)HttpStatusCode.OK, (int)HttpStatusCode.Created, (int)HttpStatusCode.Accepted, (int)HttpStatusCode.NoContent };
 
         /// <summary>
         /// constructor defining the different parameters of a connection to PC
@@ -113,14 +53,18 @@ namespace PC.Plugins.Common.Rest
         /// <param name="proxyOutURL">Proxy URL. e.g: http://<<<proxyserver>>>:<<<port_number>>>. Optional</param>
         /// <param name="proxyUser">proxy user. Optional</param>
         /// <param name="proxyPassword">proxy password Password. Optional</param>
-        public PCRestProxy(string webProtocolName, string pcServerNameAndPort, string domain, string project, string proxyOutURL="", string proxyUser="", string proxyPassword="")
+        public PCRestProxy(string webProtocolName, string pcServerNameAndPort, string domain, string project, string proxyOutURL = "", string proxyUser = "", string proxyPassword = "")
         {
             //logger = mainLogger;
-            if(!string.IsNullOrWhiteSpace(webProtocolName))
+            if (!string.IsNullOrWhiteSpace(webProtocolName))
                 _webProtocol = webProtocolName;
 
             if (!string.IsNullOrWhiteSpace(pcServerNameAndPort))
-                _pcServerAndPort = pcServerNameAndPort;
+            {
+                string[] splittedServerAndTenant = SpitPCServerAndTenant(pcServerNameAndPort);
+                _pcServerAndPort = splittedServerAndTenant[0];
+                _tenant = splittedServerAndTenant[1];
+            }
 
             if (!string.IsNullOrWhiteSpace(domain))
                 _domain = domain;
@@ -170,6 +114,103 @@ namespace PC.Plugins.Common.Rest
             }
         }
 
+        private string[] SpitPCServerAndTenant(string pcServerNameAndPort)
+        {
+            char delimiterSlash = '/';
+            char delimiterQuestionMark = '?';
+            char useDelimiter = delimiterSlash;
+            String[] strServerAndTenant = { pcServerNameAndPort, "" };
+
+            String theLreServer = pcServerNameAndPort;
+            //replace for common mistakes
+            if (!string.IsNullOrEmpty(pcServerNameAndPort))
+            {
+                theLreServer = pcServerNameAndPort.ToLower().Replace("http://", "");
+                theLreServer = theLreServer.Replace("https://", "");
+                theLreServer = theLreServer.Replace("/lre", "");
+                theLreServer = theLreServer.Replace("/site", "");
+                theLreServer = theLreServer.Replace("/loadtest", "");
+                theLreServer = theLreServer.Replace("/pcx", "");
+                theLreServer = theLreServer.Replace("/adminx", "");
+                theLreServer = theLreServer.Replace("/admin", "");
+                theLreServer = theLreServer.Replace("/login", "");
+            }
+            if (!string.IsNullOrEmpty(theLreServer))
+            {
+                if (theLreServer.Contains(delimiterSlash.ToString()))
+                {
+                    useDelimiter = delimiterSlash;
+                }
+                else if (theLreServer.Contains(delimiterQuestionMark.ToString()))
+                {
+                    useDelimiter = delimiterQuestionMark;
+                }
+                String[] severTenantArray = theLreServer.Split(useDelimiter);
+                if (severTenantArray.Length > 0)
+                {
+                    strServerAndTenant[0] = severTenantArray[0];
+                    if (severTenantArray.Length > 1)
+                    {
+                        if (useDelimiter.Equals(delimiterQuestionMark))
+                        {
+                            strServerAndTenant[1] = delimiterQuestionMark + severTenantArray[1];
+                        }
+                        else
+                        {
+                            strServerAndTenant[1] = severTenantArray[1];
+                        }
+                    }
+                }
+            }
+            return strServerAndTenant;
+        }
+
+        public string WebProtocol
+        {
+            get { return _webProtocol; }
+            set { _webProtocol = value; }
+        }
+        public string PCServerAndPort
+        {
+            get { return _pcServerAndPort; }
+            set { _pcServerAndPort = value; }
+        }
+        public string Domain
+        {
+            get { return _domain; }
+            set { _domain = value; }
+        }
+        public string Project
+        {
+            get { return _project; }
+            set { _project = value; }
+        }
+        public string ProxyOutURL
+        {
+            get { return _proxyOutURL; }
+            set
+            {
+                _proxyOutURL = value;
+                if(string.IsNullOrWhiteSpace(_proxyOutURL))
+                    SetProxyDataFromURL(_proxyOutURL);
+            }
+        }
+        public string ProxyUser
+        {
+            get { return _proxyUser; }
+            set { _proxyUser = value; }
+        }
+        public string ProxyPassword
+        {
+            get { return _proxyPassword; }
+            set { _proxyPassword = value; }
+        }
+        public string Tenant
+        {
+            get { return _tenant; }
+            set { _tenant = value; }
+        }
+
         /// <summary>
         /// Authenticate to PC Server
         /// </summary>
@@ -179,7 +220,7 @@ namespace PC.Plugins.Common.Rest
         {
             _encodedCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(userName + ":" + password));
             _restEntity = new RestEntity();
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, true)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, _tenant, true)
                 .ContentType(RESTConstants.APPLICATION_XML)
                 .Header("Authorization", string.Format("Basic {0}", _encodedCredentials))
                 .Get();
@@ -200,7 +241,7 @@ namespace PC.Plugins.Common.Rest
             {
                 _encodedCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(userName + ":" + password));
                 _restEntity = new RestEntity();
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, true)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, _tenant, true)
                     .ContentType(RESTConstants.APPLICATION_XML)
                     .Header("Authorization", string.Format("Basic {0}", _encodedCredentials))
                     .Get();
@@ -571,7 +612,7 @@ namespace PC.Plugins.Common.Rest
         /// </summary>
         public virtual bool Logout()
         {
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGOUT_URL, true)
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGOUT_URL, "", true)
                 .Get();
             return Client.Utils.Validate(clientResponse, _validStatusCodes);
         }
@@ -586,7 +627,7 @@ namespace PC.Plugins.Common.Rest
             bool logout = false;
             try
             {
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGOUT_URL, true)
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGOUT_URL, "", true)
                     .Get();
                 logout = Client.Utils.Validate(clientResponse, _validStatusCodes);
                 if (logout == false)

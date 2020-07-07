@@ -20,7 +20,7 @@ To use this plugin you must have:
 
 Before you can run LoadRunner Enterprise tests as part of your build on a Azure DevOps / TFS CI build process, you have to install the LoadRunner Enterprise CI extension on your TFS. 
 
-1. Download the "<b>LoadRunner Enterprise CI</b>" extension: you can either download the file "[Micro-Focus.PCIntegration-1.0.3.vsix](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/blob/master/Extension/Micro-Focus.PCIntegration-1.0.3.vsix) and upload it to your TFS Manage Extensions section (http://&lt;tfs_server_and_port&gt;/tfs/_gallery/manage)" or download it from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/).
+1. Download the "<b>LoadRunner Enterprise CI</b>" extension: you can either download the file "[Micro-Focus.PCIntegration-1.0.4.vsix](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/blob/master/Extension/Micro-Focus.PCIntegration-1.0.4.vsix) and upload it to your TFS Manage Extensions section (http://&lt;tfs_server_and_port&gt;/tfs/_gallery/manage)" or download it from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/).
 2. Install the "<b>LoadRunner Enterprise CI</b>" extension to your team project collection.
 
 ##### **Run a LoadRunner Enterprise test from Azure DevOps / TFS build process’s task**

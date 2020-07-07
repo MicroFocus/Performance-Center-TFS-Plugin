@@ -6,10 +6,10 @@ This extension enables you to include a LoadRunner Enterprise test execution as 
 
 This extension supports Performance Center 12.56 and later.
 
-# What's New in this Release (version 1.0.3)
+# What's New in this Release (version 1.0.4)
 
-> **December 2019**
-> - Rebranding "Performance Center" product name to "LoadRunner Enterprise"
+> **July 2020**
+> - Tenant support for "LoadRunner Enterprise 2020 SP2"
 
 # Installation Instructions
 

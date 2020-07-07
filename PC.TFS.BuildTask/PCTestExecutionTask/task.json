@@ -12,7 +12,7 @@
   "version": {
     "Major": 1,
     "Minor": 0,
-    "Patch": 3
+    "Patch": 4
   },
   "inputs": [
     {
@@ -21,7 +21,7 @@
       "label": "LRE server and port",
       "defaultValue": "http://mylreserver:80",
       "required": true,
-      "helpMarkDown": "Enter the hostname or IP address and port of a LoadRunner Enterprise server in the format: http(s)://(LREServer):(port#)"
+      "helpMarkDown": "Enter the hostname or IP address and port of a LoadRunner Enterprise server in the format: http(s)://(LREServer):(port#). If you are required to use a tenant, use the following format: http(s)://(LREServer):(port#)/?tenant=(guid#). For example: https://MyLreServer.MyCompanyDomain.com:444/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3"
     },
     {
       "name": "varUserName",

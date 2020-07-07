@@ -14,13 +14,13 @@ namespace PC.Plugins.Common.Rest
 
         public Client.Client PCClient => pcClient;
 
-        public ClientRequest PCClientRequest(string webProtocol, string pcServer, string proxyURL, string proxyUser, string proxyPassword, string domain, string project, string url, bool isLoginOrLogout = false)
+        public ClientRequest PCClientRequest(string webProtocol, string pcServer, string proxyURL, string proxyUser, string proxyPassword, string domain, string project, string url, string tenant="", bool isLoginOrLogout = false)
         {
 
             string restUrl;
             if (isLoginOrLogout)
             {
-                restUrl = string.Format("{0}://{1}/{2}", webProtocol, pcServer, url);
+                restUrl = string.Format("{0}://{1}/{2}{3}", webProtocol, pcServer, url, !string.IsNullOrEmpty(tenant) ? "/"+tenant : "");
             }
             else
             {

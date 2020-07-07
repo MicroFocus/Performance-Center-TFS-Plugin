@@ -283,11 +283,8 @@ namespace PC.Plugins.ConfiguratorUI
 
         private void DoNotCollate_Not_Selected(object sender, RoutedEventArgs e)
         {
-            try
-            {
+            if(TrendPanel!= null)
                 TrendPanel.IsEnabled = true;
-            }
-            catch { }
         }
 
         private string ValidateTimeSlotDuration ()
