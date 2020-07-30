@@ -5,6 +5,9 @@
             <Component Id="cmp1C32202B72864C86E1FCB6C2E1BD5333" Guid="*">
                 <File Id="fil32C8232DC6440AD4DC763D386B49CC8F" KeyPath="yes" Source="!(wix.ProtocolBuildRoot)\PC.Plugins.Automation.dll" />
             </Component>
+            <Component Id="cmpDC234C074B1262E9090C7B32997ECF7A" Guid="*">
+                <File Id="fil7CDDE368C429F7C91DD0EB3B1FB74FFC" KeyPath="yes" Source="!(wix.ProtocolBuildRoot)\PC.Plugins.Common-7-22-2020-10-35-AM.zip" />
+            </Component>
             <Component Id="cmp379621BEAC30167CB275CD10445667B6" Guid="*">
                 <File Id="fil65B9D276EFA0302FC79476A19AFF1405" KeyPath="yes" Source="!(wix.ProtocolBuildRoot)\PC.Plugins.Common.dll" />
             </Component>
@@ -22,6 +25,7 @@
     <Fragment>
         <ComponentGroup Id="ProductComponents">
             <ComponentRef Id="cmp1C32202B72864C86E1FCB6C2E1BD5333" />
+            <ComponentRef Id="cmpDC234C074B1262E9090C7B32997ECF7A" />
             <ComponentRef Id="cmp379621BEAC30167CB275CD10445667B6" />
             <ComponentRef Id="cmp8AE2D0A5275EC9707AFB1DACFC9DCC7E" />
             <ComponentRef Id="cmp6C603C0D575D82DD2C13A8F7184BD149" />

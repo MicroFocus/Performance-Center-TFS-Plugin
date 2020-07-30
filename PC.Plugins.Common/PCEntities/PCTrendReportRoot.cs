@@ -630,9 +630,9 @@ namespace PC.Plugins.Common.PCEntities
 
         private string pCT_NAMEField;
 
-        private byte pCT_MINIMUMField;
+        private int pCT_MINIMUMField;
 
-        private byte pCT_MAXIMUMField;
+        private int pCT_MAXIMUMField;
 
         private decimal pCT_AVERAGEField;
 
@@ -671,7 +671,7 @@ namespace PC.Plugins.Common.PCEntities
         }
 
         /// <remarks/>
-        public byte PCT_MINIMUM
+        public int PCT_MINIMUM
         {
             get
             {
@@ -684,7 +684,7 @@ namespace PC.Plugins.Common.PCEntities
         }
 
         /// <remarks/>
-        public byte PCT_MAXIMUM
+        public int PCT_MAXIMUM
         {
             get
             {

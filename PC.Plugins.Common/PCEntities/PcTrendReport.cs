@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 using PC.Plugins.Common.Helper;
 using PC.Plugins.Common.Constants;
+using System;
 
 namespace PC.Plugins.Common.PCEntities
 {
@@ -15,11 +16,11 @@ namespace PC.Plugins.Common.PCEntities
 
         private string nameField;
 
-        private byte idField;
+        private int idField;
 
-        private byte baselineIDField;
+        private int baselineIDField;
 
-        private TrendReportTrendedRun[] trendedRunsField;
+        private List<TrendReportTrendedRun> trendedRunsField;
 
         /// <remarks/>
         public string Name
@@ -35,7 +36,7 @@ namespace PC.Plugins.Common.PCEntities
         }
 
         /// <remarks/>
-        public byte ID
+        public int ID
         {
             get
             {
@@ -48,7 +49,7 @@ namespace PC.Plugins.Common.PCEntities
         }
 
         /// <remarks/>
-        public byte BaselineID
+        public int BaselineID
         {
             get
             {
@@ -62,7 +63,7 @@ namespace PC.Plugins.Common.PCEntities
 
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute("TrendedRun", IsNullable = false)]
-        public TrendReportTrendedRun[] TrendedRuns
+        public List<TrendReportTrendedRun> TrendedRuns
         {
             get
             {
@@ -114,13 +115,13 @@ namespace PC.Plugins.Common.PCEntities
     public partial class TrendReportTrendedRun
     {
 
-        private byte runIDField;
+        private int runIDField;
 
-        private System.DateTime runDateField;
+        private DateTime runDateField;
 
         private string stateField;
 
-        private byte durationField;
+        private int durationField;
 
         private string fromTimeField;
 
@@ -129,7 +130,7 @@ namespace PC.Plugins.Common.PCEntities
         private string projectNameField;
 
         /// <remarks/>
-        public byte RunID
+        public int RunID
         {
             get
             {
@@ -142,10 +143,10 @@ namespace PC.Plugins.Common.PCEntities
         }
 
         /// <remarks/>
-        public System.DateTime RunDate
+        public DateTime RunDate
         {
             get
-            {
+            { 
                 return this.runDateField;
             }
             set
@@ -168,7 +169,7 @@ namespace PC.Plugins.Common.PCEntities
         }
 
         /// <remarks/>
-        public byte Duration
+        public int Duration
         {
             get
             {
@@ -219,6 +220,4 @@ namespace PC.Plugins.Common.PCEntities
             }
         }
     }
-
-
 }

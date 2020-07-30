@@ -163,9 +163,12 @@ namespace PC.Plugins.Automation
                         if (addRunToTrendReportSuccess)
                         {
                             System.Threading.Thread.Sleep(5000);
-                            pcClient.WaitForRunToPublishOnTrendReport(runID, _pcModel.TrendReportId);
-                            System.Threading.Thread.Sleep(5000);
-                            pcClient.DownloadTrendReportAsPdf(_pcModel.TrendReportId, _workDirectory);
+                            bool publishEnded = pcClient.WaitForRunToPublishOnTrendReport(runID, _pcModel.TrendReportId);
+                            if (publishEnded)
+                            {
+                                System.Threading.Thread.Sleep(5000);
+                                pcClient.DownloadTrendReportAsPdf(_pcModel.TrendReportId, _workDirectory);
+                            }
                         }
                     }
 
@@ -176,9 +179,12 @@ namespace PC.Plugins.Automation
                         if (addRunToTrendReportSuccess)
                         {
                             System.Threading.Thread.Sleep(5000);
-                            pcClient.WaitForRunToPublishOnTrendReport(runID, _pcModel.TrendReportId);
-                            System.Threading.Thread.Sleep(5000);
-                            pcClient.DownloadTrendReportAsPdf(_pcModel.TrendReportId, _workDirectory);
+                            bool publishEnded = pcClient.WaitForRunToPublishOnTrendReport(runID, _pcModel.TrendReportId);
+                            if (publishEnded)
+                            {
+                                System.Threading.Thread.Sleep(5000);
+                                pcClient.DownloadTrendReportAsPdf(_pcModel.TrendReportId, _workDirectory);
+                            }
                         }
                     }
                     if (_statusBySLA && pcRunResponse.RunState == EnumerationHelper.GetEnumDescription(PCConstants.RunStates.Finished))

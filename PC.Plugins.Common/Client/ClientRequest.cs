@@ -45,7 +45,8 @@ namespace PC.Plugins.Common.Client
 
         private ClientResponse SendRequest(Method method, string fullFileName = "")
         {
-            ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(AcceptAllCertifications);
+            //ServicePointManager.ServerCertificateValidationCallback = new System.Net.Security.RemoteCertificateValidationCallback(AcceptAllCertifications);
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(_uri);
             httpWebRequest.Timeout = 1000000;
             // log messages

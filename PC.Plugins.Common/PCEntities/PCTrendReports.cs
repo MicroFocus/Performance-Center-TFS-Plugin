@@ -66,9 +66,9 @@ namespace PC.Plugins.Common.PCEntities
 
         private string nameField;
 
-        private byte idField;
+        private int idField;
 
-        private byte baselineIDField;
+        private int baselineIDField;
 
         private TrendReportsTrendReportTrendedRun[] trendedRunsField;
 
@@ -86,7 +86,7 @@ namespace PC.Plugins.Common.PCEntities
         }
 
         /// <remarks/>
-        public byte ID
+        public int ID
         {
             get
             {
@@ -99,7 +99,7 @@ namespace PC.Plugins.Common.PCEntities
         }
 
         /// <remarks/>
-        public byte BaselineID
+        public int BaselineID
         {
             get
             {
@@ -131,13 +131,13 @@ namespace PC.Plugins.Common.PCEntities
     public partial class TrendReportsTrendReportTrendedRun
     {
 
-        private byte runIDField;
+        private int runIDField;
 
         private System.DateTime runDateField;
 
         private string stateField;
 
-        private byte durationField;
+        private int durationField;
 
         private string fromTimeField;
 
@@ -146,7 +146,7 @@ namespace PC.Plugins.Common.PCEntities
         private string projectNameField;
 
         /// <remarks/>
-        public byte RunID
+        public int RunID
         {
             get
             {
@@ -185,7 +185,7 @@ namespace PC.Plugins.Common.PCEntities
         }
 
         /// <remarks/>
-        public byte Duration
+        public int Duration
         {
             get
             {

@@ -17,7 +17,7 @@ namespace PC.Plugins.Automation
         bool StopRun(int runId);
         PCRunResponse WaitForRunCompletion(int runId);
         PCRunResponse WaitForRunCompletion(int runId, int interval);
-        void WaitForRunToPublishOnTrendReport(int runId, string trendReportId);
+        bool WaitForRunToPublishOnTrendReport(int runId, string trendReportId);
         void PCClientEnd();
         void verifySlaStatus(string runSlaStatus);
 

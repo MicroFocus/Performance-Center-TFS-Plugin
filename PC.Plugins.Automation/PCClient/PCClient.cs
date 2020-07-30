@@ -522,45 +522,50 @@ namespace PC.Plugins.Automation
             return pcErrorResponse.ErrorCode == 0;
         }
 
-
-
-
-        public void WaitForRunToPublishOnTrendReport(int runId, String trendReportId)
+        public bool WaitForRunToPublishOnTrendReport(int runId, String trendReportId)
         {
             PCErrorResponse pcErrorResponse = new PCErrorResponse("", 0);
             try
             {
                 PCTrendReport pcTrendReport;
                 bool publishEnded = false;
-                int counter = 0;
-
+                int counterPublishing = 60;
                 do
                 {
                     pcTrendReport = _pcRestProxy.GetTrendReportMetaData(trendReportId, ref pcErrorResponse);
+                    //try max of 5 itterations with 5 seconds delay between each request before concluding something went wrong with the trend report.
+                    if (pcTrendReport == null)
+                    {
+                        string msg = string.Format("GetTrendReportMetaData Request for Trend Report Id " + trendReportId + " is null. ExceptionMessage={0}", pcErrorResponse.ExceptionMessage);
+                        _fileLog.Write(LogMessageType.Info, msg);
+						return publishEnded;
+                    }
 
-                    if (pcTrendReport == null) break;
-
-                    foreach (TrendReportTrendedRun trendReportTrendedRun in pcTrendReport.TrendedRuns) {
-
-                        if (trendReportTrendedRun.RunID != runId) continue;
-
-                        if (trendReportTrendedRun.State.Equals(PCBuilder.TRENDED) || trendReportTrendedRun.State.Equals(PCBuilder.ERROR)) {
-                            publishEnded = true;
-                            _fileLog.Write(LogMessageType.Info, "Run: " + runId + " publishing status: " + trendReportTrendedRun.State);
-                            break;
+                    TrendReportTrendedRun trendReportTrendedRun = pcTrendReport.TrendedRuns.FirstOrDefault(p => p.RunID == runId);
+                    if (trendReportTrendedRun != null && trendReportTrendedRun.State.Equals(PCBuilder.TRENDED) || trendReportTrendedRun.State.Equals(PCBuilder.ERROR))
+                    {
+                        publishEnded = true;
+                        _fileLog.Write(LogMessageType.Info, "Run: " + runId + " publishing status: " + trendReportTrendedRun.State);
+                    }
+                    else
+                    {
+                        if (counterPublishing == 60)
+                        {
+                            string msg = "Waiting for publishing to end.";
+                            _fileLog.Write(LogMessageType.Info, msg);
+                        }
+                        counterPublishing--;
+                        if (counterPublishing <= 0)
+                        {
+                            string msg = "Publishing didn't end after 5 minutes. Not waiting anymore.";
+                            _fileLog.Write(LogMessageType.Error, msg);
                         }
                         else
-                        {
                             System.Threading.Thread.Sleep(5000);
-                            counter++;
-                            if (counter >= 120) {
-                                string msg = "Publishing didn't ended after 10 minutes, aborting...";
-                                _fileLog.Write(LogMessageType.Error, msg);
-                            }
-                        }
                     }
                 }
-                while (!publishEnded && counter < 120);
+                while (!publishEnded && counterPublishing > 0);
+                return publishEnded;
             }
             catch (Exception e)
             {
@@ -569,9 +574,9 @@ namespace PC.Plugins.Automation
                 {
                     _fileLog.Write(LogMessageType.Error, string.Format("WaitForRunToPublishOnTrendReport failed, ExceptionMessage: {0}, ErrorCode: {1}", pcErrorResponse.ExceptionMessage, pcErrorResponse.ErrorCode));
                 }
+                return false;
             }
         }
-
 
         public bool DownloadTrendReportAsPdf(string trendReportId, string directory) 
         {

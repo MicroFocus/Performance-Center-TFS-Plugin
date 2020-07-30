@@ -399,9 +399,9 @@ namespace PC.Plugins.Configurator
             string logFullFileNamePreviouslyRead = Path.Combine(logFullFilename + PREVIOUSLYREAD);
             if (File.Exists(logFullFileNamePreviouslyRead))
                 File.Delete(logFullFileNamePreviouslyRead);
-            string reportFullFileName = Path.Combine(Path.GetDirectoryName(logFullFilename), "Reports.zip");
-            if (File.Exists(reportFullFileName))
-                File.Delete(reportFullFileName);
+            //string reportFullFileName = Path.Combine(Path.GetDirectoryName(logFullFilename), "Reports.zip");
+            //if (File.Exists(reportFullFileName))
+            //    File.Delete(reportFullFileName);
         }
 
         private static string[] ReadAllLinesFromPosition(string FullFilename, ref long position)

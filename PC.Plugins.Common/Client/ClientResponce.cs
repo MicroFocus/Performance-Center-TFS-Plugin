@@ -27,6 +27,7 @@ namespace PC.Plugins.Common.Client
         {
             if (httpResponse==null)
             {
+                Body = "httpResponse is null";
                 return;
                 //throw new HttpException("Response cannot be null.");
             }
@@ -50,6 +51,15 @@ namespace PC.Plugins.Common.Client
         public ClientResponse(WebException webException)
             : this((HttpWebResponse)webException.Response)
         {
+            if (webException != null && (string.IsNullOrEmpty(this.Body) || Body.Equals("httpResponse is null")))
+            {
+                this.Body += !string.IsNullOrEmpty(webException.Message) ? "\n -WebException Message = " + webException.Message : "";
+                this.Body += !string.IsNullOrEmpty(webException.Status.ToString()) ? "\n -WebException Status = " + webException.Status.ToString() : "";
+                if(webException.InnerException != null)
+                {
+                    this.Body += !string.IsNullOrEmpty(webException.InnerException.Message) ? "\n  -WebException InnerException Message = " + webException.InnerException.Message : "";
+                }
+            }
         }
 
         private string GetResponseString(WebResponse r)
