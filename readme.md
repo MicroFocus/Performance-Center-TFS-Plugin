@@ -2,12 +2,7 @@
 
 The "<b>LoadRunner Enterprise CI</b>" extension integrates LoadRunner Enterprise with Azure DevOps / Microsoft Team Foundation Server (TFS), enabling the Azure DevOps / TFS CI build process to trigger the execution of load tests designed on a LoadRunner Enterprise server.
 
-This extension currently supports:
-
-- Performance Center 12.56.
-- Performance Center 12.57.
-- Performance Center 12.6x.
-- LoadRunner Enterprise 2020.
+This extension currently supports Performance Center 12.56 and beyond.
 
 ##### **System prerequisites:**
 
