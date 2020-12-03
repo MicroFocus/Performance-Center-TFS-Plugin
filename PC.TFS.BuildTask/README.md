@@ -6,7 +6,7 @@ This extension enables you to include a LoadRunner Enterprise test execution as 
 
 This extension supports Performance Center 12.56 and later.
 
-# What's New in this Release (version 1.0.6)
+# What's New in this Release (version 1.0.7)
 
 > **November 2020**
 > - Fix for reported defects
