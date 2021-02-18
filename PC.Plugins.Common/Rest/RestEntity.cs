@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text;
-using System.Security.Cryptography;
-using PC.Plugins.Common.Client;
+﻿using PC.Plugins.Common.Client;
 using PC.Plugins.Common.Constants;
 using System.Net;
 

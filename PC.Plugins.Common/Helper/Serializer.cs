@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections;
+﻿using PC.Plugins.Common.Constants;
 using System.IO;
-using System.Xml.Serialization;
 using System.Xml;
-using PC.Plugins.Common.Constants;
+using System.Xml.Serialization;
 
 
 namespace PC.Plugins.Common.Helper
 {
     class Serializer
     {
-
         private XmlRootAttribute _serXmlRootAttribute;
 
         public XmlRootAttribute SerXmlRootAttribute
@@ -45,6 +42,5 @@ namespace PC.Plugins.Common.Helper
                 return stream.ToString();
             }
         }
-
     }
 }

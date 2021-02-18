@@ -42,6 +42,7 @@
     <Compile Include="Helper\EnumerationHelper.cs" />
     <Compile Include="Helper\Serializer.cs" />
     <Compile Include="Helper\StringHelper.cs" />
+    <Compile Include="PCEntities\AuthenticationClient.cs" />
     <Compile Include="PCEntities\PCErrorResponse.cs" />
     <Compile Include="PCEntities\PCRunEventLog.cs" />
     <Compile Include="PCEntities\PCRunEventLogRecord.cs" />

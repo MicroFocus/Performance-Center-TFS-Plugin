@@ -34,6 +34,5 @@ namespace PC.Plugins.Common.Constants
         public const string PUT = "PUT";
         public const string COOKIE = "Cookie";
         public const string CONTENT_DISPOSTION = "Content-Disposition";
-        
     }
 }

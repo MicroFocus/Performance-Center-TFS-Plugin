@@ -6,11 +6,8 @@ using System.Text;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography.X509Certificates;
-
 using System.Threading.Tasks;
 
-
-//[assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
 namespace PC.Plugins.Common.Client
 {
@@ -27,7 +24,6 @@ namespace PC.Plugins.Common.Client
         private MultipartFormDataContent content = new MultipartFormDataContent();
         private readonly CookieContainer _cookies;
         private IWebProxy _proxy;
-        //private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private enum Method
         {
             GET,
@@ -49,22 +45,12 @@ namespace PC.Plugins.Common.Client
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(_uri);
             httpWebRequest.Timeout = 1000000;
-            // log messages
-            //log.DebugFormat("Request Type: {0}", method.ToString());
-            //log.DebugFormat("Request Headers: {0}, Accept: {1}", _headers, _accept);
-            //log.DebugFormat(" Request Url : {0}", _uri);
-            if (method == Method.PUT
-                || method == Method.POST)
-            {
-                //log.DebugFormat("Body: {0} ", _body);
-                //log.DebugFormat("Content Type: {0}", _contentType);
-            }
+            //if (method == Method.PUT || method == Method.POST) { }
 
             if (_headers != null)
             {
                 httpWebRequest.Headers = _headers;
             }
-
             if (_accept != null)
             {
                 httpWebRequest.Accept = _accept;
@@ -73,7 +59,6 @@ namespace PC.Plugins.Common.Client
             {
                 httpWebRequest.ClientCertificates.Add(_clientCert);
             }
-
             httpWebRequest.CookieContainer = _cookies;
             httpWebRequest.Method = method.ToString();
             httpWebRequest.ContentType = _contentType;
@@ -141,20 +126,10 @@ namespace PC.Plugins.Common.Client
             }
         }
 
-
         private void HttpWebRequestDefinition (Method method, ref HttpWebRequest httpWebRequest)
         {
             httpWebRequest.Timeout = 1000000;
-            // log messages
-            //log.DebugFormat("Request Type: {0}", method.ToString());
-            //log.DebugFormat("Request Headers: {0}, Accept: {1}", _headers, _accept);
-            //log.DebugFormat(" Request Url : {0}", _uri);
-            if (method == Method.PUT
-                || method == Method.POST)
-            {
-                //log.DebugFormat("Body: {0} ", _body);
-                //log.DebugFormat("Content Type: {0}", _contentType);
-            }
+            //if (method == Method.PUT || method == Method.POST) { }
 
             if (_headers != null)
             {
@@ -209,16 +184,13 @@ namespace PC.Plugins.Common.Client
                 long bytesReceived = 0;
                 int attempts = 0;
                 bool finished = false;
-
                 while (!finished)
                 {
                     attempts += 1;
-
                     if (attempts > 3)
                     {
                         return;
                     }
-
                     try
                     {
                         if (bytesReceived != 0)
@@ -226,7 +198,6 @@ namespace PC.Plugins.Common.Client
                             //log.Debug(string.Format("Request resuming with range: {0} , {1}", bytesReceived, bytesToReceive));
                             httpWebRequest.AddRange(bytesReceived, bytesToReceive);
                         }
-
                         using (var response = httpWebRequest.GetResponse())
                         {                            
                             //log.Debug(string.Format("Received response. ContentLength={0} , ContentType={1}", response.ContentLength, response.ContentType));
@@ -234,7 +205,6 @@ namespace PC.Plugins.Common.Client
                             {
                                 bytesToReceive = response.ContentLength;
                             }
-
                             using (var responseStream = response.GetResponseStream())
                             {
                                 //log.Debug("Beginning read of response stream.");
@@ -249,7 +219,6 @@ namespace PC.Plugins.Common.Client
                                 //log.Debug("Finished read of response stream.");
                             }
                         }
-
                         //log.Debug("finished");
                         finished = true;
                     }
@@ -266,16 +235,14 @@ namespace PC.Plugins.Common.Client
             HttpClientHandler handler = new HttpClientHandler();
             foreach (Cookie cookie in _cookies.GetCookies(_uri))
             {
-                handler.CookieContainer.Add(_uri, new System.Net.Cookie(cookie.Name, cookie.Value, cookie.Path, cookie.Domain)); // Adding a Cookie
+                handler.CookieContainer.Add(_uri, new System.Net.Cookie(cookie.Name, cookie.Value, cookie.Path, cookie.Domain));
 
             }
-
             using (var client = new HttpClient(handler))
             {
                 client.BaseAddress = _uri;
                 return (HttpResponseMessage)client.PostAsync(string.Empty, content).Result;
             }
-
         }
 
         public ClientRequest ContentEncoding(bool encoding)
@@ -283,6 +250,7 @@ namespace PC.Plugins.Common.Client
             _gzipContentEncoding = encoding;
             return this;
         }
+
         public ClientRequest ContentType(string mediaType)
         {
             _contentType = mediaType;
@@ -314,8 +282,6 @@ namespace PC.Plugins.Common.Client
             {
                 Name = "test"
             };
-
-
             content.Add(fileContent1);
             content.Add(fileContent2);
             return this;
@@ -347,7 +313,6 @@ namespace PC.Plugins.Common.Client
             {
                 _headers = new WebHeaderCollection();
             }
-
             foreach (var header in headers)
             {
                 _headers.Add(header.Key, header.Value);
@@ -373,8 +338,6 @@ namespace PC.Plugins.Common.Client
 
         public HttpResponseMessage PostAsync() => AsyncSendRequest();
 
-
-
         public ClientResponse Post() => SendRequest(Method.POST);
 
         public ClientResponse Put() => SendRequest(Method.PUT);
@@ -382,6 +345,5 @@ namespace PC.Plugins.Common.Client
         public ClientResponse Delete() => SendRequest(Method.DELETE);
 
         public bool AcceptAllCertifications(object sender, System.Security.Cryptography.X509Certificates.X509Certificate certification, System.Security.Cryptography.X509Certificates.X509Chain chain, System.Net.Security.SslPolicyErrors sslPolicyErrors) => AcceptInvalidSslCerts;
-
     }
 }

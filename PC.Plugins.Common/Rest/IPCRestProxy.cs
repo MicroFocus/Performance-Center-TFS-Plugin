@@ -4,8 +4,8 @@ namespace PC.Plugins.Common.Rest
 {
     public interface IPCRestProxy
     {
-        bool Authenticate(string userName, string password);
-        bool Authenticate(string userName, string password, ref PCErrorResponse pcErrorResponse);
+        bool Authenticate(string userName, string password, bool useTokenForAuthentication);
+        bool Authenticate(string userName, string password, ref PCErrorResponse pcErrorResponse, bool useTokenForAuthentication);
         int CreateTestInstance(int testId, int testSetId);
         int CreateTestInstance(int testId, int testSetId, ref PCErrorResponse pcErrorResponse);
         PCTestSets GetAllTestSets();

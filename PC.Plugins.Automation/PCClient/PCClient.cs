@@ -77,8 +77,8 @@ namespace PC.Plugins.Automation
             PCErrorResponse pcErrorResponse = new PCErrorResponse("", 0);
             try
             {
-                _fileLog.Write(LogMessageType.Info, string.Format("Trying to login: [PCServer: '{0}://{1}', User: '{2}']", _pcModel.isHTTPSProtocol(), _pcModel.PCServerAndPort, _pcModel.UserName));
-                _loggedIn = _pcRestProxy.Authenticate(_pcModel.UserName, _pcModel.Password, ref pcErrorResponse);
+                _fileLog.Write(LogMessageType.Info, string.Format("Trying to login: [LRE Server: '{0}://{1}', {2}: '{3}']", _pcModel.isHTTPSProtocol(), _pcModel.PCServerAndPort, (_pcModel.UseTokenForAuthentication ? "Id Key" : "Username"), _pcModel.UserName));
+                _loggedIn = _pcRestProxy.Authenticate(_pcModel.UserName, _pcModel.Password, ref pcErrorResponse, _pcModel.UseTokenForAuthentication);
             }
             catch (Exception e)
             {
@@ -313,7 +313,8 @@ namespace PC.Plugins.Automation
             try
             {
                 int counter = 0;
-                PCRunState[] states = { PCRunState.BEFORE_COLLATING_RESULTS, PCRunState.BEFORE_CREATING_ANALYSIS_DATA };
+                PCRunState[] waitingStates = { PCRunState.BEFORE_COLLATING_RESULTS, PCRunState.BEFORE_CREATING_ANALYSIS_DATA };
+                PCRunState[] failingStates = { PCRunState.RUN_FAILURE, PCRunState.FAILED_CREATING_ANALYSIS_DATA };
                 PCRunResponse response = null;
                 PCRunState lastState = PCRunState.UNDEFINED;
                 do {
@@ -327,7 +328,7 @@ namespace PC.Plugins.Automation
 
                     // In case we are in state before collate or before analyze, we will wait 1 minute for the state to change otherwise we exit
                     // because the user probably stopped the run from PC or timeslot has reached the end.
-                    if (states.Contains(currentState))
+                    if (waitingStates.Contains(currentState))
                     {
                         counter++;
                         System.Threading.Thread.Sleep(1000);
@@ -335,6 +336,10 @@ namespace PC.Plugins.Automation
                             _fileLog.Write(LogMessageType.Info, string.Format("RunID: {0}  - Stopped from LoadRunner Enterprise side with state = {1}", runId, currentState.Value));
                             break;
                         }
+                    }
+                    else if (failingStates.Contains(currentState))
+                    {
+                        _fileLog.Write(LogMessageType.Info, string.Format("Error - RunID: {0} ended with state = {1}", runId, currentState.Value));
                     }
                     else
                     {

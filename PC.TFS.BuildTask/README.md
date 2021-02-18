@@ -6,10 +6,10 @@ This extension enables you to include a LoadRunner Enterprise test execution as 
 
 This extension supports Performance Center 12.56 and later.
 
-# What's New in this Release (version 1.0.7)
+# What's New in this Release (version 1.0.8)
 
-> **November 2020**
-> - Fix for reported defects
+> **February 2021**
+> You can use a token access to authenticate to LRE (available from LRE 2020 R1).
 
 # Installation Instructions
 

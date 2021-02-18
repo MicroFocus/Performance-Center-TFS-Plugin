@@ -49,7 +49,5 @@ namespace PC.Plugins.Common.Helper
             throw new ArgumentException("Not found.", "description");
             // or return default(T);
         }
-
-
     }
 }

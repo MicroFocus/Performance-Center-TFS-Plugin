@@ -14,31 +14,11 @@
 * limitations under the License.
 */
 using System;
-using System.IO;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-//using log4net;
-using PC.Plugins.Common.Rest;
-using PC.Plugins.Automation;
-using System.Diagnostics;
-
-
-//using MicroFocus.PC.Api.Core.Connector;
-//using MicroFocus.PC.CiPlugins.Tfs.Core.Configuration;
-//using MicroFocus.PC.CiPlugins.Tfs.Core.Tools;
 
 namespace PC.Plugins.ConfiguratorUI
 {
@@ -47,14 +27,14 @@ namespace PC.Plugins.ConfiguratorUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        //protected static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+        #region fields
         Configurator _configurator;
-
-        //ConnectionDetails _conDetails = new ConnectionDetails();
         private string _instanceId = Guid.NewGuid().ToString();
         private string _workDirectory = @"C:\Temp\PC.Plugins.Automation.Logs\{0}";
         private string _logFileName = "PC.Plugins.Automation.Logs.log";
+        #endregion
+
+        #region constructor
         public MainWindow()
         {
             try
@@ -62,16 +42,12 @@ namespace PC.Plugins.ConfiguratorUI
                 Helper.CheckedConnection = false;
                 InitializeComponent();
             }
-            catch //(Exception ex)
-            {
-               // Log.Warn("Could not parse existing configuration file", ex);
-            }
-
+            catch { }
         }
+        #endregion
 
         private void TestConnectionButton_OnClick(object sender, RoutedEventArgs e)
         {
-
             ReadFields();
             try
             {
@@ -81,7 +57,6 @@ namespace PC.Plugins.ConfiguratorUI
                     return;
                 }
                 Helper.CheckedConnection = _configurator.TestConnection();
-
             }
             catch (Exception ex)
             {
@@ -103,14 +78,11 @@ namespace PC.Plugins.ConfiguratorUI
                 System.Threading.Thread thread = new System.Threading.Thread(_configurator.Perform);
                 thread.Start();
                 string reportfile = System.IO.Path.Combine(_workDirectory, _logFileName);
-
                 DisplayReportInPSConsole(System.IO.Path.Combine(reportfile));
-
             }
             catch (Exception ex)
             {
                 const string error = "Error while trying to run the test from the plugin. Error: {0}. \n {1}";
-                //Log.Error(error, ex);
                 MessageBox.Show(string.Format(error, ex.Message, ex), "PC.Plugins.ConfiguratorUI", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
             }
         }
@@ -118,6 +90,7 @@ namespace PC.Plugins.ConfiguratorUI
         private void ReadFields()
         {
             string pcServerURL = PCServerURL.Text;
+            bool useTokenForAuthentication = UseTokenForAuthentication.IsChecked == true;
             string pcServerAndPort = PCServerURL.Text.Trim().Replace("https://", "").Replace("http://", "");
             string pcServername = (pcServerAndPort.LastIndexOf(':') == -1) ? pcServerAndPort : pcServerAndPort.Substring(0, (pcServerAndPort.LastIndexOf(':')));
             string webProtocol = PCServerURL.Text.Trim().StartsWith("https") ? "https" : "http";
@@ -143,22 +116,10 @@ namespace PC.Plugins.ConfiguratorUI
             string timeslotRepeatDelay = TimeslotRepeatDelay.Text;
             string timeslotRepeatAttempts = TimeslotRepeatAttempts.Text;
 
-            //_instanceId = string.IsNullOrEmpty(_instanceId) ? Guid.NewGuid().ToString() : _instanceId;
-
-            //IPCRestProxy pcRestProxy = new PCRestProxy(webProtocol, pcServerAndPort, domain, project, proxyURL, proxyUserName, proxyPassword);
-            //_pcRestProxy = pcRestProxy;
-
             Int32 unixTimestamp = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
             _workDirectory = string.Format(_workDirectory, unixTimestamp.ToString());
 
-
-            //_pcBuilder = new PCBuilder(pcServerAndPort, pcServername, pcUserName, pcPassword, domain,
-            //    project, testID, autoTestInstance == true, testInstanceID, timeslotDurationHours, timeslotDurationMinutes,
-            //    pcPostRunAction, useVUDs == true, useSLAStatus == true, description,
-            //    trending, trendReportID, webProtocol == "https",
-            //    proxyURL, proxyUserName, proxyPassword, _workDirectory, _logFileName);
-
-            _configurator = new Configurator(pcServerURL, pcUserName, pcPassword, domain, project, testID,
+            _configurator = new Configurator(pcServerURL, useTokenForAuthentication.ToString(), pcUserName, pcPassword, domain, project, testID,
                 autoTestInstance.ToString(), testInstanceID, pcPostRunAction, 
                 proxyURL, proxyUserName, proxyPassword,
                 trending, trendReportID, timeslotDurationHours, timeslotDurationMinutes,
@@ -168,15 +129,6 @@ namespace PC.Plugins.ConfiguratorUI
 
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
         {
-            //if (!Helper.CheckedConnection)
-            //{
-            //    var res = MessageBox.Show("Connection was not checked, are you sure you want to exit?", "Warning",
-            //        MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            //    if (res == MessageBoxResult.No)
-            //    {
-            //        e.Cancel = true;
-            //    }
-            //}
         }
 
         private void CancelButton_OnClick(object sender, RoutedEventArgs e)
@@ -233,10 +185,8 @@ namespace PC.Plugins.ConfiguratorUI
                     RadioButton rb = sender as RadioButton;
                     TimeslotRepeatDelay.IsEnabled = (rb.Name == "RepeatWithParameters");
                     TimeslotRepeatAttempts.IsEnabled = (rb.Name == "RepeatWithParameters");
-                    //TrendReportID.IsEnabled = (rb.Name == "UseTrendReportID");
                     TimeslotRepeatDelay.Text = (rb.Name == "RepeatWithParameters") ? "Enter the delay between attempts" : "";
                     TimeslotRepeatAttempts.Text = (rb.Name == "RepeatWithParameters") ? "Enter the number of attempts" : "";
-                    //TrendReportID.Text = (rb.Name == "UseTrendReportID") ? "Enter Trend Report ID" : "";
                     TimeslotRepeatDelay.SelectAll();
                     TimeslotRepeatAttempts.SelectAll();
                     MoveToNextUIElement(e);
@@ -324,6 +274,5 @@ namespace PC.Plugins.ConfiguratorUI
             }
             return timeslotDurationMinutes;
         }
-
     }
 }

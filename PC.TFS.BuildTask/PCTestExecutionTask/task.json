@@ -12,7 +12,7 @@
   "version": {
     "Major": 1,
     "Minor": 0,
-    "Patch": 7
+    "Patch": 8
   },
   "inputs": [
     {
@@ -24,20 +24,28 @@
       "helpMarkDown": "Enter the hostname or IP address and port of a LoadRunner Enterprise server in the format: http(s)://(LREServer):(port#). If you are required to use a tenant, use the following format: http(s)://(LREServer):(port#)/?tenant=(guid#). For example: https://MyLreServer.MyCompanyDomain.com:444/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3"
     },
     {
+      "name": "varUseTokenForAuthentication",
+      "type": "boolean",
+      "label": "Authenticate with token",
+      "defaultValue": "false",
+      "required": false,
+      "helpMarkDown": "Turn on this option to use an LRE token for authentication (an ID key and Secret key can be issued to a user from LRE 2021 R1). This option is the only way of authentication for LRE servers configured with SSO."
+    },
+    {
       "name": "varUserName",
       "type": "string",
-      "label": "User name",
+      "label": "User name \\ Id key",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "Enter the user name required to connect to the LoadRunner Enterprise server."
+      "helpMarkDown": "Enter the user name or the Id key of your token access to connect to the LoadRunner Enterprise server."
     },
     {
       "name": "varPassWord",
       "type": "string",
-      "label": "Password",
+      "label": "Password \\ Secret key",
       "defaultValue": "$(PCPassword)",
       "required": false,
-      "helpMarkDown": "<p>Enter the password required to connect to the LoadRunner Enterprise server.</p> <p><b><u>Note:</u></b> You can create a variable of type secret in the CI build to store the password, and specify the variable to avoid exposing a password in the build configuration. For example, '$(PCPassword)').</p>"
+      "helpMarkDown": "<p>Enter the password or Secret key of your token to connect to the LoadRunner Enterprise server.</p> <p><b><u>Note:</u></b> You can create a variable of type secret in the CI build to store the password, and specify the variable to avoid exposing a password in the build configuration. For example, '$(PCPassword)').</p>"
     },
     {
       "name": "varDomain",

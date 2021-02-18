@@ -30,7 +30,6 @@ namespace PC.Plugins.Automation
         string TimeslotRepeat { get; set; }
         string TimeslotRepeatDelay { get; set; }
         string TimeslotRepeatAttempts { get; set; }
-
-
+        bool UseTokenForAuthentication { get; set; }
     }
 }

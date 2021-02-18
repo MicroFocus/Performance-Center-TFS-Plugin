@@ -15,6 +15,7 @@ namespace PC.Plugins.Automation
     {
         private string _pcServerAndPort;
         private string _pcServerName;
+        private bool _useTokenForAuthentication;
         private string _userName;
         private string _password;
         private string _domain;
@@ -37,7 +38,7 @@ namespace PC.Plugins.Automation
         private string _timeslotRepeatDelay;
         private string _timeslotRepeatAttempts;
 
-        public PCModel(string pcServerAndPort, string pcServerName, string userName, string password, string domain, string project,
+        public PCModel(string pcServerAndPort, string pcServerName, bool useTokenForAuthentication, string userName, string password, string domain, string project,
                    String testId, bool autoTestInstanceID, string testInstanceId, string timeslotDurationHours, string timeslotDurationMinutes,
                    PCPostRunActionsRequest pcPostRunActionsRequest, bool vudsMode, string description, string addRunToTrendReport, string trendReportId,
                    bool httpsProtocol, string proxyOutURL, string proxyOutUser, string proxyOutPassword,
@@ -46,6 +47,7 @@ namespace PC.Plugins.Automation
 
             this._pcServerAndPort = pcServerAndPort;
             this._pcServerName = pcServerName.Replace(" ", "");
+            this._useTokenForAuthentication = useTokenForAuthentication;
             this._userName = userName.Replace(" ", "");
             //this._password = setPassword(almPassword);
             this._password = password;
@@ -83,6 +85,12 @@ namespace PC.Plugins.Automation
         {
             get { return _pcServerName; }
             set { _pcServerName = value; }
+        }
+
+        public bool UseTokenForAuthentication
+        {
+            get { return _useTokenForAuthentication; }
+            set { _useTokenForAuthentication = value; }
         }
 
         public string UserName
@@ -231,7 +239,7 @@ namespace PC.Plugins.Automation
             string vudsModeString = (_vudsMode) ? "true" : "false";
             string trendString = ("USE_ID").Equals(_addRunToTrendReport) ? String.Format(", TrendReportID = '{0}'", _trendReportId) : "";
 
-            return String.Format("[PCServer='{0}', User='{0}', Domain='{0}', Project='{0}', TestID='{0}', " +
+            return String.Format("[LREerver='{0}', " + (_useTokenForAuthentication ? "Id Key" : "User") + " ='{0}', Domain='{0}', Project='{0}', TestID='{0}', " +
                             "TestInstanceID='{0}', TimeslotDuration='{0}', PostRunAction='{0}', " +
                             "VUDsMode='{0}'{0}, HTTPSProtocol='{0}']",
 

@@ -11,10 +11,12 @@ namespace PC.Plugins.ConfiguratorUI
 {
     public class Configurator
     {
+        #region fields
         private const string END_OF_LOG_FILE = "Test Execution Ended";
         private IPCRestProxy _pcRestProxy;
         private IPCBuilder _pcBuilder;
         private string _pcServerURL;
+        private string _useTokenForAuthentication;
         private string _pcServerAndPort;
         private string _pcServername;
         private string _webProtocol;
@@ -41,8 +43,9 @@ namespace PC.Plugins.ConfiguratorUI
         private string _timeslotRepeatDelay;
         private string _timeslotRepeatAttempts;
         //private string _description;
+        #endregion
 
-
+        #region properties
         public string PCServerURL
         {
             get { return _pcServerURL; }
@@ -57,6 +60,12 @@ namespace PC.Plugins.ConfiguratorUI
         {
             get { return _pcServername; }
             set { _pcServername = value; }
+        }
+
+        public string UseTokenForAuthentication
+        {
+            get { return _useTokenForAuthentication; }
+            set { _useTokenForAuthentication = value; }
         }
 
         public string WebProtocol
@@ -188,11 +197,11 @@ namespace PC.Plugins.ConfiguratorUI
             get { return _timeslotRepeatAttempts; }
             set { _timeslotRepeatAttempts = value; }
         }
+        #endregion
 
+        #region constructor
 
-
-
-        public Configurator(string pcServerURL, string pcUserName, string pcPassword, string domain, string project,
+        public Configurator(string pcServerURL, string useTokenForAuthentication, string pcUserName, string pcPassword, string domain, string project,
             string testID, string autoTestInstance, string testInstanceID, string pcPostRunAction,
             string proxyURL, string proxyUserName, string proxyPassword,
             string trending, string trendReportID, string timeslotDurationHours, string timeslotDurationMinutes,
@@ -200,6 +209,7 @@ namespace PC.Plugins.ConfiguratorUI
             string timeslotRepeat = "DoNotRepeat", string timeslotRepeatDelay = "5", string timeslotRepeatAttempts = "3")
         {
             _pcServerAndPort = pcServerURL.Trim().Replace("https://", "").Replace("http://", "");
+            _useTokenForAuthentication = useTokenForAuthentication;
             _pcServername = (_pcServerAndPort.LastIndexOf(':') == -1) ? _pcServerAndPort : _pcServerAndPort.Substring(0, (_pcServerAndPort.LastIndexOf(':')));
             _webProtocol = pcServerURL.Trim().StartsWith("https") ? "https" : "http";
             _pcUserName = pcUserName;
@@ -219,6 +229,7 @@ namespace PC.Plugins.ConfiguratorUI
             _timeslotDurationMinutes = String.IsNullOrWhiteSpace(timeslotDurationMinutes) ? "30" : timeslotDurationMinutes;
             _useSLAStatus = useSLAStatus;
             _useVUDs = useVUDs;
+            
             if (!string.IsNullOrWhiteSpace(workDirectory))
                 _workDirectory = workDirectory;
             else
@@ -236,7 +247,7 @@ namespace PC.Plugins.ConfiguratorUI
             _timeslotRepeatDelay = int.TryParse(timeslotRepeatDelay, out intTimeslotRepeatDelay) && intTimeslotRepeatDelay > 1 ? timeslotRepeatDelay : "1";
             _timeslotRepeatAttempts = int.TryParse(timeslotRepeatAttempts, out intTimeslotRepeatAttempts) && intTimeslotRepeatAttempts > 2 ? timeslotRepeatAttempts : "2";
 
-            _pcBuilder = new PCBuilder(_pcServerAndPort, _pcServername, _pcUserName, _pcPassword, _domain,
+            _pcBuilder = new PCBuilder(_pcServerAndPort, _pcServername, _useTokenForAuthentication.ToLower() == "true", _pcUserName, _pcPassword, _domain,
                 _project, _testID, _autoTestInstance.ToLower() == "true", _testInstanceID, _timeslotDurationHours, _timeslotDurationMinutes,
                 _pcPostRunAction, _useVUDs.ToLower() == "true", _useSLAStatus.ToLower() == "true", _description,
                 _trending, _trendReportID, _webProtocol == "https",
@@ -246,6 +257,8 @@ namespace PC.Plugins.ConfiguratorUI
 
         }
 
+        #endregion
+
         public void Perform()
         {
             System.Threading.Thread thread = new System.Threading.Thread(_pcBuilder.Perform);
@@ -254,7 +267,7 @@ namespace PC.Plugins.ConfiguratorUI
 
         public bool TestConnection()
         {
-            Helper.CheckedConnection = _pcRestProxy.Authenticate(_pcUserName, _pcPassword);
+            Helper.CheckedConnection = _pcRestProxy.Authenticate(_pcUserName, _pcPassword, _useTokenForAuthentication.ToLower() == "true");
             return Helper.CheckedConnection;
         }
     }

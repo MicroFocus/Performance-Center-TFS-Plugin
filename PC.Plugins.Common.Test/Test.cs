@@ -51,7 +51,7 @@ namespace PC.Plugins.Common.Test
                 txtProxyUser.Text,
                 txtProxyPassword.Text
                 );
-            _authenticated = pcRestProxy.Authenticate(txtPCUserName.Text, txtPCPassword.Text);
+            _authenticated = pcRestProxy.Authenticate(txtPCUserName.Text, txtPCPassword.Text, false);
         }
 
         private void btnAuthenticate_Click(object sender, EventArgs e)
@@ -66,7 +66,7 @@ namespace PC.Plugins.Common.Test
                 txtProxyPassword.Text 
                 );
 
-            bool authenticated = pcRestProxy.Authenticate(txtPCUserName.Text, txtPCPassword.Text);
+            bool authenticated = pcRestProxy.Authenticate(txtPCUserName.Text, txtPCPassword.Text, false);
 
             if (authenticated)
             {

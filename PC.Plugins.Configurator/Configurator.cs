@@ -9,6 +9,7 @@ namespace PC.Plugins.Configurator
 {
     public class Configurator
     {
+        #region fields
         private const string PREVIOUSLYREAD = "previouslyRead";
         private const string DUPLICATED = "duplicated";
         private const string END_OF_LOG_FILE = "Test Execution Ended";
@@ -40,7 +41,10 @@ namespace PC.Plugins.Configurator
         private static string _timeslotRepeat;
         private static string _timeslotRepeatDelay;
         private static string _timeslotRepeatAttempts;
+        private static string _useTokenForAuthentication;
+        #endregion
 
+        #region properties
         public static string PCServerURL
         {
             get { return _pcServerURL; }
@@ -186,11 +190,24 @@ namespace PC.Plugins.Configurator
             set { _timeslotRepeatAttempts = value; }
         }
 
+        public string UseTokenForAuthentication
+        {
+            get { return _useTokenForAuthentication; }
+            set { _useTokenForAuthentication = value; }
+        }
+        #endregion
+
+        #region constructor
+
         public Configurator()
         {
         }
 
-        public static string Perform(string pcServerURL, string pcUserName, string pcPassword, string domain, string project,
+        #endregion
+        
+        //visual studio will show no reference to those methods but they are referenced from the ps1 file.
+        #region public methods used from powershell script 
+        public static string Perform(string pcServerURL, string useTokenForAuthentication, string pcUserName, string pcPassword, string domain, string project,
             string testID, string autoTestInstance, string testInstanceID, string pcPostRunAction,
             string proxyURL, string proxyUserName, string proxyPassword,
             string trending, string trendReportID, string timeslotDurationHours, string timeslotDurationMinutes,
@@ -220,6 +237,7 @@ namespace PC.Plugins.Configurator
             _timeslotRepeat = timeslotRepeat;
             _timeslotRepeatDelay = timeslotRepeatDelay;
             _timeslotRepeatAttempts = timeslotRepeatAttempts;
+            _useTokenForAuthentication = string.IsNullOrEmpty(useTokenForAuthentication) ? "false" : useTokenForAuthentication;
 
             if (!string.IsNullOrWhiteSpace(workDirectory))
                 _workDirectory = workDirectory;
@@ -236,7 +254,7 @@ namespace PC.Plugins.Configurator
             ValidateInputFieldsSupposedToBePositiveInteger(ref message);
             if (string.IsNullOrEmpty(message))
             {
-                _pcBuilder = new PCBuilder(_pcServerAndPort, _pcServername, _pcUserName, _pcPassword, _domain,
+                _pcBuilder = new PCBuilder(_pcServerAndPort, _pcServername, _useTokenForAuthentication.ToLower() == "true", _pcUserName, _pcPassword, _domain,
                     _project, _testID, _autoTestInstance.ToLower() == "true", _testInstanceID, _timeslotDurationHours, _timeslotDurationMinutes,
                     _pcPostRunAction, _useVUDs.ToLower() == "true", _useSLAStatus.ToLower() == "true", _description,
                     _trending, _trendReportID, _webProtocol == "https",
@@ -250,27 +268,6 @@ namespace PC.Plugins.Configurator
                 throw new Exception(message);
             }
         }
-
-        public static void Perform()
-        {
-            System.Threading.Thread thread = new System.Threading.Thread(_pcBuilder.Perform);
-            thread.Start();
-        }
-
-        //public static bool TestConnection(string pcServerURL, string pcUserName, string pcPassword, string proxyURL, string proxyUserName, string proxyPassword)
-        //{
-        //    _webProtocol = pcServerURL.Trim().StartsWith("https") ? "https" : "http";
-        //    _pcServerAndPort = pcServerURL.Trim().Replace("https://", "").Replace("http://", "");
-        //    _pcUserName = pcUserName;
-        //    _pcPassword = pcPassword;
-        //    _proxyURL = proxyURL;
-        //    _proxyUserName = proxyUserName;
-        //    _proxyPassword = proxyPassword;
-
-        //    _pcRestProxy = new PCRestProxy(_webProtocol, _pcServerAndPort, "", "", proxyURL, proxyUserName, proxyPassword);
-
-        //    return _pcRestProxy.Authenticate(_pcUserName, _pcPassword);
-        //}
 
         public static bool IsLogFileEnded(string fullFilename)
         {
@@ -345,7 +342,14 @@ namespace PC.Plugins.Configurator
             }
             catch { }
         }
-
+        #endregion
+   
+        #region helpers
+        private static void Perform()
+        {
+            System.Threading.Thread thread = new System.Threading.Thread(_pcBuilder.Perform);
+            thread.Start();
+        }
         private static string[] ReadAllLinesFromPosition(string FullFilename, ref long position)
         {
             using (FileStream fileStream = File.OpenRead(FullFilename))
@@ -407,5 +411,6 @@ namespace PC.Plugins.Configurator
                 _timeslotDurationMinutes = "28800";
             }
         }
+        #endregion
     }
 }

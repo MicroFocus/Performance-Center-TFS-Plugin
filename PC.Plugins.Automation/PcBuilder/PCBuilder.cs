@@ -36,10 +36,6 @@ namespace PC.Plugins.Automation
         public const string ERROR = "Error";
         private string _workDirectory = @"C:\Temp\PC.Plugins.Automation.Logs\{0}";
         private string _logFileName = @"PC.Plugins.Automation.Logs.log";
-        private string _userName;
-        private string _password;
-        private string _timeslotDurationHours;
-        private string _timeslotDurationMinutes;
         private bool _statusBySLA;
         private FileLog _fileLog;
         private IPCModel _pcModel;
@@ -50,6 +46,7 @@ namespace PC.Plugins.Automation
         public PCBuilder(
             string serverAndPort,
             string pcServerName,
+            bool useTokenForAuthentication,
             string userName,
             string password,
             string domain,
@@ -81,16 +78,13 @@ namespace PC.Plugins.Automation
             _logFileName = !String.IsNullOrWhiteSpace(logFileName) ? logFileName : _logFileName; ;
             _logFullFileName = Path.Combine(_workDirectory, _logFileName);
             _fileLog = new FileLog(_logFullFileName);
-            _userName = userName;
-            _password = password; 
-            _timeslotDurationHours = timeslotDurationHours;
-            _timeslotDurationMinutes = timeslotDurationMinutes;
             _statusBySLA = statusBySLA;
 
             _pcModel =
                     new PCModel(
                             serverAndPort,
                             pcServerName,
+                            useTokenForAuthentication,
                             userName,
                             password,
                             domain,

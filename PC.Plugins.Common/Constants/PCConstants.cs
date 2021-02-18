@@ -8,6 +8,7 @@ namespace PC.Plugins.Common.Constants
         public const string BASE_PC_API_URL = "LoadTest/rest";
         public const string BASE_PC_API_AUTHENTICATION_URL = BASE_PC_API_URL + "/authentication-point";
         public const string AUTHENTICATION_LOGIN_URL = BASE_PC_API_AUTHENTICATION_URL + "/authenticate";
+        public const string AUTHENTICATION_WITH_TOKEN_LOGIN_URL = BASE_PC_API_AUTHENTICATION_URL + "/authenticateclient";
         public const string AUTHENTICATION_LOGOUT_URL = BASE_PC_API_AUTHENTICATION_URL + "/logout";
         public const string PC_API_RESOURCES_TEMPLATE = BASE_PC_API_URL + "/domains/%s/projects/%s";
         public const string RUNS_RESOURCE_NAME = "Runs";

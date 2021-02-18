@@ -1,29 +1,24 @@
-﻿using System;
-using System.Text;
-using System.Collections.Generic;
-using PC.Plugins.Common.PCEntities;
-using PC.Plugins.Common.Client;
-using PC.Plugins.Common.Helper;
+﻿using PC.Plugins.Common.Client;
 using PC.Plugins.Common.Constants;
-using System.Net.Http;
+using PC.Plugins.Common.Helper;
+using PC.Plugins.Common.PCEntities;
+using System;
+using System.Collections.Generic;
 using System.Net;
-using System.Web;
-using System.Collections.Specialized;
-using System.IO;
+using System.Net.Http;
+using System.Text;
 
 namespace PC.Plugins.Common.Rest
 {
 
     /// <summary>
-    /// <summary>
     ///*
-    /// 
     /// @author Daniel Danan
-    /// 
     /// Class to be used for most common operations required in CI plugins
     /// </summary>
     public class PCRestProxy : IPCRestProxy
     {
+        #region fields
         private string _webProtocol = "http";
         private string _pcServerAndPort;
         private string _tenant;
@@ -43,6 +38,9 @@ namespace PC.Plugins.Common.Rest
         private PCErrorResponse _pcErrorResponse = new PCErrorResponse("General error caused by the function \"{0}\" in PCRestProxy. Error: {1}", 99999);
         protected internal static readonly IList<int> _validStatusCodes = new List<int> { (int)HttpStatusCode.OK, (int)HttpStatusCode.Created, (int)HttpStatusCode.Accepted, (int)HttpStatusCode.NoContent };
 
+        #endregion
+
+        #region constructor
         /// <summary>
         /// constructor defining the different parameters of a connection to PC
         /// </summary>
@@ -61,7 +59,7 @@ namespace PC.Plugins.Common.Rest
 
             if (!string.IsNullOrWhiteSpace(pcServerNameAndPort))
             {
-                string[] splittedServerAndTenant = SpitPCServerAndTenant(pcServerNameAndPort);
+                string[] splittedServerAndTenant = GeneralHelper.SpitPCServerAndTenant(pcServerNameAndPort);
                 _pcServerAndPort = splittedServerAndTenant[0];
                 _tenant = splittedServerAndTenant[1];
             }
@@ -114,57 +112,9 @@ namespace PC.Plugins.Common.Rest
             }
         }
 
-        private string[] SpitPCServerAndTenant(string pcServerNameAndPort)
-        {
-            char delimiterSlash = '/';
-            char delimiterQuestionMark = '?';
-            char useDelimiter = delimiterSlash;
-            String[] strServerAndTenant = { pcServerNameAndPort, "" };
+        #endregion
 
-            String theLreServer = pcServerNameAndPort;
-            //replace for common mistakes
-            if (!string.IsNullOrEmpty(pcServerNameAndPort))
-            {
-                theLreServer = pcServerNameAndPort.ToLower().Replace("http://", "");
-                theLreServer = theLreServer.Replace("https://", "");
-                theLreServer = theLreServer.Replace("/lre", "");
-                theLreServer = theLreServer.Replace("/site", "");
-                theLreServer = theLreServer.Replace("/loadtest", "");
-                theLreServer = theLreServer.Replace("/pcx", "");
-                theLreServer = theLreServer.Replace("/adminx", "");
-                theLreServer = theLreServer.Replace("/admin", "");
-                theLreServer = theLreServer.Replace("/login", "");
-            }
-            if (!string.IsNullOrEmpty(theLreServer))
-            {
-                if (theLreServer.Contains(delimiterSlash.ToString()))
-                {
-                    useDelimiter = delimiterSlash;
-                }
-                else if (theLreServer.Contains(delimiterQuestionMark.ToString()))
-                {
-                    useDelimiter = delimiterQuestionMark;
-                }
-                String[] severTenantArray = theLreServer.Split(useDelimiter);
-                if (severTenantArray.Length > 0)
-                {
-                    strServerAndTenant[0] = severTenantArray[0];
-                    if (severTenantArray.Length > 1)
-                    {
-                        if (useDelimiter.Equals(delimiterQuestionMark))
-                        {
-                            strServerAndTenant[1] = delimiterQuestionMark + severTenantArray[1];
-                        }
-                        else
-                        {
-                            strServerAndTenant[1] = severTenantArray[1];
-                        }
-                    }
-                }
-            }
-            return strServerAndTenant;
-        }
-
+        #region properties
         public string WebProtocol
         {
             get { return _webProtocol; }
@@ -211,75 +161,42 @@ namespace PC.Plugins.Common.Rest
             set { _tenant = value; }
         }
 
+        #endregion
+
+        #region authenticate
         /// <summary>
-        /// Authenticate to PC Server
+        /// authenticate to LRE server with either username\password or token (ID key\ secret key)
         /// </summary>
-        /// <param name="userName">PC username</param>
-        /// <param name="password">PC Password</param>
-        public virtual bool Authenticate(string userName, string password)
+        /// <param name="userName"></param>
+        /// <param name="password"></param>
+        /// <param name="useTokenForAuthentication"></param>
+        /// <returns></returns>
+        public virtual bool Authenticate(string userName, string password, bool useTokenForAuthentication)
         {
-            _encodedCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(userName + ":" + password));
-            _restEntity = new RestEntity();
-            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, _tenant, true)
-                .ContentType(RESTConstants.APPLICATION_XML)
-                .Header("Authorization", string.Format("Basic {0}", _encodedCredentials))
-                .Get();
-            _cookieContainer.Add(clientResponse.Cookies);
-            return Client.Utils.Validate(clientResponse, _validStatusCodes);
+            if (useTokenForAuthentication)
+                return AuthenticateWithToken(userName, password);
+            else
+                return Authenticate(userName, password);
         }
 
         /// <summary>
-        /// Authenticate to PC Server
+        /// authenticate to LRE server with either username\password or token (ID key\ secret key)
         /// </summary>
-        /// <param name="userName">PC username</param>
-        /// <param name="password">PC Password</param>
-        /// /// <param name="pcErrorResponse">reference to PCErrorResponse object</param>
-        public virtual bool Authenticate(string userName, string password, ref PCErrorResponse pcErrorResponse)
+        /// <param name="userName"></param>
+        /// <param name="password"></param>
+        /// <param name="pcErrorResponse"></param>
+        /// <param name="useTokenForAuthentication"></param>
+        /// <returns></returns>
+        public virtual bool Authenticate(string userName, string password, ref PCErrorResponse pcErrorResponse, bool useTokenForAuthentication)
         {
-            bool authenticated = false;
-            try
-            {
-                _encodedCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(userName + ":" + password));
-                _restEntity = new RestEntity();
-                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, _tenant, true)
-                    .ContentType(RESTConstants.APPLICATION_XML)
-                    .Header("Authorization", string.Format("Basic {0}", _encodedCredentials))
-                    .Get();
-                if(clientResponse.Cookies!=null)
-                    _cookieContainer.Add(clientResponse.Cookies);
-                authenticated = Client.Utils.Validate(clientResponse, _validStatusCodes);
-                if (authenticated == false)
-                    if (clientResponse.Body != null)
-                        try
-                        {
-                            pcErrorResponse = PCErrorResponse.XMLToObject(clientResponse.Body);
-                        }
-                        catch
-                        {
-                            string errorMessage = "Error: Failed to authenticate."; 
-                            errorMessage +=         "\n**** The response received to the authentication request is:";
-                            errorMessage +=         "\n=================================";
-                            errorMessage +=         "\n" + clientResponse.Body;
-                            errorMessage +=         "\n=================================";
-                            errorMessage += !string.IsNullOrEmpty(_proxyOutURL) ? "\n**** Verify if the proxy URL: " + _proxyOutURL + " is available and the proxy credentials are correct." : "";
-                            errorMessage += string.Format("\n**** Verify that this LoadRunner Enterprise URL {0}://{1}/LoadTest/ is indeed available from the Operating System running the test.", _webProtocol, _pcServerAndPort);
-                            pcErrorResponse = new PCErrorResponse(errorMessage, 9999899); 
-                        }
-                    else
-                    {
-                        if (!string.IsNullOrWhiteSpace(_proxyHostName))
-                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this Proxy URL {0} or this Perfomance Center URL {1}://{2}/LoadTest/ is indeed available", _proxyOutURL, _webProtocol, _pcServerAndPort)), 999890);
-                        else
-                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this PC URL {0}://{1}/LoadTest/ is indeed available", _webProtocol, _pcServerAndPort)), 999990);
-                    }
-            }
-            catch (Exception ex)
-            {
-                pcErrorResponse = new PCErrorResponse (string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", ex.Message), 999991);
-            }
-            return authenticated;
+            if (useTokenForAuthentication)
+                return AuthenticateWithToken(userName, password, ref pcErrorResponse);
+            else
+                return Authenticate(userName, password , ref pcErrorResponse);
         }
+        #endregion
 
+        #region Different rest commands
         /// <summary>
         /// Get all TestSets (in PCTestSets object) in the ALM project
         /// </summary>
@@ -341,8 +258,6 @@ namespace PC.Plugins.Common.Rest
             return pcTest;
         }
 
-
-
         /// <summary>
         /// Get all test instances (in PCTestInstances object) of a specific Test
         /// </summary>
@@ -358,7 +273,6 @@ namespace PC.Plugins.Common.Rest
             }
             return null;
         }
-
 
         /// <summary>
         /// Get all test instances (in PCTestInstances object) of a specific Test
@@ -391,7 +305,6 @@ namespace PC.Plugins.Common.Rest
             }
             return pcTestInstances;
         }
-
 
         /// <summary>
         /// Get information (in GetRunData object) on specific Run
@@ -433,7 +346,6 @@ namespace PC.Plugins.Common.Rest
             }
             return pcRunResponse;
         }
-
 
         /// <summary>
         /// Get information (in PCTest object) on specific test
@@ -536,7 +448,6 @@ namespace PC.Plugins.Common.Rest
             }
             return false;
         }
-
 
         /// <summary>
         /// To dowload a specific result of a specific Run to a file. Returns true if successful while the file is still being downloaded (important for big files)
@@ -725,7 +636,6 @@ namespace PC.Plugins.Common.Rest
             return StopRun;
         }
 
-
         /// <summary>
         /// Create a new test instance of a test into a testset
         /// </summary>
@@ -784,7 +694,6 @@ namespace PC.Plugins.Common.Rest
             }
             return createTestInstance;
         }
-
 
         /// <summary>
         /// download a TrendReport to PDF file 
@@ -919,7 +828,6 @@ namespace PC.Plugins.Common.Rest
             return pcRunResponse;
         }
 
-
         /// <summary>
         /// Get a Trend report in XML
         /// </summary>
@@ -1052,9 +960,153 @@ namespace PC.Plugins.Common.Rest
             }
             return pcTrendReport;
         }
+        #endregion
+
+        #region authenticate helper
+        /// <summary>
+        /// Authenticate to PC Server
+        /// </summary>
+        /// <param name="userName">PC username</param>
+        /// <param name="password">PC Password</param>
+        private bool Authenticate(string userName, string password)
+        {
+            _encodedCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(userName + ":" + password));
+            _restEntity = new RestEntity();
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, _tenant, true)
+                .ContentType(RESTConstants.APPLICATION_XML)
+                .Header("Authorization", string.Format("Basic {0}", _encodedCredentials))
+                .Get();
+            _cookieContainer.Add(clientResponse.Cookies);
+            return Client.Utils.Validate(clientResponse, _validStatusCodes);
+        }
+
+        /// <summary>
+        /// Authenticate to PC Server
+        /// </summary>
+        /// <param name="userName">PC username</param>
+        /// <param name="password">PC Password</param>
+        /// <param name="pcErrorResponse">reference to PCErrorResponse object</param>
+        private bool Authenticate(string userName, string password, ref PCErrorResponse pcErrorResponse)
+        {
+            bool authenticated = false;
+            try
+            {
+                _encodedCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(userName + ":" + password));
+                _restEntity = new RestEntity();
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_LOGIN_URL, _tenant, true)
+                    .ContentType(RESTConstants.APPLICATION_XML)
+                    .Header("Authorization", string.Format("Basic {0}", _encodedCredentials))
+                    .Get();
+                if (clientResponse.Cookies != null)
+                    _cookieContainer.Add(clientResponse.Cookies);
+                authenticated = Client.Utils.Validate(clientResponse, _validStatusCodes);
+                if (authenticated == false)
+                    if (clientResponse.Body != null)
+                        try
+                        {
+                            pcErrorResponse = PCErrorResponse.XMLToObject(clientResponse.Body);
+                        }
+                        catch
+                        {
+                            string errorMessage = "Error: Failed to authenticate.";
+                            errorMessage += "\n**** The response received to the authentication request is:";
+                            errorMessage += "\n=================================";
+                            errorMessage += "\n" + clientResponse.Body;
+                            errorMessage += "\n=================================";
+                            errorMessage += !string.IsNullOrEmpty(_proxyOutURL) ? "\n**** Verify if the proxy URL: " + _proxyOutURL + " is available and the proxy credentials are correct." : "";
+                            errorMessage += string.Format("\n**** Verify that this LoadRunner Enterprise URL {0}://{1}/LoadTest/ is indeed available from the Operating System running the test.", _webProtocol, _pcServerAndPort);
+                            pcErrorResponse = new PCErrorResponse(errorMessage, 9999899);
+                        }
+                    else
+                    {
+                        if (!string.IsNullOrWhiteSpace(_proxyHostName))
+                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this Proxy URL {0} or this Perfomance Center URL {1}://{2}/LoadTest/ is indeed available", _proxyOutURL, _webProtocol, _pcServerAndPort)), 999890);
+                        else
+                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this PC URL {0}://{1}/LoadTest/ is indeed available", _webProtocol, _pcServerAndPort)), 999990);
+                    }
+            }
+            catch (Exception ex)
+            {
+                pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", ex.Message), 999991);
+            }
+            return authenticated;
+        }
+
+
+        /// <summary>
+        /// Authenticate to LRE Server with token
+        /// </summary>
+        /// <param name="clientIdKey">ID key</param>
+        /// <param name="clientSecretKey">Secret key</param>
+        private bool AuthenticateWithToken(string clientIdKey, string clientSecretKey)
+        {
+            AuthenticationClient authenticationClient = new AuthenticationClient(clientIdKey, clientSecretKey);
+            _restEntity = new RestEntity();
+            ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_WITH_TOKEN_LOGIN_URL, _tenant, true)
+                .ContentType(RESTConstants.APPLICATION_XML)
+                .Body(authenticationClient.ObjectToXml())
+                .Post();
+            _cookieContainer.Add(clientResponse.Cookies);
+            return Client.Utils.Validate(clientResponse, _validStatusCodes);
+        }
+
+        /// <summary>
+        /// Authenticate to LRE Server with token
+        /// </summary>
+        /// <param name="clientIdKey">ID key</param>
+        /// <param name="clientSecretKey">Secret key</param>
+        /// <param name="pcErrorResponse">reference to PCErrorResponse object</param>
+        private bool AuthenticateWithToken(string clientIdKey, string clientSecretKey, ref PCErrorResponse pcErrorResponse)
+        {
+            bool authenticated = false;
+            try
+            {
+                AuthenticationClient authenticationClient = new AuthenticationClient(clientIdKey, clientSecretKey);
+                _restEntity = new RestEntity();
+                ClientResponse clientResponse = _restEntity.PCClientRequest(_webProtocol, _pcServerAndPort, _proxyOutURL, _proxyUser, _proxyPassword, _domain, _project, PCConstants.AUTHENTICATION_WITH_TOKEN_LOGIN_URL, _tenant, true)
+                    .ContentType(RESTConstants.APPLICATION_XML)
+                    .Body(authenticationClient.ObjectToXml())
+                    .Post();
+                if (clientResponse.Cookies != null)
+                    _cookieContainer.Add(clientResponse.Cookies);
+                authenticated = Client.Utils.Validate(clientResponse, _validStatusCodes);
+                if (authenticated == false)
+                {
+                    if (clientResponse.Body != null)
+                        try
+                        {
+                            pcErrorResponse = PCErrorResponse.XMLToObject(clientResponse.Body);
+                        }
+                        catch
+                        {
+                            string errorMessage = "Error: Failed to authenticate.";
+                            errorMessage += "\n**** The response received to the authentication request is:";
+                            errorMessage += "\n=================================";
+                            errorMessage += "\n" + clientResponse.Body;
+                            errorMessage += "\n=================================";
+                            errorMessage += !string.IsNullOrEmpty(_proxyOutURL) ? "\n**** Verify if the proxy URL: " + _proxyOutURL + " is available and the proxy credentials are correct." : "";
+                            errorMessage += string.Format("\n**** Verify that this LoadRunner Enterprise URL {0}://{1}/LoadTest/ is indeed available from the Operating System running the test.", _webProtocol, _pcServerAndPort);
+                            pcErrorResponse = new PCErrorResponse(errorMessage, 9999899);
+                        }
+                    else
+                    {
+                        if (!string.IsNullOrWhiteSpace(_proxyHostName))
+                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this Proxy URL {0} or this Perfomance Center URL {1}://{2}/LoadTest/ is indeed available", _proxyOutURL, _webProtocol, _pcServerAndPort)), 999890);
+                        else
+                            pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", String.Format("No response from the PC server. Verify that this PC URL {0}://{1}/LoadTest/ is indeed available", _webProtocol, _pcServerAndPort)), 999990);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                pcErrorResponse = new PCErrorResponse(string.Format(_pcErrorResponse.ExceptionMessage, "Authenticate", ex.Message), 999991);
+            }
+            return authenticated;
+        }
+
+        #endregion
 
         #region local helper
-
         /// <summary>
         /// extract information from proxyURL
         /// </summary>
@@ -1090,7 +1142,7 @@ namespace PC.Plugins.Common.Rest
 
         #endregion
 
-        #region notdone
+        #region notdone / not used for now
         //*************************************************************************************************************************
         //*************************************************************************************************************************
         //*********************************************not working, not needed for now*********************************************
@@ -1182,9 +1234,5 @@ namespace PC.Plugins.Common.Rest
             return uploadVugenScript;
         }
         #endregion
-
-     
-
     }
-
 }
