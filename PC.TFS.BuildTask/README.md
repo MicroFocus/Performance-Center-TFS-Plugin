@@ -8,7 +8,7 @@ This extension supports Performance Center 12.56 and later.
 
 # What's New in this Release (version 1.0.8)
 
-> **February 2021**
+> **April 2021**
 > You can use a token access to authenticate to LRE (available from LRE 2020 R1).
 
 # Installation Instructions
