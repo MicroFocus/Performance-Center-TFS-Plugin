@@ -547,7 +547,7 @@ namespace PC.Plugins.Automation
                     }
 
                     TrendReportTrendedRun trendReportTrendedRun = pcTrendReport.TrendedRuns.FirstOrDefault(p => p.RunID == runId);
-                    if (trendReportTrendedRun != null && trendReportTrendedRun.State.Equals(PCBuilder.TRENDED) || trendReportTrendedRun.State.Equals(PCBuilder.ERROR))
+                    if (trendReportTrendedRun != null && (trendReportTrendedRun.State.Equals(PCBuilder.TRENDED) || trendReportTrendedRun.State.Equals(PCBuilder.ERROR)))
                     {
                         publishEnded = true;
                         _fileLog.Write(LogMessageType.Info, "Run: " + runId + " publishing status: " + trendReportTrendedRun.State);

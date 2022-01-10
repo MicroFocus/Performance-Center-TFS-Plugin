@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "PCIntegration",
   "name": "LoadRunner Enterprise CI",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "publisher": "Micro-Focus",
   "targets": [
     {
