@@ -7,10 +7,6 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("PC.Plugins.Installer.CA")]
 [assembly: AssemblyDescription("LoadRunner Enterprise Plugin Installer")]
-//[assembly: AssemblyCompany("Micro Focus")]
-//[assembly: AssemblyProduct("PC.Plugins.Installer.CA")]
-//[assembly: AssemblyCopyright("Copyright ֲ© Micro Focus 2018")]
-[assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 

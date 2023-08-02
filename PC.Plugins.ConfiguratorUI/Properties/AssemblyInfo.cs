@@ -1,5 +1,5 @@
 ﻿/*!
-* (c) 2016-2018 EntIT Software LLC, a Micro Focus company
+* (c) 2016-2018 EntIT Software LLC, a OpenText company
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -25,10 +25,6 @@ using System.Windows;
 [assembly: AssemblyTitle("PC.Plugins.ConfiguratorUI")]
 [assembly: AssemblyDescription("Configuration UI for PC.Plugins")]
 [assembly: AssemblyConfiguration("")]
-//[assembly: AssemblyCompany("Micro Focus")]
-//[assembly: AssemblyProduct("PC.Plugins.ConfiguratorUI")]
-//[assembly: AssemblyCopyright("Copyright © Micro Focus 2018")]
-[assembly: AssemblyTrademark("Micro Focus")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible

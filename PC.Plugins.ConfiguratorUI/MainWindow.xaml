@@ -5,12 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PC.Plugins.ConfiguratorUI"
         mc:Ignorable="d"
-        Title="TFS Plugin for LoadRunner Enterprise - Configuration" Height="Auto" Width="Auto"
+        Title="TFS Plugin for LoadRunner Enterprise - Configuration" Height="600" Width="900"
         ResizeMode="CanResize" 
         WindowStartupLocation="CenterScreen"
         Closing="MainWindow_OnClosing" Icon="MicroFocusIcon.ico" FontSize="14px"
-        WindowStyle="ThreeDBorderWindow" MouseDown="MainWindow_OnMouseDown"
-        SizeToContent="WidthAndHeight" >
+        WindowStyle="SingleBorderWindow" MouseDown="MainWindow_OnMouseDown" >
     <Window.Resources>
         <Style x:Key="CommonStyle" TargetType="Control">
             <Setter Property="FontSize" Value="14"/>
@@ -59,7 +58,7 @@
                 <RowDefinition Height="70"/>
                 <RowDefinition Height="900"/>
                 <RowDefinition Height="15"/>
-                <RowDefinition Height="70"/>
+                <RowDefinition Height="120"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="126"/>
@@ -75,22 +74,22 @@
             <Line Grid.Row="0" Grid.ColumnSpan="3" X1="0" Y1="70" X2="630" Y2="70" Stroke="#EEEEEE" StrokeThickness="2" />
             <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,1,0">
                 <DockPanel Margin="0,10,0,0">
-                    <Label Height="40" Margin="10,2,0,2" Content="LRE URL:" />
+                    <Label Height="NaN" Margin="10,2,0,2" Content="LRE URL:" />
                     <Button Style="{DynamicResource NoChromeButton}" x:Name="TipButtonPCServer" ToolTip="PC Server URL. e.g.: https://mypserver.mycompany.com:434" Margin="0,10,0,0">
                         <Image Source="qicon.png" Height="20" Width="20" Margin="0 5 20 0"/>
                     </Button>
                 </DockPanel>
                 <DockPanel Margin="0,10,0,0">
-                    <Label Height="40" Margin="10,2,0,2" Content="Use Access Token:" />
+                    <Label Height="NaN" Margin="10,2,0,2" Content="Use Access Token:" />
                     <Button Style="{DynamicResource NoChromeButton}" x:Name="TipButtonAccessToken" ToolTip="Needed if LRE is configured to work with SSO but not only">
                         <Image Source="qicon.png" Height="20" Width="20" Margin="0 5 20 0"/>
                     </Button>
                 </DockPanel>
-                <Label Height="40" Margin="10,2,0,2" Content="User Name:" />
-                <Label Height="40" Margin="10,2,0,2" Content="Password:" />
-                <Label Height="40" Margin="10,2,0,2" Content="Domain:" />
-                <Label Height="40" Margin="10,2,0,2" Content="Project:" />
-                <Label Height="40" Margin="10,2,0,2" Content="Test ID:" />
+                <Label Height="NaN" Margin="10,2,0,2" Content="User Name:" />
+                <Label Height="NaN" Margin="10,2,0,2" Content="Password:" />
+                <Label Height="NaN" Margin="10,2,0,2" Content="Domain:" />
+                <Label Height="NaN" Margin="10,2,0,2" Content="Project:" />
+                <Label Height="NaN" Margin="10,2,0,2" Content="Test ID:" />
                 <Label Height="65" Width="115" Margin="10,5,0,2" Content="Test Instance ID:" />
                 <Label Height="40" Margin="10,5,0,2" Content="Proxy URL:" />
                 <Label Height="40" Margin="10,2,0,2" Content="Proxy User Name:" />
@@ -112,7 +111,7 @@
                     <Label Height="40" Margin="10,2,0,2" Content="Use VUDs:" />
                     <Button Style="{DynamicResource NoChromeButton}" x:Name="TipButtonVUDs" >
                         <Button.ToolTip>
-                            <TextBlock><Run Text="A Virtual User Day (VUD) license provides you with a specified number of Vusers (VUDs) that you can run an unlimited number of times within a 24 hour period."/><LineBreak /><Run Text="Before using this option, make sure that VUDs licenses are applied in your Micro Focus LoadRunner Enterprise environment."/></TextBlock>
+                            <TextBlock><Run Text="A Virtual User Day (VUDF) license provides you with a specified number of Vusers (VUDs) that you can run an unlimited number of times within a 24 hour period."/><LineBreak /><Run Text="Before using this option, make sure that VUDs licenses are applied in your LoadRunner Enterprise environment."/></TextBlock>
                         </Button.ToolTip>
                         <Image Source="qicon.png" Height="20" Width="20" Margin="0 5 20 0"/>
                     </Button>
@@ -131,15 +130,15 @@
                 </Label>
             </StackPanel>
             <StackPanel Grid.ColumnSpan="3" Margin="125,0,1,69" Grid.RowSpan="3" Grid.Row="1">
-                <TextBox x:Name="PCServerURL" Margin="32,12,147,2" Width="Auto" Height="40" Text="http://MyLreServer/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3"/>
+                <TextBox x:Name="PCServerURL" Margin="32,12,147,2" Width="Auto" Height="NaN" Text="http://MyLreServer/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3"/>
                 <Line Stroke="#EEEEEE" X1="0" Y1="25" X2="{Binding Width, ElementName=root}" Y2="25" />
-                <CheckBox x:Name="UseTokenForAuthentication" Margin="32,1,147,1"/>
+                <CheckBox x:Name="UseTokenForAuthentication" Margin="32,1,147,1" Height="NaN"/>
                 <Line Stroke="#EEEEEE" X1="0" Y1="15" X2="{Binding Width, ElementName=root}" Y2="15" />
-                <TextBox x:Name="PCUserName" Margin="32,2,147,2" Width="Auto" Height="40" Text="daniel"/>
-                <PasswordBox x:Name="PCPassword" Margin="32,2,147,2" Width="Auto" Height="40" Password="" />
-                <TextBox x:Name="Domain" Margin="32,2,147,2" Width="Auto" Height="40" Text="DEFAULT"/>
-                <TextBox x:Name="Project" Margin="32,2,147,2" Width="Auto" Height="40" Text="MyLREProject"/>
-                <TextBox x:Name="TestID" Margin="32,2,147,2" Width="Auto" Height="40" Text="199 "/>
+                <TextBox x:Name="PCUserName" Margin="32,2,147,2" Width="Auto" Height="NaN" Text="daniel"/>
+                <PasswordBox x:Name="PCPassword" Margin="32,2,147,2" Width="Auto" Height="NaN" Password="" />
+                <TextBox x:Name="Domain" Margin="32,2,147,2" Width="Auto" Height="NaN" Text="DEFAULT"/>
+                <TextBox x:Name="Project" Margin="32,2,147,2" Width="Auto" Height="NaN" Text="MyLREProject"/>
+                <TextBox x:Name="TestID" Margin="32,2,147,2" Width="Auto" Height="NaN" Text="199 "/>
                 <StackPanel Grid.Row="4" Grid.Column="1" Margin="32,10,0,0">
                     <RadioButton x:Name = "AutoTestInstance" IsChecked="True" Checked = "HandleTestInstanceCheck" GroupName="TestInstance" Content = "Automatically select existing or create new if none exists" Margin="32,5,0,0" />
                     <RadioButton x:Name = "SpecifyTestInstance" Checked = "HandleTestInstanceCheck" GroupName = "TestInstance"  HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Margin="32,5,0,0"  >

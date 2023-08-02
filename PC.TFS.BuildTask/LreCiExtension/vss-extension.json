@@ -1,0 +1,88 @@
+{
+  "manifestVersion": 1,
+  "id": "PCIntegration",
+  "name": "LoadRunner Enterprise CI",
+  "version": "1.1.0",
+  "publisher": "Micro-Focus",
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "description": "Run a LoadRunner Enterprise test from a task in a Azure DevOps / Microsoft Team Foundation Server CI build process.",
+  "categories": [
+    "Test"
+  ],
+  "resources": [
+    ""
+  ],
+  "tags": [
+    "Performance Center",
+    "Performance Testing",
+    "LoadRunner",
+    "Continuous Integration",
+    "LoadRunner Enterprise"
+  ],
+  "icons": {
+    "default": "resources/img/LreIcon.png"
+  },
+  "screenshots ": [
+    {
+      "path": "resources/screenshots/AlmExecution.PNG"
+    },
+    {
+      "path": "resources/screenshots/screen2.png"
+    }
+  ],
+  "links": {
+    "home": {
+      "uri": "<link to project extension>"
+    },
+    "installation": {
+      "uri": "<link to installation>"
+    },
+    "learn": {
+      "uri": "<link to documentation>"
+    }
+  },
+  "content": {
+    "details": {
+      "path": "README.md"
+    },
+    "overview": {
+      "path": "overview.md"
+    },
+    "license": {
+      "path": "LICENSE.md"
+    }
+  },
+  "branding": {
+    "color": "rgb(89, 141, 88)",
+    "theme": "dark"
+  },
+  "files": [
+    {
+      "path": "LreCiTask"
+    }
+  ],
+  "scopes": [
+    "vso.test",
+    "vso.build_execute",
+    "vso.serviceendpoint"
+  ],
+  "contributions": [
+    {
+      "id": "build-task-pc-test-execution",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "LreCiTask"
+      }
+    }
+  ],
+  "galleryFlags": [
+    "Public"
+  ]
+}

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   
-  <Product Id="70b27b3a-1db9-4b60-88bb-fcfe1357f255" Name="LoadRunner Enterprise Plugin" Language="1033" Version="1.0.0.0" Manufacturer="Micro Focus" UpgradeCode="d89463af-7749-4b63-a351-dd9e0547f49a">
+  <Product Id="70b27b3a-1db9-4b60-88bb-fcfe1357f255" Name="LoadRunner Enterprise Plugin" Language="1033" Version="1.0.0.0" Manufacturer="OpenText" UpgradeCode="d89463af-7749-4b63-a351-dd9e0547f49a">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of LoadRunner Enterprise Plugin is already installed." />
@@ -37,7 +37,7 @@
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir" >
       <Directory Id="ProgramFilesFolder">
-        <Directory Id="MicroFocus" Name="Micro Focus">
+        <Directory Id="OpenText" Name="OpenText">
           <Directory Id="INSTALLDIR" Name="LoadRunner Enterprise Plugin" />
         </Directory>
       </Directory>
