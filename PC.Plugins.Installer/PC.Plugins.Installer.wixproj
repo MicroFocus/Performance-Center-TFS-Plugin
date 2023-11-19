@@ -51,6 +51,10 @@
   <PropertyGroup>
     <PreBuildEvent />
   </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>robocopy $(ProjectDir)bin\$(Configuration)\ $(SolutionDir)Extension\ /is /it /XO /NP /XF %2a.wixpdb
+if %25ERRORLEVEL%25 EQU 3 EXIT /B 0 else EXIT /B %25ERRORLEVEL%25</PostBuildEvent>
+  </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
 	Other similar extension points exist, see Wix.targets.

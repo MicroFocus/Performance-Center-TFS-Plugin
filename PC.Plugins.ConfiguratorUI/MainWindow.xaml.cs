@@ -1,5 +1,5 @@
 ﻿/*!
-* (c) 2016-2018 EntIT Software LLC, a Micro Focus company
+* (c) 2016-2018 EntIT Software LLC, a OpenText company
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.

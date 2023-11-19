@@ -1,35 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
-        <DirectoryRef Id="INSTALLDIR">
-            <Component Id="cmp1C32202B72864C86E1FCB6C2E1BD5333" Guid="*">
-                <File Id="fil32C8232DC6440AD4DC763D386B49CC8F" KeyPath="yes" Source="!(wix.ProtocolBuildRoot)\PC.Plugins.Automation.dll" />
-            </Component>
-            <Component Id="cmpDC234C074B1262E9090C7B32997ECF7A" Guid="*">
-                <File Id="fil7CDDE368C429F7C91DD0EB3B1FB74FFC" KeyPath="yes" Source="!(wix.ProtocolBuildRoot)\PC.Plugins.Common-7-22-2020-10-35-AM.zip" />
-            </Component>
-            <Component Id="cmp379621BEAC30167CB275CD10445667B6" Guid="*">
-                <File Id="fil65B9D276EFA0302FC79476A19AFF1405" KeyPath="yes" Source="!(wix.ProtocolBuildRoot)\PC.Plugins.Common.dll" />
-            </Component>
-            <Component Id="cmp8AE2D0A5275EC9707AFB1DACFC9DCC7E" Guid="*">
-                <File Id="fil2E1FB6DE311C8206D7AA49A9E792FBA8" KeyPath="yes" Source="!(wix.ProtocolBuildRoot)\PC.Plugins.Configurator.dll" />
-            </Component>
-            <Component Id="cmp6C603C0D575D82DD2C13A8F7184BD149" Guid="*">
-                <File Id="fil07E293B5A30DFC94E3C41839D9882A7A" KeyPath="yes" Source="!(wix.ProtocolBuildRoot)\PC.Plugins.ConfiguratorUI.exe" />
-            </Component>
-            <Component Id="cmp0E1A41F7E3B7AEEC45D663A7A9BE5E25" Guid="*">
-                <File Id="fil2DC4B54F444CA7BD27CD58FC0322CC47" KeyPath="yes" Source="!(wix.ProtocolBuildRoot)\PC.Plugins.ConfiguratorUI.exe.config" />
-            </Component>
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <ComponentGroup Id="ProductComponents">
-            <ComponentRef Id="cmp1C32202B72864C86E1FCB6C2E1BD5333" />
-            <ComponentRef Id="cmpDC234C074B1262E9090C7B32997ECF7A" />
-            <ComponentRef Id="cmp379621BEAC30167CB275CD10445667B6" />
-            <ComponentRef Id="cmp8AE2D0A5275EC9707AFB1DACFC9DCC7E" />
-            <ComponentRef Id="cmp6C603C0D575D82DD2C13A8F7184BD149" />
-            <ComponentRef Id="cmp0E1A41F7E3B7AEEC45D663A7A9BE5E25" />
-        </ComponentGroup>
     </Fragment>
 </Wix>

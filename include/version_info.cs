@@ -1,7 +1,8 @@
 using System.Reflection;
 
-[assembly: AssemblyCompany("Micro Focus")]
-[assembly: AssemblyCopyright("Copyright © Micro Focus 2018")]
+[assembly: AssemblyCompany("OpenText")]
+[assembly: AssemblyCopyright("Copyright © OpenText 2023")]
 [assembly: AssemblyProduct("LoadRunner Enterprise Plugin")]
-[assembly: AssemblyVersion("1.0.9.0")]
-[assembly: AssemblyFileVersion("1.0.9.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
+[assembly: AssemblyTrademark("OpenText")]

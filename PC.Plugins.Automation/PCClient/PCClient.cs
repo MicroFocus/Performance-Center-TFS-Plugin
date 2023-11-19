@@ -1,15 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using PC.Plugins.Common.Rest;
+﻿using PC.Plugins.Common.Constants;
 using PC.Plugins.Common.PCEntities;
-using PC.Plugins.Common.Constants;
-using PC.Plugins.Common.Helper;
+using PC.Plugins.Common.Rest;
+using System;
+using System.IO;
 using System.IO.Compression;
-using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace PC.Plugins.Automation
 {
@@ -218,7 +213,7 @@ namespace PC.Plugins.Automation
 
         private bool TestExist(int testID, ref PCErrorResponse pcErrorResponse)
         {
-            PCTest pcTest = _pcRestProxy.GetTest(testID, ref pcErrorResponse);
+             PCTest pcTest = _pcRestProxy.GetTest(testID, ref pcErrorResponse);
             if (pcTest == null)
                 return false;
             return true;
@@ -534,7 +529,7 @@ namespace PC.Plugins.Automation
             {
                 PCTrendReport pcTrendReport;
                 bool publishEnded = false;
-                int counterPublishing = 60;
+                int counterPublishing = 120;
                 do
                 {
                     pcTrendReport = _pcRestProxy.GetTrendReportMetaData(trendReportId, ref pcErrorResponse);
@@ -554,9 +549,9 @@ namespace PC.Plugins.Automation
                     }
                     else
                     {
-                        if (counterPublishing == 60)
+                        if (counterPublishing % 10 == 0)
                         {
-                            string msg = "Waiting for publishing to end.";
+                            string msg = $"Waiting for publishing to end.";
                             _fileLog.Write(LogMessageType.Info, msg);
                         }
                         counterPublishing--;

@@ -1,5 +1,5 @@
 #
-# pcLocalTask.ps1
+# lreLocalTask.ps1
 #
 param([string][Parameter(Mandatory=$true)] $varPCServer,
 	[string][Parameter(Mandatory=$true)] $varUserName,

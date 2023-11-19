@@ -8,10 +8,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("PC.Plugins.Configurator")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-//[assembly: AssemblyCompany("Micro Focus")]
-//[assembly: AssemblyProduct("PC.Plugins.Configurator")]
-//[assembly: AssemblyCopyright("Copyright © Micro Focus 2018")]
-[assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
