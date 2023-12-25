@@ -11,74 +11,53 @@ async function run() {
 		const varDomain: string = tl.getInput('varDomain', true) ?? '';
 		const varProject: string = tl.getInput('varProject', true) ?? '';
 		const varTestID: string = tl.getInput('varTestID', true) ?? '';
-		const varAutoTestInstance: string = tl.getInput('varAutoTestInstance', false) ?? '';
+		const varAutoTestInstance: string = tl.getInput('varAutoTestInstance', false) ?? 'true';
 		const varTestInstID: string = tl.getInput('varTestInstID', false) ?? '';
-		const varPostRunAction: string = tl.getInput('varPostRunAction', false) ?? '';
+		const varPostRunAction: string = tl.getInput('varPostRunAction', false) ?? 'CollateAndAnalyze';
 		const varProxyUrl: string = tl.getInput('varProxyUrl', false) ?? '';
 		const varProxyUser: string = tl.getInput('varProxyUser', false) ?? '';
 		const varProxyPassword: string = tl.getInput('varProxyPassword', false) ?? '';
-		const varTrending: string = tl.getInput('varTrending', false) ?? '';
+		const varTrending: string = tl.getInput('varTrending', false) ?? 'DoNotTrend';
 		const varTrendReportID: string = tl.getInput('varTrendReportID', false) ?? '';
-		const varTimeslotDuration: string = tl.getInput('varTimeslotDuration', false) ?? '';
-		const varUseVUDs: string = tl.getInput('varUseVUDs', false) ?? '';
-		const varUseSLAInStatus: string = tl.getInput('varUseSLAInStatus', false) ?? '';
+		const varTimeslotDuration: string = tl.getInput('varTimeslotDuration', false) ?? '30';
+		const varUseVUDs: string = tl.getInput('varUseVUDs', false) ?? 'false';
+		const varUseSLAInStatus: string = tl.getInput('varUseSLAInStatus', false) ?? 'false';
 		const varArtifactsDir: string = tl.getInput('varArtifactsDir', false) ?? '';
-		const varTimeslotRepeat: string = tl.getInput('varTimeslotRepeat', false) ?? '';
-		const varTimeslotRepeatDelay: string = tl.getInput('varTimeslotRepeatDelay', false) ?? '';
-		const varTimeslotRepeatAttempts: string = tl.getInput('varTimeslotRepeatAttempts', false) ?? '';
-		const varUseTokenForAuthentication: string = tl.getInput('varUseTokenForAuthentication', false) ?? '';
+		const varTimeslotRepeat: string = tl.getInput('varTimeslotRepeat', false) ?? 'DoNotRepeat';
+		const varTimeslotRepeatDelay: string = tl.getInput('varTimeslotRepeatDelay', false) ?? '1';
+		const varTimeslotRepeatAttempts: string = tl.getInput('varTimeslotRepeatAttempts', false) ?? '2';
+		const varUseTokenForAuthentication: string = tl.getInput('varUseTokenForAuthentication', false) ?? 'false';
 
 		if ([varPCServer, varUserName, varPassword, varDomain, varProject, varTestID].includes('bad')) {
 			tl.setResult(tl.TaskResult.Failed, 'Bad input was given');
 			return;
 		}
-		// console.log('start running on ', 
-			// "varPCServer='", varPCServer, "', ", "\r\n",
-			// "varUserName='", varUserName, "', ", "\r\n",
-			// "varPassword='********', ", "\r\n",
-			// "varDomain='",	varDomain, "', ", "\r\n",
-			// "varProject='",	varProject, "', ", "\r\n",
-			// "varTestID='",	varTestID, "', ", "\r\n",
-			// "varAutoTestInstance='",	varAutoTestInstance, "', ", "\r\n",
-			// "varTestInstID='", varTestInstID, "', ", "\r\n",
-			// "varPostRunAction='", varPostRunAction, "', ", "\r\n",
-			// "varProxyUrl='",	varProxyUrl, "', ", "\r\n",
-			// "varProxyUser='", varProxyUser, "', ", "\r\n",
-			// "varProxyPassword='********', ", "\r\n",
-			// "varTrending='", varTrending, "', ", "\r\n",
-			// "varTrendReportID='", varTrendReportID, "', ", "\r\n",
-			// "varTimeslotDuration='", varTimeslotDuration, "', ", "\r\n",
-			// "varUseVUDs='", varUseVUDs, "', ", "\r\n",
-			// "varUseSLAInStatus='", varUseSLAInStatus, "', ", "\r\n",
-			// "varArtifactsDir='", varArtifactsDir, "', ", "\r\n",
-			// "varTimeslotRepeat='", varTimeslotRepeat, "', ", "\r\n",
-			// "varTimeslotRepeatDelay='", varTimeslotRepeatDelay, "', ", "\r\n",
-			// "varTimeslotRepeatAttempts='", varTimeslotRepeatAttempts, "', ", "\r\n",
-			// "varUseTokenForAuthentication='", varUseTokenForAuthentication, "'", "\r\n");
-		await ExecutePcLocalTask(	
-			varPCServer, 
-			varUserName,
-			varPassword,
-			varDomain,
-			varProject,
-			varTestID,
-			varAutoTestInstance,
-			varTestInstID,
-			varPostRunAction,
-			varProxyUrl,
-			varProxyUser,
-			varProxyPassword,
-			varTrending,
-			varTrendReportID,
-			varTimeslotDuration,
-			varUseVUDs,
-			varUseSLAInStatus,
-			varArtifactsDir,
-			varTimeslotRepeat,
-			varTimeslotRepeatDelay,
-			varTimeslotRepeatAttempts,
-			varUseTokenForAuthentication);
-        // console.log('finished running on ', varPCServer);
+		var artifactoryDirVerified = verifyArtifactoryPath(varArtifactsDir);
+
+		process.env.VARPCSERVER = varPCServer;
+		process.env.VARUSERNAME = varUserName;
+		process.env.VARPASSWORD = varPassword;
+		process.env.VARDOMAIN = varDomain;
+		process.env.VARPROJECT = varProject;
+		process.env.VARTESTID = varTestID;
+		process.env.VARAUTOTESTINSTANCE = varAutoTestInstance;
+		process.env.VARTESTINSTID = varTestInstID;
+		process.env.VARPOSTRUNACTION = varPostRunAction;
+		process.env.VARPROXYURL = varProxyUrl;
+		process.env.VARPROXYUSER = varProxyUser;
+		process.env.VARPROXYPASSWORD = varProxyPassword;
+		process.env.VARTRENDING = varTrending;
+		process.env.VARTRENDREPORTID = varTrendReportID;
+		process.env.VARTIMESLOTDURATION = varTimeslotDuration;
+		process.env.VARUSEVUDS = varUseVUDs;
+		process.env.VARUSESLAINSTATUS = varUseSLAInStatus;
+		process.env.VARARTIFACTSDIR = artifactoryDirVerified;
+		process.env.VARTIMESLOTREPEAT = varTimeslotRepeat;
+		process.env.VARTIMESLOTREPEATDELAY = varTimeslotRepeatDelay;
+		process.env.VARTIMESLOTREPEATATTEMPTS = varTimeslotRepeatAttempts;
+		process.env.VARUSETOKENFORAUTHENTICATION = varUseTokenForAuthentication;
+
+		await ExecutePcLocalTask();
 		if(errorLevel != 0) {
 			errorLevel = 0;
 			throw new Error("Failed running")
@@ -93,53 +72,32 @@ async function run() {
     }
 }
 
-async function ExecutePcLocalTask(
-	varPCServer: string, 
-	varUserName:string, 
-	varPassword: string, 
-	varDomain: string,
-	varProject: string,
-	varTestID: string ,
-	varAutoTestInstance: string,
-	varTestInstID: string,
-	varPostRunAction: string,
-	varProxyUrl: string,
-	varProxyUser: string,
-	varProxyPassword: string,
-	varTrending: string,
-	varTrendReportID: string,
-	varTimeslotDuration: string,
-	varUseVUDs: string,
-	varUseSLAInStatus: string,
-	varArtifactsDir: string,
-	varTimeslotRepeat: string,
-	varTimeslotRepeatDelay: string,
-	varTimeslotRepeatAttempts: string,
-	varUseTokenForAuthentication: string) {
+/**
+ * The artifactory should not contain a parameter because this would mean 
+ * it does not correspond to a valid environment variable.
+ * Therefore, this mnethod can be used, if this happens, to perform the following:
+ * - the pipeline workspace will be used instead of the provided value
+ * - and if the pipeline workspace itself does not exist, no path for artifactory will be used.
+ * @param varArtifactsDir
+ * @returns
+ */
+function verifyArtifactoryPath(varArtifactsDir: string) {
+    var artifactoryDirVerified = varArtifactsDir;
+    var paramsInArtifactoryDirVerified = artifactoryDirVerified.match(/\(([^}]*)\)/);
+    if (paramsInArtifactoryDirVerified) {
+        let pipelineWorkspace = process.env.PIPELINE_WORKSPACE;
+        if (pipelineWorkspace) {
+            artifactoryDirVerified = pipelineWorkspace.concat("\\LreTest");
+        } else {
+            artifactoryDirVerified = "LreTest";
+        }
+    }
+    return artifactoryDirVerified;
+}
+
+async function ExecutePcLocalTask() {
 	const scriptPath = path.join(__dirname, "lreLocalTask.ps1");
-	const psCommand = `& "${scriptPath}" ` + 
-		`-varPCServer "${varPCServer}" ` +
-		`-varUserName "${varUserName}" ` +
-		`-varPassword "${varPassword}" ` +
-		`-varDomain "${varDomain}" ` +
-		`-varProject "${varProject}" ` +
-		`-varTestID "${varTestID}" ` +
-		`-varAutoTestInstance "${varAutoTestInstance}" ` +
-		`-varTestInstID "${varTestInstID}" ` +
-		`-varPostRunAction "${varPostRunAction}" ` +
-		`-varProxyUrl "${varProxyUrl}" ` +
-		`-varProxyUser "${varProxyUser}" ` +
-		`-varProxyPassword "${varProxyPassword}" ` +
-		`-varTrending "${varTrending}" ` +
-		`-varTrendReportID "${varTrendReportID}" ` +
-		`-varTimeslotDuration "${varTimeslotDuration}" ` +
-		`-varUseVUDs "${varUseVUDs}" ` +
-		`-varUseSLAInStatus "${varUseSLAInStatus}" ` +
-		`-varArtifactsDir "${varArtifactsDir}" ` +
-		`-varTimeslotRepeat "${varTimeslotRepeat}" ` +
-		`-varTimeslotRepeatDelay "${varTimeslotRepeatDelay}" ` +
-		`-varTimeslotRepeatAttempts "${varTimeslotRepeatAttempts}" ` +
-		`-varUseTokenForAuthentication "${varUseTokenForAuthentication}"`;
+	const psCommand = `& "${scriptPath}"`;
 	await execPsCommand(psCommand);
 }
 
@@ -174,7 +132,6 @@ process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
 	console.log('Task was interrupted');
 	// Perform cleanup or additional actions here
 	tl.setResult(tl.TaskResult.Failed, 'Task was interrupted');
-  });
-  
+});
 
 run();

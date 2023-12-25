@@ -1,28 +1,32 @@
 #
 # lreLocalTask.ps1
 #
-param([string][Parameter(Mandatory=$true)] $varPCServer,
-	[string][Parameter(Mandatory=$true)] $varUserName,
-	[string][Parameter(Mandatory=$false)]$varPassword,
-	[string][Parameter(Mandatory=$true)] $varDomain,
-	[string][Parameter(Mandatory=$true)] $varProject,
-	[string][Parameter(Mandatory=$true)] $varTestID,
-	[string] $varAutoTestInstance="true",
-	[string] $varTestInstID="",
-	[string] $varPostRunAction="CollateAndAnalyze",
-	[string] $varProxyUrl="",
-	[string] $varProxyUser="",
-	[string] $varProxyPassword="",
-	[string] $varTrending="DoNotTrend",
-	[string] $varTrendReportID="",
-	[string] $varTimeslotDuration="30",
-	[string] $varUseVUDs="false",
-	[string] $varUseSLAInStatus="false",
-	[string] $varArtifactsDir="",
-	[string] $varTimeslotRepeat="DoNotRepeat",
-	[string] $varTimeslotRepeatDelay="1",
-	[string] $varTimeslotRepeatAttempts="3",
-	[string] $varUseTokenForAuthentication="false")
+
+$varPCServer = $env:VARPCSERVER
+$varUserName = $env:VARUSERNAME
+$varPassword = $env:VARPASSWORD
+$varDomain = $env:VARDOMAIN
+$varProject = $env:VARPROJECT
+$varTestID = $env:VARTESTID
+$varAutoTestInstance = $env:VARAUTOTESTINSTANCE
+$varTestInstID = $env:VARTESTINSTID
+$varPostRunAction = $env:VARPOSTRUNACTION
+$varProxyUrl = $env:VARPROXYURL
+$varProxyUser = $env:VARPROXYUSER
+$varProxyPassword = $env:VARPROXYPASSWORD
+$varTrending = $env:VARTRENDING
+$varTrendReportID = $env:VARTRENDREPORTID
+$varTimeslotDuration = $env:VARTIMESLOTDURATION
+$varUseVUDs = $env:VARUSEVUDS
+$varUseSLAInStatus = $env:VARUSESLAINSTATUS
+$varArtifactsDir = $env:VARARTIFACTSDIR
+$varTimeslotRepeat = $env:VARTIMESLOTREPEAT
+$varTimeslotRepeatDelay = $env:VARTIMESLOTREPEATDELAY
+$varTimeslotRepeatAttempts = $env:VARTIMESLOTREPEATATTEMPTS
+$varUseTokenForAuthentication = $env:VARUSETOKENFORAUTHENTICATION
+
+$dateTime="$("$(Get-Date -format 'u')")".Replace(":","-").Replace(" ", "--");
+$varArtifactsDir="$($varArtifactsDir)\$($dateTime)".Replace("\\", "\")
 
 #Write-Host "+++++++++Verifying required environment variable++++++++++"
 $pcworkdir = $PSScriptRoot

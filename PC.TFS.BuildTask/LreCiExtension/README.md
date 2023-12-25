@@ -6,18 +6,20 @@ This extension enables you to include a LoadRunner Enterprise test execution as 
 
 This extension supports Performance Center 12.56 and later.
 
-# What's New in this Release (version 1.1.0)
+# What's New in this Release (version 1.1.2)
 
-> **August 2023**
+> **December 2023**
 > "Micro Focus" is now "OpenText" (rebranding).
 > Wrapping the previous powershell extension into a Node extension.
+> Logs and reports to be saved under unique sub folder (defined by date and time) in provided build artifactory path.
+> If parameter defining the build artifactory path is not valid, the pipeline workspace will be used.
 
 # Installation Instructions
 
-For full installation instructions, see the installation section in the [LoadRunner Enterprise-TFS Plugin readme](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/blob/master/readme.md).
+For full installation instructions, see the installation section in the [Installation and environment set up](https://admhelp.microfocus.com/lr/en/2023-2023-r1/help/WebHelp/Content/Controller/Azure_DevOps.htm#mt-item-1).
 
 <u>Note</u>: You must have Administrator privileges to install the Extension on your Azure DevOps server.
 
 # Documentation
 
-Please check the [LoadRunner Enterprise CI Plugin for Azure DevOps / Microsoft Team Foundation Server Wiki](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/wiki) and search for the extension documentation in [LoadRunner Enterprise Help](https://admhelp.microfocus.com/pc/en/latest/online_help/Content/PC/Microsoft-Team-Foundation-Plugin.htm).
+Please check the [Continuous integration with Azure DevOps](https://admhelp.microfocus.com/lr/en/2023-2023-r1/help/WebHelp/Content/Controller/Azure_DevOps.htm).

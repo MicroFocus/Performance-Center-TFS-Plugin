@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "PCIntegration",
   "name": "LoadRunner Enterprise CI",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "publisher": "Micro-Focus",
   "targets": [
     {
@@ -14,7 +14,10 @@
     "Test"
   ],
   "resources": [
-    ""
+    {
+      "path": "resources/img/LreIcon.png",
+      "addressable": true
+    }
   ],
   "tags": [
     "Performance Center",
@@ -36,13 +39,13 @@
   ],
   "links": {
     "home": {
-      "uri": "<link to project extension>"
+      "uri": "https://admhelp.microfocus.com/lr/en/2023-2023-r1/help/WebHelp/Content/Controller/Azure_DevOps.htm"
     },
     "installation": {
-      "uri": "<link to installation>"
+      "uri": "https://admhelp.microfocus.com/lr/en/2023-2023-r1/help/WebHelp/Content/Controller/Azure_DevOps.htm#mt-item-1"
     },
     "learn": {
-      "uri": "<link to documentation>"
+      "uri": "https://admhelp.microfocus.com/lr/en/2023-2023-r1/help/WebHelp/Content/Controller/Azure_DevOps.htm#mt-item-2"
     }
   },
   "content": {
