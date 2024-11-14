@@ -72,7 +72,7 @@ namespace PC.Plugins.Automation
             PCErrorResponse pcErrorResponse = new PCErrorResponse("", 0);
             try
             {
-                _fileLog.Write(LogMessageType.Info, string.Format("Trying to login: [LRE Server: '{0}://{1}', {2}: '{3}']", _pcModel.isHTTPSProtocol(), _pcModel.PCServerAndPort, (_pcModel.UseTokenForAuthentication ? "Id Key" : "Username"), _pcModel.UserName));
+                _fileLog.Write(LogMessageType.Info, string.Format("Trying to login: [Server: '{0}://{1}', {2}: '{3}']", _pcModel.isHTTPSProtocol(), _pcModel.PCServerAndPort, (_pcModel.UseTokenForAuthentication ? "Id Key" : "Username"), _pcModel.UserName));
                 _loggedIn = _pcRestProxy.Authenticate(_pcModel.UserName, _pcModel.Password, ref pcErrorResponse, _pcModel.UseTokenForAuthentication);
             }
             catch (Exception e)
@@ -191,7 +191,7 @@ namespace PC.Plugins.Automation
                         }
                         else
                         {
-                            string msg = "No TestSetID available in project, please create a testset from LoadRunner Enterprise UI";
+                            string msg = "No TestSetID available in project, please create a testset from application's UI";
                             _fileLog.Write(LogMessageType.Info, msg);
 
                         }
@@ -227,7 +227,7 @@ namespace PC.Plugins.Automation
             {
                 // If the user selected "Use trend report associated with the test" we want the report ID to be the one from the test
                 string msg = "No trend report ID is associated with the test.\n" +
-                    "Please turn Automatic Trending on for the test through LoadRunner Enterprise UI.\n" +
+                    "Please turn Automatic Trending on for the test through the application's UI.\n" +
                     "Alternatively you can check 'Add run to trend report with ID' on Jenkins job configuration.";
                 if (_pcModel.AddRunToTrendReport.Equals("AssociatedTrend"))
                 {
@@ -328,7 +328,7 @@ namespace PC.Plugins.Automation
                         counter++;
                         System.Threading.Thread.Sleep(1000);
                         if (counter > 60) {
-                            _fileLog.Write(LogMessageType.Info, string.Format("RunID: {0}  - Stopped from LoadRunner Enterprise side with state = {1}", runId, currentState.Value));
+                            _fileLog.Write(LogMessageType.Info, string.Format("RunID: {0}  - Stopped from server side with state = {1}", runId, currentState.Value));
                             break;
                         }
                     }

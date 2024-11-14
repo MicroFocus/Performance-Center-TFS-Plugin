@@ -239,7 +239,7 @@ namespace PC.Plugins.Automation
             string vudsModeString = (_vudsMode) ? "true" : "false";
             string trendString = ("USE_ID").Equals(_addRunToTrendReport) ? String.Format(", TrendReportID = '{0}'", _trendReportId) : "";
 
-            return String.Format("[LREerver='{0}', " + (_useTokenForAuthentication ? "Id Key" : "User") + " ='{0}', Domain='{0}', Project='{0}', TestID='{0}', " +
+            return String.Format("[Server='{0}', " + (_useTokenForAuthentication ? "Id Key" : "User") + " ='{0}', Domain='{0}', Project='{0}', TestID='{0}', " +
                             "TestInstanceID='{0}', TimeslotDuration='{0}', PostRunAction='{0}', " +
                             "VUDsMode='{0}'{0}, HTTPSProtocol='{0}']",
 

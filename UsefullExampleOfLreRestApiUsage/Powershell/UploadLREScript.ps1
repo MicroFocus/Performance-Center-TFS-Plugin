@@ -1,10 +1,10 @@
-param([string][Parameter(Mandatory=$true,Position=0,HelpMessage="The base of the LRE server URL. e.g. http(s)://mylreserver.mydomain.com:80")] $lreServer,
-	  [string][Parameter(Mandatory=$true,Position=1,HelpMessage="the LRE user able to perform action on the lreproject")] $username,
-	  [string][Parameter(Mandatory=$true,Position=2,HelpMessage="the password of the lre user")] $password,
-	  [string][Parameter(Mandatory=$true,Position=3,HelpMessage="the name of the domain in LRE (case sensitive)")] $domain,
-	  [string][Parameter(Mandatory=$true,Position=4,HelpMessage="the name of the project in LRE (case sensitive)")] $project,
+param([string][Parameter(Mandatory=$true,Position=0,HelpMessage="The base of the server URL. e.g. http(s)://MyServer.mydomain.com:80")] $lreServer,
+	  [string][Parameter(Mandatory=$true,Position=1,HelpMessage="the user able to perform action on the project")] $username,
+	  [string][Parameter(Mandatory=$true,Position=2,HelpMessage="the password of the user")] $password,
+	  [string][Parameter(Mandatory=$true,Position=3,HelpMessage="the name of the domain (case sensitive)")] $domain,
+	  [string][Parameter(Mandatory=$true,Position=4,HelpMessage="the name of the project (case sensitive)")] $project,
 	  [string][Parameter(Mandatory=$true,Position=5,HelpMessage="the full file name of the script compressed to zip file and accessible by powershell")] $filePath,
-	  [string][Parameter(Mandatory=$true,Position=6,HelpMessage="the folder path in LRE project under subject `
+	  [string][Parameter(Mandatory=$true,Position=6,HelpMessage="the folder path in project under subject `
 	(path should be existing (there is an API allowing to create subject path but not implemeted here) `
 	and might be case sensitive and should contain the root subject). e.g. myscriptsfolder\mysubscriptsfolder\mysubsubscriptsfolder")] $lreScriptSubjectPath,
 	  [string][Parameter(Mandatory=$false,Position=7,HelpMessage="you can decide to overwrite if script already exist. default is true")] $lreScriptOverwrite="true",
@@ -15,7 +15,7 @@ param([string][Parameter(Mandatory=$true,Position=0,HelpMessage="The base of the
 Add-Type -AssemblyName System.Net.Http
 
 ####### Define parameters (parametrized above) #########
-# $lreServer = "http://mylreserver"
+# $lreServer = "http://MyServer"
 # $tenant = "fa128c06-5436-413d-9cfa-9f04bb738df3"
 # $username = "myuser"
 # $password = "mypassword"
@@ -28,7 +28,7 @@ Add-Type -AssemblyName System.Net.Http
 
 ######################## Welcome message ############################
 Write-Host ("")
-Write-Host ("********* Welcome to script performing different rest commands over LRE *********")
+Write-Host ("********* Welcome to script performing different rest commands over OpenText Enterprise Performance Engineering *********")
 Write-Host ("")
 
 ######################## initialize some variables ##################
@@ -50,7 +50,7 @@ $apiDomainProjectScript = "scripts"
 
 ##################### 1 - authentication #######################
 Write-Host ("")
-Write-Host ("********* authenticating to LRE ... *********")
+Write-Host ("********* authenticating to Server ... *********")
 Write-Host ("")
 
 # Define URL for auth
@@ -74,7 +74,7 @@ if ($responseAuth.IsSuccessStatusCode) {
 
     ###################### 3- upload script ########################
 	Write-Host ("")
-	Write-Host ("********* Uploading script to LRE project ... *********")
+	Write-Host ("********* Uploading script to project ... *********")
 	Write-Host ("")
 
 	# Define URL for uploading script

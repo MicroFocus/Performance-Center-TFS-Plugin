@@ -1,9 +1,9 @@
 ﻿{
   "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
   "id": "91008DAF-AFE5-3E2A-A6FF-8ACF9D229E3A",
-  "name": "LoadRunnerEnterpriseTesting",
-  "friendlyName": "LoadRunner Enterprise Test",
-  "description": "Run a LoadRunner Enterprise test from a task in a Azure DevOps / Microsoft Team Foundation Server CI build process.",
+  "name": "OTEPerformanceEngineeringTest",
+  "friendlyName": "OpenText Enterprise Performance Engineering Test",
+  "description": "Run an performance test from a task in a Azure DevOps Server CI build process.",
   "category": "Test",
   "visibility": [
     "Build",
@@ -13,7 +13,7 @@
   "version": {
     "Major": 1,
     "Minor": 1,
-    "Patch": 2
+    "Patch": 3
   },
   "inputs": [
     {
@@ -27,10 +27,10 @@
     {
       "name": "varPCServer",
       "type": "string",
-      "label": "LRE server and port",
-      "defaultValue": "http://mylreserver:80",
+      "label": "server and port",
+      "defaultValue": "http://MyServer:80",
       "required": true,
-      "helpMarkDown": "Enter the hostname or IP address and port of a LoadRunner Enterprise server in the format: http(s)://(LREServer):(port#). If you are required to use a tenant, use the following format: http(s)://(LREServer):(port#)/?tenant=(guid#). For example: https://MyLreServer.MyCompanyDomain.com:444/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3"
+      "helpMarkDown": "Enter the hostname or IP address and port of the server in the format: http(s)://(Server):(port#). If you are required to use a tenant, use the following format: http(s)://(LREServer):(port#)/?tenant=(guid#). For example: https://MyLreServer.MyCompanyDomain.com:444/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3"
     },
     {
       "name": "varUseTokenForAuthentication",
@@ -38,7 +38,7 @@
       "label": "Authenticate with token",
       "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "Turn on this option to use an LRE token for authentication (an ID key and Secret key can be issued to a user from LRE 2021 R1). This option is the only way of authentication for LRE servers configured with SSO."
+      "helpMarkDown": "Turn on this option to use a token for authentication. This option is the only way of authentication for LRE servers configured with SSO."
     },
     {
       "name": "varUserName",
@@ -46,7 +46,7 @@
       "label": "User name \\ Id key",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "Enter the user name or the Id key of your token access to connect to the LoadRunner Enterprise server."
+      "helpMarkDown": "Enter the user name or the Id key of your token access to connect to the server."
     },
     {
       "name": "varPassWord",
@@ -54,7 +54,7 @@
       "label": "Password \\ Secret key",
       "defaultValue": "$(PCPassword)",
       "required": false,
-      "helpMarkDown": "<p>Enter the password or Secret key of your token to connect to the LoadRunner Enterprise server.</p> <p><b><u>Note:</u></b> You can create a variable of type secret in the CI build to store the password, and specify the variable to avoid exposing a password in the build configuration. For example, '$(PCPassword)').</p>"
+      "helpMarkDown": "<p>Enter the password or Secret key of your token to connect to the server.</p> <p><b><u>Note:</u></b> You can create a variable of type secret in the CI build to store the password, and specify the variable to avoid exposing a password in the build configuration. For example, '$(PCPassword)').</p>"
     },
     {
       "name": "varDomain",
@@ -62,7 +62,7 @@
       "label": "Domain",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "Enter the LoadRunner Enterprise domain in which the test to run is stored."
+      "helpMarkDown": "Enter the domain in which the test to run is stored."
     },
     {
       "name": "varProject",
@@ -70,7 +70,7 @@
       "label": "Project",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "Enter the name of the LoadRunner Enterprise project in which the test to run is stored."
+      "helpMarkDown": "Enter the name of the project in which the test to run is stored."
     },
     {
       "name": "varTestID",
@@ -78,7 +78,7 @@
       "label": "Test ID",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "Enter the Test ID. You can get the ID from <b>LoadRunner Enterprise Application</b> > <b>Test Management</b> > <b>Test Plan</b> > Select your test and find the ID in the General Details: <b>Test Name (Id)</b>."
+      "helpMarkDown": "Enter the Test ID. You can get the ID from the application > <b>Test Management</b> > <b>Test Plan</b> > Select your test and find the ID in the General Details: <b>Test Name (Id)</b>."
     },
     {
       "name": "varAutoTestInstance",
@@ -86,7 +86,7 @@
       "label": "Test instance",
       "defaultValue": "true",
       "required": false,
-      "helpMarkDown": "<p>Select an option for adding the Test Instance ID:</p><ul><li><b>Automatically select existing or create new if none exists</b>. If you select this option, LoadRunner Enterprise creates a test instance or locates the existing test instance.</li><li><b>Manual selection</b>. Enter the Test Instance ID (available from <b>LoadRunner Enterprise Application</b> > <b>Test Management</b> > <b>Test Lab</b> > <b>Performance Test Set</b> view).</li>",
+      "helpMarkDown": "<p>Select an option for adding the Test Instance ID:</p><ul><li><b>Automatically select existing or create new if none exists</b>. If you select this option, the application creates a test instance or locates the existing test instance.</li><li><b>Manual selection</b>. Enter the Test Instance ID (available from the application > <b>Test Management</b> > <b>Test Lab</b> > <b>Performance Test Set</b> view).</li>",
       "options": {
         "true": "Automatically select existing or create new if none exists",
         "false": "Manual selection"
@@ -98,7 +98,7 @@
       "label": "Test Instance ID",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "Enter the Test Instance ID (available from <b>LoadRunner Enterprise</b> > <b>Test Management</b> > <b>Test Lab</b> > <b>Performance Test Set</b> view).",
+      "helpMarkDown": "Enter the Test Instance ID (available from the application > <b>Test Management</b> > <b>Test Lab</b> > <b>Performance Test Set</b> view).",
       "visibleRule": "varAutoTestInstance = false"
     },
     {
@@ -175,7 +175,7 @@
       "label": "Use VUDs",
       "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "<p>Choose whether to use a Virtual User Day (VUD) license. This provides you with a specified number of Vusers (VUDs) that you can run an unlimited number of times within a 24 hour period.</p><p>Before using this option, make sure that VUDs licenses are applied in your LoadRunner Enterprise environment.</p>"
+      "helpMarkDown": "<p>Choose whether to use a Virtual User Day (VUD) license. This provides you with a specified number of Vusers (VUDs) that you can run an unlimited number of times within a 24 hour period.</p><p>Before using this option, make sure that VUDs licenses are applied in your server.</p>"
     },
     {
       "name": "varUseSLAInStatus",
@@ -225,7 +225,7 @@
       "helpMarkDown": "Enter the path to the artifacts directory where the result files are stored."
     }
   ],
-  "instanceNameFormat": "Execute LoadRunner Enterprise test $(descriptionString)",
+  "instanceNameFormat": "Execute test $(descriptionString)",
   "execution": { 
     "Node": {
       "target": "index.js"
