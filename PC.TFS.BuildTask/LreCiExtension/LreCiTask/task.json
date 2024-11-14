@@ -1,7 +1,7 @@
 ﻿{
   "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
   "id": "91008DAF-AFE5-3E2A-A6FF-8ACF9D229E3A",
-  "name": "OTEPerformanceEngineeringTest",
+  "name": "LoadRunnerEnterpriseTesting",
   "friendlyName": "OpenText Enterprise Performance Engineering Test",
   "description": "Run an performance test from a task in a Azure DevOps Server CI build process.",
   "category": "Test",
