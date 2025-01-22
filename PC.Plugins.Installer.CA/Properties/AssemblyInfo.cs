@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("PC.Plugins.Installer.CA")]
-[assembly: AssemblyDescription("LoadRunner Enterprise Plugin Installer")]
+[assembly: AssemblyDescription("OpenText Enterprise Performance Engineering Plugin Installer")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 

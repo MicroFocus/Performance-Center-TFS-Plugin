@@ -1014,7 +1014,7 @@ namespace PC.Plugins.Common.Rest
                             errorMessage += "\n" + clientResponse.Body;
                             errorMessage += "\n=================================";
                             errorMessage += !string.IsNullOrEmpty(_proxyOutURL) ? "\n**** Verify if the proxy URL: " + _proxyOutURL + " is available and the proxy credentials are correct." : "";
-                            errorMessage += string.Format("\n**** Verify that this LoadRunner Enterprise URL {0}://{1}/LoadTest/ is indeed available from the Operating System running the test.", _webProtocol, _pcServerAndPort);
+                            errorMessage += string.Format("\n**** Verify that this server URL {0}://{1}/LoadTest/ is indeed available from the Operating System running the test.", _webProtocol, _pcServerAndPort);
                             pcErrorResponse = new PCErrorResponse(errorMessage, 9999899);
                         }
                     else
@@ -1034,7 +1034,7 @@ namespace PC.Plugins.Common.Rest
 
 
         /// <summary>
-        /// Authenticate to LRE Server with token
+        /// Authenticate to Server with token
         /// </summary>
         /// <param name="clientIdKey">ID key</param>
         /// <param name="clientSecretKey">Secret key</param>
@@ -1051,7 +1051,7 @@ namespace PC.Plugins.Common.Rest
         }
 
         /// <summary>
-        /// Authenticate to LRE Server with token
+        /// Authenticate to Server with token
         /// </summary>
         /// <param name="clientIdKey">ID key</param>
         /// <param name="clientSecretKey">Secret key</param>
@@ -1085,7 +1085,7 @@ namespace PC.Plugins.Common.Rest
                             errorMessage += "\n" + clientResponse.Body;
                             errorMessage += "\n=================================";
                             errorMessage += !string.IsNullOrEmpty(_proxyOutURL) ? "\n**** Verify if the proxy URL: " + _proxyOutURL + " is available and the proxy credentials are correct." : "";
-                            errorMessage += string.Format("\n**** Verify that this LoadRunner Enterprise URL {0}://{1}/LoadTest/ is indeed available from the Operating System running the test.", _webProtocol, _pcServerAndPort);
+                            errorMessage += string.Format("\n**** Verify that this Server URL {0}://{1}/LoadTest/ is indeed available from the Operating System running the test.", _webProtocol, _pcServerAndPort);
                             pcErrorResponse = new PCErrorResponse(errorMessage, 9999899);
                         }
                     else
