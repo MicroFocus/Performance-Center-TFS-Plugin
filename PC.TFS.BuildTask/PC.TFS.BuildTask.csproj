@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props')" />
   <PropertyGroup>
-	<TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
@@ -106,16 +106,16 @@
   </ProjectExtensions>
   <!-- Add the Custom Clean target -->
   <Target Name="Clean">
-	<Exec Command="echo custom Cleaning the project begining..." />
-	<RemoveDir Directories="$(ProjectDir)LreCiExtension\LreCiTask\node_modules" ContinueOnError="true" />
-	<Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\index.js" ContinueOnError="true" />
-	<Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\package.json" ContinueOnError="true" />
-	<Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\package-lock.json" ContinueOnError="true" />
-	<Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\PC.Plugins.Automation.dll" ContinueOnError="true" />
-	<Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\PC.Plugins.Common.dll" ContinueOnError="true" />
-	<Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\PC.Plugins.Configurator.dll" ContinueOnError="true" />
-	<Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\tsconfig.json" ContinueOnError="true" />
-	<Exec Command="echo custom Cleaning the project ended..." />
+    <Exec Command="echo custom Cleaning the project begining..." />
+    <RemoveDir Directories="$(ProjectDir)LreCiExtension\LreCiTask\node_modules" ContinueOnError="true" />
+    <Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\index.js" ContinueOnError="true" />
+    <Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\package.json" ContinueOnError="true" />
+    <Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\package-lock.json" ContinueOnError="true" />
+    <Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\PC.Plugins.Automation.dll" ContinueOnError="true" />
+    <Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\PC.Plugins.Common.dll" ContinueOnError="true" />
+    <Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\PC.Plugins.Configurator.dll" ContinueOnError="true" />
+    <Delete Files="$(ProjectDir)LreCiExtension\LreCiTask\tsconfig.json" ContinueOnError="true" />
+    <Exec Command="echo custom Cleaning the project ended..." />
   </Target>
   <PropertyGroup>
     <PostBuildEvent>cd $(ProjectDir)LreCiExtension\LreCiTask
@@ -123,13 +123,13 @@ call npm init --yes
 call npm install azure-pipelines-task-lib --save
 call npm install @types/node --save-dev
 call npm install @types/q --save-dev
-call npm install typescript@5.1.6 -g --save-dev
+call npm install typescript@5.1.6 --save-dev
 set TSCONFIG="$(ProjectDir)LreCiExtension\LreCiTask\tsconfig.json"
 if exist %25TSCONFIG%25 del /F %25TSCONFIG%25
-call tsc --init --target es6
-call tsc
+call npx tsc --init --target es6
+call npx tsc
 cd $(ProjectDir)LreCiExtension
-call tfx extension create --manifest-globs vss-extension.json --output-path ..\..\Extension\
+call npx -y tfx-cli extension create --manifest-globs vss-extension.json --output-path ..\..\Extension\
 EXIT /B 0</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>

@@ -6,10 +6,10 @@ This extension enables you to include an OpenText Enterprise Performance Enginee
 
 This extension supports the 3 latest versions of OpenText Enterprise Performance Engineering.
 
-# What's New in this Release (version 1.1.3)
+# What's New in this Release (version 2.0.0)
 
-> **December 2024**
-> "LoadRunner Enterprise" is now "OpenText Enterprise Performance Engineering" (rebranding).
+> **September 2025**
+> The major version of the Extension is set to 2 (moving away from 1 to prevent from Azure DevOps to use obsolete Nodejs version).
 
 # Installation Instructions
 

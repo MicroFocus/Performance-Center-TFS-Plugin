@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "PCIntegration",
   "name": "OpenText Enterprise Performance Engineering CI",
-  "version": "1.1.3",
+  "version": "2.0.0",
   "publisher": "Micro-Focus",
   "targets": [
     {
