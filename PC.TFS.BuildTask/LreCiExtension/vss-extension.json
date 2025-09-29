@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "PCIntegration",
   "name": "OpenText Enterprise Performance Engineering CI",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "publisher": "Micro-Focus",
   "targets": [
     {
@@ -33,10 +33,16 @@
   },
   "screenshots ": [
     {
-      "path": "resources/screenshots/AlmExecution.PNG"
+      "path": "resources/screenshots/PCTestExecutionTaskAddingTask.PNG"
     },
     {
-      "path": "resources/screenshots/screen2.png"
+      "path": "resources/screenshots/PCTestExecutionTaskConfiguration.png"
+    },
+    {
+      "path": "resources/screenshots/PCTestExecutionTaskResult.png"
+    },
+    {
+      "path": "resources/screenshots/PCTestExecutionTaskRunning.png"
     }
   ],
   "links": {

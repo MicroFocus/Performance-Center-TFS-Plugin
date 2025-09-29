@@ -9,5 +9,6 @@ The <b>"OpenText Enterprise Performance Engineering CI"</b> extension allows Azu
 ## System prerequisites
 
 * OpenText Enterprise Performance Engineering server to be available\accessible from Team Foundation Server's agent pools.
+* Node.js in Team Foundation Server's agent pools
 * Powershell version 4.0 or higher in Team Foundation Server's agent pools
 * .NET Framework 4.8 in Team Foundation Server's agent pools

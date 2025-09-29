@@ -6,7 +6,7 @@ This extension enables you to include an OpenText Enterprise Performance Enginee
 
 This extension supports the 3 latest versions of OpenText Enterprise Performance Engineering.
 
-# What's New in this Release (version 2.0.0)
+# What's New in this Release (version 2.0.2)
 
 > **September 2025**
 > The major version of the Extension is set to 2 (moving away from 1 to prevent from Azure DevOps to use obsolete Nodejs version).
