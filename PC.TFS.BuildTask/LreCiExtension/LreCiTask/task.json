@@ -13,7 +13,7 @@
   "version": {
     "Major": 2,
     "Minor": 0,
-    "Patch": 2
+    "Patch": 3
   },
   "inputs": [
     {
@@ -226,8 +226,11 @@
     }
   ],
   "instanceNameFormat": "Execute test $(descriptionString)",
-  "execution": { 
-    "Node20": {
+  "execution": {
+    "Node": {
+      "target": "index.js"
+    },
+	"Node20": {
       "target": "index.js"
     }
   }
