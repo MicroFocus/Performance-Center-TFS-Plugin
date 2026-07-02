@@ -13,7 +13,7 @@
     "test:integration": "tsx ../../integration/test-utils/run-integration-tests.ts",
     "test:integration:safe": "cross-env INTEGRATION_SAFE_MODE=true tsx ../../integration/test-utils/run-integration-tests.ts",
     "lint": "eslint src/**/*.ts",
-    "clean": "rimraf dist",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "security:audit": "npm audit --audit-level=moderate",
     "package:vsix": "cd .. && tfx extension create --manifest-globs vss-extension.json --output-path ../Extension"
   },
@@ -47,7 +47,6 @@
     "cross-env": "^7.0.3",
     "eslint": "^9.39.4",
     "globals": "^17.7.0",
-    "rimraf": "^5.0.10",
     "tsx": "^4.22.4",
     "typescript": "^5.9.3"
   }
