@@ -112,6 +112,12 @@ jobs:
         working-directory: ./angular/LreCiTask
         run: npm run build
 
+      # Remove devDependencies from node_modules before packaging so they are
+      # not bundled into the VSIX (saves ~45 MB: typescript, esbuild, eslint…).
+      - name: Prune dev dependencies
+        working-directory: ./angular/LreCiTask
+        run: npm prune --omit=dev
+
       - name: Install TFX CLI
         run: npm install -g tfx-cli
 
