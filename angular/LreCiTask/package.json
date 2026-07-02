@@ -15,7 +15,7 @@
     "lint": "eslint src/**/*.ts",
     "clean": "rimraf dist",
     "security:audit": "npm audit --audit-level=moderate",
-    "package:vsix": "cd .. && tfx extension create --manifest-globs vss-extension.json --output-path .\\out"
+    "package:vsix": "cd .. && tfx extension create --manifest-globs vss-extension.json --output-path ./out"
   },
   "keywords": [
     "loadrunner",

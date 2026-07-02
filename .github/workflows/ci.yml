@@ -12,6 +12,14 @@ on:
       - 'release/deploy.txt'
       - '**.md'
 
+# Suppress the "Node 20 is being deprecated" warning that GitHub emits when
+# actions/checkout, actions/setup-node and actions/upload-artifact (which
+# internally declare node20 as their runtime) are forced to run on the newer
+# Node 24 runner.  The actions work correctly on Node 24; this is purely a
+# cosmetic warning until GitHub releases node24-native action versions.
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,6 +30,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      # Suppress the "Using 'master' as the name for the initial branch" git hint
+      - name: Suppress git default-branch hint
+        run: git config --global advice.defaultBranchName false
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -63,4 +75,3 @@ jobs:
           name: vsix-build
           path: angular/out/*.vsix
           retention-days: 30
-
