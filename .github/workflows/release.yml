@@ -153,7 +153,7 @@ jobs:
           cat release/deploy.txt
 
       - name: Commit and push updated files
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v10
         with:
           message: "Release v${{ needs.check-release.outputs.version }}: Reset deploy.txt and update version files"
           add: |
