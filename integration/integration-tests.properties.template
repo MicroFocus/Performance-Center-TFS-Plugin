@@ -1,0 +1,63 @@
+# Copy this file to integration-tests.properties and fill real values for local IT runs.
+# When placeholder values are left as-is, integration tests are skipped.
+
+# ── Server connection ─────────────────────────────────────────────────────────
+pc.web.protocol=https
+pc.lre.server=https://your-lre-server.example.com/homepage/?tenant=your-tenant-guid
+pc.alm.domain=YOUR_DOMAIN
+pc.alm.project=YOUR_PROJECT
+
+# ── Authentication ────────────────────────────────────────────────────────────
+# Username/password auth (leave idKey/secretKey empty to use this mode)
+pc.alm.user=YOUR_USERNAME
+pc.alm.password=YOUR_PASSWORD
+
+# Token-based auth (fill both to switch to token mode; leave empty for user/pass)
+pc.lre.idKey=
+pc.lre.secretKey=
+
+# ── Proxy (leave empty if no proxy needed) ────────────────────────────────────
+pc.proxy.url=
+pc.proxy.user=
+pc.proxy.password=
+
+# ── Test identifiers ──────────────────────────────────────────────────────────
+# Test ID used for read-only tests (getTest, getTestInstances, etc.)
+pc.test.id=YOUR_TEST_ID
+# Human-readable test name (optional – used for assertion only)
+pc.test.name=
+# TestSet ID – required when no testinstance exists and auto-creation is needed
+pc.testset.id=YOUR_TESTSET_ID
+# TestInstance ID – leave empty to let the suite auto-resolve/create one;
+# set to a known value to skip the create-test-instance test entirely.
+pc.testinstance.id=
+# Maximum minutes to wait for a run to complete (default 60)
+pc.test.maxWaitMinutes=60
+
+# ── Run settings (used when integration.test.executeRun=true) ─────────────────
+pc.run.timeslotDurationMinutes=30
+pc.run.postRunAction=Collate And Analyze
+pc.run.useVuds=false
+# Existing run ID – used to test report download without starting a new run
+# (leave empty if you don't have a known completed run to test against)
+pc.run.id=YOUR_RUN_ID
+
+# ── Trend report ──────────────────────────────────────────────────────────────
+# Trend report ID – used to test trend PDF download
+# (leave empty to skip trend download tests)
+pc.trend.reportId=YOUR_TREND_REPORT_ID
+
+# ── Artifact output ───────────────────────────────────────────────────────────
+pc.artifacts.directory=./integration/test-results
+
+# ── Behaviour flags ───────────────────────────────────────────────────────────
+# Set executeRun=true to actually start a run (consumes VUD licenses!)
+integration.test.executeRun=false
+integration.test.downloadReports=false
+integration.test.testCleanup=true
+
+# ── Legacy script paths (used by older test scaffolding) ─────────────────────
+pc.test.folderPath=Subject\\your-folder
+pc.test.scriptPath=src/test/resources/your-script.zip
+pc.test.kilimanjaro.scriptPath=/kilimanjaro.zip
+pc.test.kilimanjaro.folderPath=Subject\\scripts

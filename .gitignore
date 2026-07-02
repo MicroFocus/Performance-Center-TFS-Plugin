@@ -3,3 +3,11 @@ PC.TFS.BuildTask\LreCiExtension\LreCiTask\index.js
 PC.TFS.BuildTask\LreCiExtension\LreCiTask\package.json
 PC.TFS.BuildTask\LreCiExtension\LreCiTask\package-lock.json
 PC.TFS.BuildTask\LreCiExtension\LreCiTask\tsconfig.json
+
+# Integration test credentials (NEVER commit!)
+integration/integration-tests.properties
+integration/test-results/
+integration/*.log
+**/docsLocal/
+**/.vs/
+**/.idea/

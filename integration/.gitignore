@@ -1,0 +1,9 @@
+# Never commit actual credentials
+integration-tests.properties
+lre-config.json
+
+# Test outputs
+test-results/
+*.log
+reports/
+artifacts/

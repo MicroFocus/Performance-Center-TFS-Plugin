@@ -1,0 +1,92 @@
+name: CI Build
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - 'release/deploy.txt'
+      - '**.md'
+  pull_request:
+    branches: [master]
+    paths-ignore:
+      - 'release/deploy.txt'
+      - '**.md'
+
+# Suppress the "Node 20 is being deprecated" warning that GitHub emits when
+# actions/checkout, actions/setup-node and actions/upload-artifact (which
+# internally declare node20 as their runtime) are forced to run on the newer
+# Node 24 runner.  The actions work correctly on Node 24; this is purely a
+# cosmetic warning until GitHub releases node24-native action versions.
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [24.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Suppress the "Using 'master' as the name for the initial branch" git hint
+      - name: Suppress git default-branch hint
+        run: git config --global advice.defaultBranchName false
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: 'angular/LreCiTask/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./angular/LreCiTask
+        run: npm ci
+
+      - name: Audit dependencies
+        working-directory: ./angular/LreCiTask
+        run: npm run security:audit
+
+      - name: Run linter
+        working-directory: ./angular/LreCiTask
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: ./angular/LreCiTask
+        run: npm test
+
+      - name: Build TypeScript
+        working-directory: ./angular/LreCiTask
+        run: npm run build
+
+      # Remove devDependencies from node_modules before packaging so they are
+      # not bundled into the VSIX (saves ~45 MB: typescript, esbuild, eslint…).
+      - name: Prune dev dependencies
+        working-directory: ./angular/LreCiTask
+        run: npm prune --omit=dev
+
+      - name: Install TFX CLI
+        run: npm install -g tfx-cli
+
+      - name: Package VSIX
+        working-directory: ./angular
+        run: npm run package:vsix --prefix LreCiTask
+
+      - name: Resolve built VSIX path
+        id: vsix
+        run: |
+          VERSION=$(node -p "require('./angular/vss-extension.json').version")
+          VSIX_PATH="Extension/Micro-Focus.PCIntegration-${VERSION}.vsix"
+          echo "path=${VSIX_PATH}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Built VSIX: ${VSIX_PATH}"
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix-build
+          path: ${{ steps.vsix.outputs.path }}
+          retention-days: 30

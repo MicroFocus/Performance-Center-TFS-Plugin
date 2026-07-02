@@ -1,0 +1,18 @@
+# TypeScript source — agents only need the compiled JS in LreCiTask/dist/
+LreCiTask/src
+LreCiTask/index.ts
+
+# Test infrastructure — not needed at runtime
+LreCiTask/jest.config.js
+LreCiTask/jest.integration.config.js
+LreCiTask/.eslintrc.json
+LreCiTask/tsconfig.json
+
+# Docs — informational only
+LreCiTask/docs
+
+# Build/tool artefacts
+LreCiTask/node_modules/.cache
+LreCiTask/*.log
+LreCiTask/*.tsbuildinfo
+

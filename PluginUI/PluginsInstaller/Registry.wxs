@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Registry.wxs — writes a machine-wide environment variable so that
+  other tools can discover the PluginsUI install path.
+
+  HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment
+    PluginsUI_Path = <INSTALLDIR>
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Fragment>
+    <ComponentGroup Id="RegistryComponents" Directory="INSTALLDIR">
+      <Component Id="CmpRegistryEnvVar" Guid="FE2DA74B-8BD8-491B-94C1-71ECBA83AB32">
+        <RegistryKey
+            Root="HKLM"
+            Key="SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+            ForceDeleteOnUninstall="no">
+          <RegistryValue
+              Name="PluginsUI_Path"
+              Value="[INSTALLDIR]"
+              Type="expandable"
+              KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+</Wix>
+
