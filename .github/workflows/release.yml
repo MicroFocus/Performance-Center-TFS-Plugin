@@ -125,7 +125,10 @@ jobs:
         run: |
           VERSION="${{ needs.check-release.outputs.version }}"
           TAG="v${VERSION}"
-          VSIX_FILE=$(ls angular/out/*.vsix | head -1)
+          VSIX_FILE=$(ls Extension/*.vsix | grep "${VERSION}" | head -1)
+          if [ -z "$VSIX_FILE" ]; then
+            VSIX_FILE=$(ls Extension/*.vsix | head -1)
+          fi
           VSIX_NAME="Micro-Focus.PCIntegration-${VERSION}.vsix"
           
           # Create release with asset upload
