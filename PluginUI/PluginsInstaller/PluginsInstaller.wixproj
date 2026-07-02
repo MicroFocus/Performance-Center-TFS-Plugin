@@ -2,6 +2,16 @@
   <PropertyGroup>
     <!-- Output name for the MSI -->
     <OutputName>PluginsUI-Setup</OutputName>
+    <!--
+      ICE38 / ICE43 / ICE57 are false positives for per-machine installs.
+      The ICE validators treat ProgramMenuFolder as a per-user directory and
+      therefore demand an HKCU KeyPath. For a per-machine install the shortcut
+      lands in the All-Users Start Menu (%ProgramData%\...\Start Menu\Programs)
+      and the KeyPath must be HKLM so that any user's uninstaller can verify
+      and remove the component. Suppressing these three ICEs here is the
+      standard WiX recommendation for this well-known false-positive scenario.
+    -->
+    <SuppressIces>ICE38;ICE43;ICE57</SuppressIces>
     <!-- Version is passed as a preprocessor variable to the WXS files -->
     <ProductVersion>1.0.2</ProductVersion>
     <DefineConstants>ProductVersion=$(ProductVersion)</DefineConstants>

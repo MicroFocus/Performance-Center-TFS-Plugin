@@ -190,7 +190,7 @@ public sealed class LreTaskRunner : IDisposable
         var nextToExe = Path.Combine(AppContext.BaseDirectory, "dist", "index.js");
         if (File.Exists(nextToExe)) return nextToExe;
 
-        // 3. Dev-repo layout: bin/Debug/net8.0-windows → ../../../../.. → repo root
+        // 3. Dev-repo layout: bin/Debug/net10.0-windows → ../../../../.. → repo root
         var repoRoot  = Path.GetFullPath(
             Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
         var repoGuess = Path.Combine(repoRoot, "angular", "LreCiTask", "dist", "index.js");

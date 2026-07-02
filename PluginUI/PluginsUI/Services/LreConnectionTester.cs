@@ -77,7 +77,7 @@ public static class LreConnectionTester
 
             // Enforce 30-second timeout independent of the caller's CancellationToken
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            linked.CancelAfter(TimeSpan.FromSeconds(30));
+            linked.CancelAfter(TimeSpan.FromSeconds(30L));
 
             try
             {

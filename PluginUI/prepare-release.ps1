@@ -218,7 +218,7 @@ Write-Host ""
 Write-Host "  Staging folder : $StagingDir"
 Write-Host ""
 Write-Host "  Prerequisites on the target machine:"
-Write-Host "    .NET 8 Desktop Runtime  (winget install Microsoft.DotNet.DesktopRuntime.8)"
+.NET 10 Desktop Runtime (winget install Microsoft.DotNet.DesktopRuntime.10)
 Write-Host "    Node.js >= 20           (winget install OpenJS.NodeJS.LTS)"
 Write-Host ""
 

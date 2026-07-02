@@ -30,9 +30,13 @@
         <RemoveFolder Id="RemoveProgramMenuPluginsUIDir" Directory="ProgramMenuPluginsUIDir" On="uninstall" />
         <RemoveFolder Id="RemoveProgramMenuOpenTextDir"  Directory="ProgramMenuOpenTextDir"  On="uninstall" />
         <!-- Registry key makes this component keyed so MSI tracks it correctly.
-             Root must be HKLM (not HKCU) because Scope="perMachine" installs
-             the shortcut into the All-Users Start Menu; using HKCU would cause
-             MSI to skip removal when a different user runs the uninstaller. -->
+             Root=HKLM is intentional for a per-machine install: the uninstaller
+             may run as a different user (or SYSTEM); an HKCU key written at
+             install time would be invisible to them, causing MSI to miss the
+             component and skip shortcut removal.
+             ICE38 / ICE43 / ICE57 are suppressed in PluginsInstaller.wixproj
+             because those rules do not account for per-machine installs where
+             ProgramMenuFolder resolves to the All-Users Start Menu. -->
         <RegistryValue Root="HKLM"
                        Key="Software\OpenText\PluginsUI"
                        Name="StartMenuShortcut"
