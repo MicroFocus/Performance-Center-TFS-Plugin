@@ -142,7 +142,6 @@ export class LreTestRunner {
         let lastEventLogId = 0;
         const pollStart    = Date.now();
 
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             // Guard against stuck runs — LRE may return a non-terminal state
             // indefinitely if something goes wrong on the server side.
