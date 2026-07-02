@@ -1,0 +1,99 @@
+{
+  "manifestVersion": 1,
+  "id": "PCIntegration",
+  "name": "OpenText Enterprise Performance Engineering CI",
+  "version": "3.0.0",
+  "publisher": "Micro-Focus",
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "description": "Run an OpenText Enterprise Performance Engineering test from a task in a Azure DevOps Server CI build process.",
+  "categories": [
+    "Azure Pipelines"
+  ],
+  "resources": [
+    {
+      "path": "resources/img/LreIcon.png",
+      "addressable": true
+    }
+  ],
+  "tags": [
+    "Performance Center",
+    "Performance Testing",
+    "Continuous Integration",
+    "OpenText Enterprise Performance Engineering",
+    "Performance Engineering"
+  ],
+  "icons": {
+    "default": "resources/img/LreIcon.png"
+  },
+  "screenshots ": [
+    {
+      "path": "resources/screenshots/PCTestExecutionTaskAddingTask.PNG"
+    },
+    {
+      "path": "resources/screenshots/PCTestExecutionTaskConfiguration.png"
+    },
+    {
+      "path": "resources/screenshots/PCTestExecutionTaskResult.png"
+    },
+    {
+      "path": "resources/screenshots/PCTestExecutionTaskRunning.png"
+    }
+  ],
+  "links": {
+    "home": {
+      "uri": "https://admhelp.microfocus.com/lr/en/latest/help/WebHelp/Content/Controller/Azure_DevOps.htm"
+    },
+    "installation": {
+      "uri": "https://admhelp.microfocus.com/lr/en/latest/help/WebHelp/Content/Controller/Azure_DevOps.htm#mt-item-1"
+    },
+    "learn": {
+      "uri": "https://admhelp.microfocus.com/lr/en/latest/help/WebHelp/Content/Controller/Azure_DevOps.htm#mt-item-2"
+    }
+  },
+  "content": {
+    "details": {
+      "path": "README.md"
+    },
+    "overview": {
+      "path": "overview.md"
+    },
+    "license": {
+      "path": "LICENSE.md"
+    }
+  },
+  "branding": {
+    "color": "rgb(89, 141, 88)",
+    "theme": "dark"
+  },
+  "files": [
+    { "path": "LreCiTask/task.json" },
+    { "path": "LreCiTask/icon.png" },
+    { "path": "LreCiTask/index.js" },
+    { "path": "LreCiTask/package.json" },
+    { "path": "LreCiTask/dist" },
+    { "path": "LreCiTask/node_modules" }
+  ],
+  "scopes": [
+    "vso.test",
+    "vso.build_execute"
+  ],
+  "contributions": [
+    {
+      "id": "build-task-pc-test-execution",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "LreCiTask"
+      }
+    }
+  ],
+  "galleryFlags": [
+    "Public"
+  ]
+}

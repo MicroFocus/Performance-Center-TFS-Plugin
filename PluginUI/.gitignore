@@ -1,0 +1,31 @@
+# PluginsUI — .gitignore
+
+# Build outputs
+PluginsUI/bin/
+PluginsUI/obj/
+PluginsInstaller/bin/
+PluginsInstaller/obj/
+
+# Generated MSI output
+out/
+
+# Staging folder (populated by prepare-release.ps1)
+staging/
+
+# Auto-generated WXS file (regenerated every build by PreBuild.ps1)
+PluginsInstaller/Files.wxs
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+

@@ -1,55 +1,71 @@
 # OpenText Enterprise Performance Engineering CI plugin for Azure DevOps Server
 
-The "<b>OpenText Enterprise Performance Engineering CI</b>" extension integrates tests designed in OpenText Enterprise Performance Engineering projects with Azure DevOps Server pipelines' build.
+![CI Build](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/actions/workflows/ci.yml/badge.svg)
+![Release](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/actions/workflows/release.yml/badge.svg)
 
-##### **System prerequisites:**
+The **"OpenText Enterprise Performance Engineering CI"** extension integrates performance tests designed in OpenText Enterprise Performance Engineering (LRE) projects with Azure DevOps Server pipelines.
 
-To use this plugin you must have:
+## Active Codebase
 
-- OpenText Enterprise Performance Engineering server designed to run load tests on Lab hosts.
-- PowerShell version 4.0 or later.
+The extension is implemented in **TypeScript / Node.js** and lives entirely under `angular/`:
 
-##### **Install the "OpenText Enterprise Performance Engineering CI" extension:**
+```
+angular/
+  vss-extension.json          # Extension manifest (publisher, version, files)
+  LreCiTask/
+    task.json                 # Azure DevOps task definition (inputs, execution handlers)
+    index.js                  # Bootstrap entry point (Node version guard + polyfills)
+    index.ts                  # TypeScript source of bootstrap
+    src/lre/                  # LRE REST API client, authenticator, runner, downloader
+    src/models/               # TypeScript entity interfaces
+    src/utils/                # Logger, ArtifactManager, XmlUtils
+    dist/                     # Compiled output (generated — do not edit)
+    node_modules/             # Bundled runtime dependencies
+```
 
-Before you can run load tests as part of your build on a Azure DevOps CI build process, you have to install the OpenText Enterprise Performance Engineering CI extension on your Azure DevOps Server. 
+The legacy C#/.NET projects (`PC.Plugins.*`, `PC.TFS.BuildTask/`) remain in the repository for reference only and are **not maintained**.
 
-1. Download the extension: you can either download the file "[Micro-Focus.PCIntegration-1.0.4.vsix](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/blob/master/Extension/Micro-Focus.PCIntegration-1.0.4.vsix) and upload it to your Azure DevOps Manage Extensions section (http://&lt;tfs_server_and_port&gt;/tfs/_gallery/manage)" or download it from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/).
-2. Install the extension to your team project collection.
+## System Prerequisites
 
-##### **Run a load test from Azure DevOps build process’s task**
+| Requirement | Notes |
+|---|---|
+| Azure DevOps Server | 2019 or later |
+| Agent | v3.x recommended (bundles Node 20). v2.x agents on Windows also work via the Node 20 externals when present. |
+| Node.js on agent | Provided by the agent externals — no separate installation needed |
+| LRE server | Accessible from the agent host |
 
-1. Go to the build definition of your Azure DevOps collection and add the "<b>OpenText Enterprise Performance Engineering task</b>" to a pipeline.
-2. Provide the required input for the task. <b>Note</b>: To avoid conflicts with the way Azure DevOps manages secret input, this task performs minimal validations and therefore does not ensure the input is correct.
-3. Run the Azure DevOps CI Build.
+## Installing the Extension
 
-##### **GitHub repository projects**
+1. Download `Micro-Focus.PCIntegration-3.0.0.vsix` from the [GitHub Releases](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/releases) page or the [Visual Studio Marketplace](https://marketplace.visualstudio.com/).
+2. In Azure DevOps Server Administration Console → **Extensions** → **Upload extension**, select the VSIX.
+3. Install it to your team project collection.
 
-This GitHub repository contains the following projects which are used to build the OpenText Enterprise Performance Engineering Plugin Extension for Azure DevOps:
+## Running a Test from a Pipeline
 
+1. Open your build pipeline definition and add the **"Enterprise Performance Engineering Test"** task.
+2. Fill in the required inputs (server URL, credentials, domain, project, test ID).
+3. Run the pipeline — the task authenticates, creates or resolves a timeslot, monitors the run, and downloads the result artifacts automatically.
 
-| **Project Name** | **Description** |
-|---------------------------|----------------------------------------------------|
- **PC.Plugins.Automation** | Project handling a build task. |
-|**PC.Plugins.Common.Test**|Test project for PC.Plugins.Common project. This is a simple UI that requires some valid inputs to verify the functions defined and  implemented in PC.Plugins.Common.|
-|**PC.Plugins.Common**| Project with the most common Rest API operations used to trigger a load test, to monitor the run to the end of execution, to download Analysis and Trend Reports.|
-|**PC.Plugins.Configurator**| Project supporting different types of functions called from PowerShell which trigger a build execution from PC.Plugins.Automation.|
-|**PC.Plugins.ConfiguratorUI**|Similar to PC.Plugins.Configurator, this standalone tool has a UI in which you enter values to run a build execution from PC.Plugins.Automation. It then opens a PowerShell window to display the build progression.
-|**PC.Plugins.Installer.CA**|Custom actions definitions for PC.Plugins.Installer (currently empty).|
-|**PC.Plugins.Installer**|Installer containing PC.Plugins.Common.dll, PC.Plugins.Automation.dll, PC.Plugins.Configurator.dll, and PC.Plugins.ConfiguratorUI.exe.|
-|**PC.TFS.BuildTask**| Project defining the extension that will be used in Azure DevOps / TFS.|
+For full configuration details see the [documentation](https://admhelp.microfocus.com/lr/en/latest/help/WebHelp/Content/Controller/Azure_DevOps.htm).
 
- 
+## Developer Quick Start
 
-For more details, see the [OpenText Enterprise Performance Engineering Azure DevOps Extension wiki](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/wiki).
+```powershell
+# Build
+cd angular/LreCiTask
+npm install
+npm run build          # compiles TypeScript → dist/
 
+# Type-check only
+npm test
 
+# Package VSIX (output: angular/out/)
+npm run package:vsix   # requires: npm install -g tfx-cli
+```
 
- 
+See [`angular/LOCAL-TESTING-GUIDE.md`](./angular/LOCAL-TESTING-GUIDE.md) for local test options and [`AGENTS.md`](./AGENTS.md) for the AI coding agent guide.
 
- 
+## Release Process
 
- 
-
- 
-
- 
+1. Edit `release/deploy.txt`: set `enabled=true` and `version=X.Y.Z`
+2. Commit and push to `master` — the `release.yml` workflow updates all version files, builds the VSIX, creates a GitHub Release, then resets `enabled=false`

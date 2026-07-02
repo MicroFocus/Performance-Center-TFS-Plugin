@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Shortcuts.wxs — Start Menu and Desktop shortcuts for PluginsUI.exe
+  WiX v4 syntax
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Fragment>
+    <!-- ── Directory for Start Menu shortcut ────────────────────────── -->
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ProgramMenuOpenTextDir" Name="OpenText">
+        <Directory Id="ProgramMenuPluginsUIDir" Name="PluginsUI" />
+      </Directory>
+    </StandardDirectory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ShortcutComponents">
+
+      <!-- Start Menu shortcut -->
+      <Component Id="CmpStartMenuShortcut"
+                 Directory="ProgramMenuPluginsUIDir"
+                 Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890">
+        <Shortcut Id="StartMenuShortcut"
+                  Name="OpenText Performance Engineering Plugin"
+                  Description="OpenText Enterprise Performance Engineering Plugin"
+                  Target="[INSTALLDIR]PluginsUI.exe"
+                  WorkingDirectory="INSTALLDIR" />
+        <!-- ICE64: remove user-profile Start Menu subdirs on uninstall -->
+        <RemoveFolder Id="RemoveProgramMenuPluginsUIDir" Directory="ProgramMenuPluginsUIDir" On="uninstall" />
+        <RemoveFolder Id="RemoveProgramMenuOpenTextDir"  Directory="ProgramMenuOpenTextDir"  On="uninstall" />
+        <!-- Registry key makes this component keyed so MSI tracks it correctly.
+             Root must be HKLM (not HKCU) because Scope="perMachine" installs
+             the shortcut into the All-Users Start Menu; using HKCU would cause
+             MSI to skip removal when a different user runs the uninstaller. -->
+        <RegistryValue Root="HKLM"
+                       Key="Software\OpenText\PluginsUI"
+                       Name="StartMenuShortcut"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+  </Fragment>
+
+</Wix>
+

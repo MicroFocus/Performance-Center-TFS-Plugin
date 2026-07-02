@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?include Variables.wxi?>
+<!--
+  Product.wxs — main installer definition for PluginsUI
+  WiX v4 syntax (namespace: http://wixtoolset.org/schemas/v4/wxs)
+
+  UI flow:  Welcome → License → InstallDir → Progress → Finish
+  Default install path:  C:\Program Files\OpenText\OpenText Enterprise Performance Engineering Plugin\
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package
+      ProductCode="$(var.ProductCode)"
+      Name="OpenText Enterprise Performance Engineering Plugin"
+      Language="1033"
+      Version="$(var.ProductVersion)"
+	  Manufacturer="OpenText"
+	  UpgradeCode="d89463af-7749-4b63-a351-dd9e0547f49a"
+      Scope="perMachine"
+      InstallerVersion="500">
+
+    <!-- Embed all cab files into the single MSI -->
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Prevent downgrades -->
+    <MajorUpgrade
+        DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+        Schedule="afterInstallInitialize" />
+
+    <!-- Product icon shown in Add/Remove Programs (Apps &amp; Features) -->
+    <Icon Id="ProductIcon" SourceFile="icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
+
+    <!--
+      Prerequisite note:
+        .NET 8 Desktop Runtime (x64) and Node.js >= 20 are required at runtime.
+        PluginsUI.exe will show clear error messages if either is missing.
+        If you need hard-block checks in the MSI, add a WiX Burn bootstrapper
+        that wraps this MSI and uses <util:PackageSearch> / <util:RegistrySearch>
+        before installing.
+    -->
+
+    <!-- ── UI customisation ─────────────────────────────────────────── -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+
+    <!-- Custom bitmaps and EULA (kept from PC.Plugins.Installer branding) -->
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf"    Overridable="yes" />
+    <WixVariable Id="WixUIBannerBmp"  Value="BannerBmp.bmp"  Overridable="yes" />
+    <WixVariable Id="WixUIDialogBmp"  Value="DialogBmp.bmp"  Overridable="yes" />
+
+    <!-- WixUI_InstallDir: Welcome → License → InstallDir → Progress → Finish -->
+    <ui:WixUI Id="WixUI_InstallDir" />
+
+    <!-- ── Features ─────────────────────────────────────────────────── -->
+    <Feature Id="ProductFeature"
+             Title="OpenText Enterprise Performance Engineering Plugin"
+             Level="1">
+      <!-- All files harvested from staging\ by HarvestDirectory in .wixproj -->
+      <ComponentGroupRef Id="StagingComponents" />
+      <!-- Registry: writes PLUGINSUI_PATH environment variable -->
+      <ComponentGroupRef Id="RegistryComponents" />
+      <!-- Shortcuts: Start Menu + Desktop -->
+      <ComponentGroupRef Id="ShortcutComponents" />
+    </Feature>
+
+  </Package>
+
+  <!-- ── Directory structure ──────────────────────────────────────────── -->
+  <Fragment>
+    <!--
+      ProgramFiles6432Folder resolves to:
+        C:\Program Files\        on 64-bit Windows (64-bit MSI)
+        C:\Program Files (x86)\  on 32-bit Windows
+    -->
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="OpenTextDir" Name="OpenText">
+        <Directory Id="INSTALLDIR" Name="OpenText Enterprise Performance Engineering Plugin" />
+      </Directory>
+    </StandardDirectory>
+  </Fragment>
+
+</Wix>
+

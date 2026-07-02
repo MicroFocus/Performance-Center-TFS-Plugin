@@ -1,0 +1,146 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'release/deploy.txt'
+
+jobs:
+  check-release:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+      version: ${{ steps.check.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read deploy.txt
+        id: check
+        run: |
+          if [ -f "release/deploy.txt" ]; then
+            enabled=$(grep "^enabled=" release/deploy.txt | cut -d'=' -f2 | tr -d ' ')
+            version=$(grep "^version=" release/deploy.txt | cut -d'=' -f2 | tr -d ' ')
+            echo "enabled=$enabled" >> $GITHUB_OUTPUT
+            echo "version=$version" >> $GITHUB_OUTPUT
+            echo "Release enabled: $enabled, version: $version"
+          else
+            echo "enabled=false" >> $GITHUB_OUTPUT
+            echo "version=" >> $GITHUB_OUTPUT
+          fi
+
+  release:
+    needs: check-release
+    if: needs.check-release.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [24.x]
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: 'angular/LreCiTask/package-lock.json'
+
+      - name: Update version in vss-extension.json
+        run: |
+          VERSION="${{ needs.check-release.outputs.version }}"
+          echo "Updating version to: $VERSION"
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" angular/vss-extension.json
+          cat angular/vss-extension.json | grep version
+
+      - name: Update version in task.json
+        run: |
+          VERSION="${{ needs.check-release.outputs.version }}"
+          MAJOR=$(echo $VERSION | cut -d'.' -f1)
+          MINOR=$(echo $VERSION | cut -d'.' -f2)
+          PATCH=$(echo $VERSION | cut -d'.' -f3)
+          
+          echo "Updating task.json with version - Major: $MAJOR, Minor: $MINOR, Patch: $PATCH"
+          sed -i "s/\"Major\": [0-9]*/\"Major\": $MAJOR/" angular/LreCiTask/task.json
+          sed -i "s/\"Minor\": [0-9]*/\"Minor\": $MINOR/" angular/LreCiTask/task.json
+          sed -i "s/\"Patch\": [0-9]*/\"Patch\": $PATCH/" angular/LreCiTask/task.json
+          cat angular/LreCiTask/task.json | grep -A 3 "\"version\":"
+
+      - name: Update version in package.json
+        run: |
+          VERSION="${{ needs.check-release.outputs.version }}"
+          echo "Updating package.json version to: $VERSION"
+          npm version $VERSION --prefix angular/LreCiTask --no-git-tag-v
+
+      - name: Install dependencies
+        working-directory: ./angular/LreCiTask
+        run: npm ci
+
+      - name: Audit dependencies
+        working-directory: ./angular/LreCiTask
+        run: npm run security:audit
+
+      - name: Run linter
+        working-directory: ./angular/LreCiTask
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: ./angular/LreCiTask
+        run: npm test
+
+      - name: Build TypeScript
+        working-directory: ./angular/LreCiTask
+        run: npm run build
+
+      - name: Install TFX CLI
+        run: npm install -g tfx-cli
+
+      - name: Package VSIX
+        working-directory: ./angular
+        run: npm run package:vsix --prefix LreCiTask
+
+      - name: Create Release and Upload Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.check-release.outputs.version }}"
+          TAG="v${VERSION}"
+          VSIX_FILE=$(ls angular/out/*.vsix | head -1)
+          VSIX_NAME="Micro-Focus.PCIntegration-${VERSION}.vsix"
+          
+          # Create release with asset upload
+          gh release create "$TAG" \
+            "$VSIX_FILE#${VSIX_NAME}" \
+            --title "Release ${TAG}" \
+            --notes "OpenText Enterprise Performance Engineering CI - Version ${VERSION}
+
+          **Changes:**
+          - Automatic release build from deploy.txt trigger" \
+            --repo "${{ github.repository }}" || echo "Release already exists"
+
+      - name: Reset deploy.txt
+        run: |
+          sed -i "s/^enabled=true/enabled=false/" release/deploy.txt
+          cat release/deploy.txt
+
+      - name: Commit and push updated files
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "Release v${{ needs.check-release.outputs.version }}: Reset deploy.txt and update version files"
+          add: |
+            angular/vss-extension.json
+            angular/LreCiTask/task.json
+            angular/LreCiTask/package.json
+            release/deploy.txt
+          push: true
+          fetch: true
+          pull: --rebase --autostash
+
