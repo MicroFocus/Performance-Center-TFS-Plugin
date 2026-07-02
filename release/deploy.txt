@@ -1,6 +1,6 @@
 # Release trigger file
 # 1) Set enabled=true
-# 2) Set version to the angular\vss-extension.json release version and to angular\LreCiTask\task.json you want to publish
-# 3) Commit and push this file to main/master
+# 2) Set version=X.Y.Z to match angular/vss-extension.json and angular/LreCiTask/task.json
+# 3) Commit and push this file to master — the release workflow fires automatically
 enabled=true
 version=3.0.0
