@@ -69,9 +69,18 @@ jobs:
         working-directory: ./angular
         run: npm run package:vsix --prefix LreCiTask
 
+      - name: Resolve built VSIX path
+        id: vsix
+        run: |
+          VERSION=$(node -p "require('./angular/vss-extension.json').version")
+          VSIX_PATH="Extension/Micro-Focus.PCIntegration-${VERSION}.vsix"
+          echo "path=${VSIX_PATH}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Built VSIX: ${VSIX_PATH}"
+
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
           name: vsix-build
-          path: Extension/*.vsix
+          path: ${{ steps.vsix.outputs.path }}
           retention-days: 30
