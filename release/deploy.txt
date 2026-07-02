@@ -2,5 +2,5 @@
 # 1) Set enabled=true
 # 2) Set version to the angular\vss-extension.json release version and to angular\LreCiTask\task.json you want to publish
 # 3) Commit and push this file to main/master
-enabled=false
+enabled=true
 version=3.0.0
