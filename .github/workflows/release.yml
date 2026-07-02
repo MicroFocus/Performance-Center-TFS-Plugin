@@ -90,7 +90,7 @@ jobs:
         run: |
           VERSION="${{ needs.check-release.outputs.version }}"
           echo "Updating package.json version to: $VERSION"
-          npm version $VERSION --prefix angular/LreCiTask --no-git-tag-v
+          npm version $VERSION --prefix angular/LreCiTask --no-git-tag-version --allow-same-version
 
       - name: Install dependencies
         working-directory: ./angular/LreCiTask
