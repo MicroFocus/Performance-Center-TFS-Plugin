@@ -10,9 +10,14 @@
     <RootNamespace>PluginsUI</RootNamespace>
     <ApplicationIcon>Assets\PC.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.0.0</Version>
+    <Version>3.0.0.0</Version>
     <Authors>OpenText</Authors>
-    <Description>Standalone configurator UI for OpenText Enterprise Performance Engineering (LRE) — runs the Node.js angular task locally.</Description>
+    <Description>Standalone configurator UI for OpenText Enterprise Performance Engineering — runs the Node.js angular task locally.</Description>
+    <Copyright>© Copyright 2001-2026 Open Text or one of its affiliates.</Copyright>
+    <Product>OpenText Enterprise Performance Engineering Plugin</Product>
+    <FileVersion>3.0.0.0</FileVersion>
+    <Trademark>OpenText</Trademark>
+    <Company>OpenText</Company>
   </PropertyGroup>
 
   <!-- Assets: images and scripts are copied to output directory -->
