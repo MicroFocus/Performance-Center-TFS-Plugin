@@ -29,7 +29,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "adm-zip": "^0.5.18",
+    "adm-zip": "^0.6.0",
     "axios": "^1.18.1",
     "axios-cookiejar-support": "^5.0.5",
     "azure-pipelines-task-lib": "^5.276.0",
