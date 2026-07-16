@@ -33,7 +33,7 @@
     "axios": "^1.18.1",
     "axios-cookiejar-support": "^5.0.5",
     "azure-pipelines-task-lib": "^5.276.0",
-    "fast-xml-parser": "^5.9.3",
+    "fast-xml-parser": "^5.10.1",
     "tough-cookie": "^4.1.4"
   },
   "devDependencies": {
