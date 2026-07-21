@@ -4,16 +4,15 @@
  *
  * MainWindow.xaml.cs — code-behind for PluginsUI
  *
- * Key design choices vs the old PC.Plugins.ConfiguratorUI:
+ * Key design choices:
+ *  • TabControl — Tab 0 "CI Test Run" (LreCiTask), Tab 1 "Workspace Sync" (LreWorkspaceSyncTask).
+ *  • Connection and Proxy sections are shared above the tab control.
+ *  • Run/Stop buttons at the bottom work for whichever tab is active.
+ *  • Two separate auto-save paths: last-session.json (CI) and last-session-sync.json (Sync).
+ *  • Save Config / Load Config operates on the currently active tab's config only.
  *  • No references to PC.Plugins.* assemblies — fully standalone.
- *  • "Run" launches node dist/index.js directly with INPUT_* env vars (no PS1 wrapper needed).
- *  • "Test Connection" delegates to Scripts/test-connection.js via node — identical HTTP call to the main task.
  *  • async/await throughout — the UI never blocks.
- *  • Real-time streaming RichTextBox output panel with colour-coded lines.
- *  • Auto-save / auto-restore last session on close / open (%LOCALAPPDATA%\PluginsUI\last-session.json).
- *  • Save / Load configuration (JSON, passwords excluded).
- *  • Stop button to kill the running node process.
- *  • Browse buttons for Artifacts directory and Node dist path.
+ *  • Real-time streaming RichTextBox output with colour-coded lines.
  */
 
 using System.ComponentModel;
@@ -38,8 +37,15 @@ public partial class MainWindow : Window
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "PluginsUI", "last-session.json");
 
-    private readonly LreTaskRunner      _runner   = new();
-    private CancellationTokenSource?    _cts;
+    private static readonly string _autoSaveSyncPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "PluginsUI", "last-session-sync.json");
+
+    private readonly LreTaskRunner          _runner     = new();
+    private readonly LreWorkspaceSyncRunner _syncRunner = new();
+    private CancellationTokenSource?        _cts;
+
+    private bool IsSyncTab => TaskTabControl.SelectedIndex == 1;
 
     // ─────────────────────────────────────────────────────────────────────────
     // Constructor
@@ -48,7 +54,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        ApplyConfig(ConfigurationService.Load(_autoSavePath));
+        ApplyConfig(ConfigurationService.Load<LreConfiguration>(_autoSavePath));
+        ApplySyncConfig(ConfigurationService.Load<LreSyncConfiguration>(_autoSaveSyncPath));
         SetStatus("Ready.");
     }
 
@@ -58,7 +65,7 @@ public partial class MainWindow : Window
 
     private async void TestConnection_Click(object sender, RoutedEventArgs e)
     {
-        var cfg = BuildConfig();
+        var cfg = BuildConfig();          // connection fields are shared — reuse CI build
         SetStatus("Testing connection…");
         TestConnectionButton.IsEnabled = false;
 
@@ -101,30 +108,42 @@ public partial class MainWindow : Window
 
     private async void Run_Click(object sender, RoutedEventArgs e)
     {
-        if (_runner.IsRunning)
+        if (_runner.IsRunning || _syncRunner.IsRunning)
         {
-            MessageBox.Show("A test is already running. Use Stop to cancel it first.",
+            MessageBox.Show("A task is already running. Use Stop to cancel it first.",
                 "PluginsUI", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        // Validate required fields
         if (!ValidateRequiredFields()) return;
-
-        var cfg          = BuildConfig();
-        var password     = PCPassword.Password;
-        var proxyPwd     = ProxyPassword.Password;
 
         _cts = new CancellationTokenSource();
         var progress = new Progress<string>(AppendOutput);
 
         SetRunning(true);
-        AppendOutput($"[{DateTime.Now:HH:mm:ss}] Starting task…");
 
         try
         {
-            var exitCode = await _runner.RunAsync(cfg, password, proxyPwd, progress, _cts.Token);
-            SetStatus(exitCode == 0 ? "Task completed successfully." : $"Task exited with code {exitCode}.");
+            if (IsSyncTab)
+            {
+                var cfg        = BuildSyncConfig();
+                var password   = PCPassword.Password;
+                var proxyPwd   = ProxyPassword.Password;
+
+                AppendOutput($"[{DateTime.Now:HH:mm:ss}] Starting workspace sync…");
+                var exitCode = await _syncRunner.RunAsync(cfg, password, proxyPwd, progress, _cts.Token);
+                SetStatus(exitCode == 0 ? "Sync completed successfully." : $"Sync exited with code {exitCode}.");
+            }
+            else
+            {
+                var cfg        = BuildConfig();
+                var password   = PCPassword.Password;
+                var proxyPwd   = ProxyPassword.Password;
+
+                AppendOutput($"[{DateTime.Now:HH:mm:ss}] Starting task…");
+                var exitCode = await _runner.RunAsync(cfg, password, proxyPwd, progress, _cts.Token);
+                SetStatus(exitCode == 0 ? "Task completed successfully." : $"Task exited with code {exitCode}.");
+            }
         }
         catch (Exception ex)
         {
@@ -141,9 +160,10 @@ public partial class MainWindow : Window
 
     private void Stop_Click(object sender, RoutedEventArgs e)
     {
-        if (!_runner.IsRunning) return;
+        if (!_runner.IsRunning && !_syncRunner.IsRunning) return;
         _cts?.Cancel();
         _runner.Stop();
+        _syncRunner.Stop();
         SetStatus("Stopping…");
     }
 
@@ -160,16 +180,20 @@ public partial class MainWindow : Window
     {
         var dlg = new SaveFileDialog
         {
-            Title            = "Save Configuration",
-            Filter           = "JSON configuration (*.json)|*.json|All files (*.*)|*.*",
-            DefaultExt       = ".json",
-            FileName         = "lre-config.json"
+            Title      = "Save Configuration",
+            Filter     = "JSON configuration (*.json)|*.json|All files (*.*)|*.*",
+            DefaultExt = ".json",
+            FileName   = IsSyncTab ? "lre-sync-config.json" : "lre-config.json"
         };
         if (dlg.ShowDialog(this) != true) return;
 
         try
         {
-            ConfigurationService.Save(BuildConfig(), dlg.FileName);
+            if (IsSyncTab)
+                ConfigurationService.Save(BuildSyncConfig(), dlg.FileName);
+            else
+                ConfigurationService.Save(BuildConfig(), dlg.FileName);
+
             SetStatus($"Configuration saved to {Path.GetFileName(dlg.FileName)}.");
             MessageBox.Show(
                 $"Configuration saved.\n\nNote: passwords are not included in the saved file.",
@@ -194,8 +218,16 @@ public partial class MainWindow : Window
 
         try
         {
-            var cfg = ConfigurationService.Load(dlg.FileName);
-            ApplyConfig(cfg);
+            if (IsSyncTab)
+            {
+                var cfg = ConfigurationService.Load<LreSyncConfiguration>(dlg.FileName);
+                ApplySyncConfig(cfg);
+            }
+            else
+            {
+                var cfg = ConfigurationService.Load<LreConfiguration>(dlg.FileName);
+                ApplyConfig(cfg);
+            }
             SetStatus($"Configuration loaded from {Path.GetFileName(dlg.FileName)}.");
         }
         catch (Exception ex)
@@ -206,12 +238,12 @@ public partial class MainWindow : Window
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Browse buttons
+    // Browse buttons — CI task
     // ─────────────────────────────────────────────────────────────────────────
 
     private void BrowseArtifacts_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new OpenFolderDialog { Title = "Select Artifacts Directory" };
+        var dlg = new OpenFolderDialog { Title = "Select Artifacts Directory (CI Task)" };
         if (dlg.ShowDialog(this) == true)
             ArtifactsDirectory.Text = dlg.FolderName;
     }
@@ -220,14 +252,12 @@ public partial class MainWindow : Window
     {
         var dlg = new OpenFileDialog
         {
-            Title  = "Select dist/index.js",
+            Title  = "Select LreCiTask index.js (bootstrap)",
             Filter = "JavaScript files (index.js)|index.js|All files (*.*)|*.*"
         };
-
-        // Pre-navigate to likely location
         var guess = Path.GetFullPath(
             Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-                "angular", "LreCiTask", "dist"));
+                "angular", "LreCiTask"));
         if (Directory.Exists(guess)) dlg.InitialDirectory = guess;
 
         if (dlg.ShowDialog(this) == true)
@@ -236,8 +266,7 @@ public partial class MainWindow : Window
 
     private void DetectNodeDist_Click(object sender, RoutedEventArgs e)
     {
-        // Run the same resolution the runner uses and show what was found
-        var resolved = LreTaskRunner.ResolveDistPath(null);   // ignore any typed value — detect fresh
+        var resolved = LreTaskRunner.ResolveDistPath(null);
         if (resolved is not null)
         {
             NodeDistPath.Text = resolved;
@@ -245,14 +274,67 @@ public partial class MainWindow : Window
         }
         else
         {
-            SetStatus("dist/index.js not found automatically.");
+            SetStatus("LreCiTask index.js not found automatically.");
             MessageBox.Show(
-                "Could not locate dist\\index.js automatically.\n\n" +
-                "Expected location for installer deployment:\n" +
-                $"  {Path.Combine(AppContext.BaseDirectory, "dist", "index.js")}\n\n" +
-                "Build the angular task first (npm run build in angular\\LreCiTask),\n" +
-                "then copy the dist\\ folder next to PluginsUI.exe,\n" +
-                "or use Browse… to select the file manually.",
+                "Could not locate LreCiTask index.js automatically.\n\n" +
+                "Build the angular task first:\n" +
+                "  cd angular && npm install && npm run build\n\n" +
+                "Then use Browse… to select the file manually.",
+                "PluginsUI — Detect",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Browse buttons — Workspace Sync task
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private void BrowseSyncWorkspace_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFolderDialog { Title = "Select Workspace Directory to Scan" };
+        if (dlg.ShowDialog(this) == true)
+            SyncWorkspaceDir.Text = dlg.FolderName;
+    }
+
+    private void BrowseSyncArtifacts_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFolderDialog { Title = "Select Artifacts Directory (Sync Task)" };
+        if (dlg.ShowDialog(this) == true)
+            SyncArtifactsDirectory.Text = dlg.FolderName;
+    }
+
+    private void BrowseSyncNodeDist_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title  = "Select LreWorkspaceSyncTask index.js (bootstrap)",
+            Filter = "JavaScript files (index.js)|index.js|All files (*.*)|*.*"
+        };
+        var guess = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..",
+                "angular", "LreWorkspaceSyncTask"));
+        if (Directory.Exists(guess)) dlg.InitialDirectory = guess;
+
+        if (dlg.ShowDialog(this) == true)
+            SyncNodeDistPath.Text = dlg.FileName;
+    }
+
+    private void DetectSyncNodeDist_Click(object sender, RoutedEventArgs e)
+    {
+        var resolved = LreWorkspaceSyncRunner.ResolveDistPath(null);
+        if (resolved is not null)
+        {
+            SyncNodeDistPath.Text = resolved;
+            SetStatus($"Auto-detected: {resolved}");
+        }
+        else
+        {
+            SetStatus("LreWorkspaceSyncTask index.js not found automatically.");
+            MessageBox.Show(
+                "Could not locate LreWorkspaceSyncTask index.js automatically.\n\n" +
+                "Build the angular sync task first:\n" +
+                "  cd angular && npm install && npm run build\n\n" +
+                "Then use Browse… to select the file manually.",
                 "PluginsUI — Detect",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
@@ -266,18 +348,18 @@ public partial class MainWindow : Window
     {
         if (TogglePasswordButton.Content is string label && label == "Show")
         {
-            TogglePasswordButton.Content  = "Hide";
-            PCPasswordVisible.Text        = PCPassword.Password;
-            PCPassword.Visibility         = Visibility.Collapsed;
-            PCPasswordVisible.Visibility  = Visibility.Visible;
+            TogglePasswordButton.Content = "Hide";
+            PCPasswordVisible.Text       = PCPassword.Password;
+            PCPassword.Visibility        = Visibility.Collapsed;
+            PCPasswordVisible.Visibility = Visibility.Visible;
             PCPasswordVisible.Focus();
         }
         else
         {
-            TogglePasswordButton.Content  = "Show";
-            PCPassword.Password           = PCPasswordVisible.Text;
-            PCPasswordVisible.Visibility  = Visibility.Collapsed;
-            PCPassword.Visibility         = Visibility.Visible;
+            TogglePasswordButton.Content = "Show";
+            PCPassword.Password          = PCPasswordVisible.Text;
+            PCPasswordVisible.Visibility = Visibility.Collapsed;
+            PCPassword.Visibility        = Visibility.Visible;
         }
     }
 
@@ -319,64 +401,97 @@ public partial class MainWindow : Window
             DoNotTrend.IsChecked = true;
     }
 
+    private void TaskTab_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // Update Run button tooltip to reflect the active task
+        if (RunButton is null) return;
+        RunButton.ToolTip = IsSyncTab
+                ? "Sync workspace scripts to Enterprise Performance Engineering"
+            : "Run the performance test";
+        SetStatus("Ready.");
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Window events
     // ─────────────────────────────────────────────────────────────────────────
 
     private void Window_Closing(object sender, CancelEventArgs e)
     {
-        if (_runner.IsRunning)
+        if (_runner.IsRunning || _syncRunner.IsRunning)
         {
             var result = MessageBox.Show(
-                "A test is still running. Stop it and close?",
+                "A task is still running. Stop it and close?",
                 "PluginsUI", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (result == MessageBoxResult.No) { e.Cancel = true; return; }
             _runner.Stop();
+            _syncRunner.Stop();
         }
         _runner.Dispose();
+        _syncRunner.Dispose();
 
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(_autoSavePath)!);
+            var dir = Path.GetDirectoryName(_autoSavePath)!;
+            Directory.CreateDirectory(dir);
             ConfigurationService.Save(BuildConfig(), _autoSavePath);
+            ConfigurationService.Save(BuildSyncConfig(), _autoSaveSyncPath);
         }
         catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[AutoSave] {ex.Message}"); /* best-effort */ }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Helpers
+    // Helpers — build / apply configs
     // ─────────────────────────────────────────────────────────────────────────
 
-    /// <summary>Read all form fields into a new <see cref="LreConfiguration"/>.</summary>
+    /// <summary>Read form fields into a new <see cref="LreConfiguration"/> (CI task).</summary>
     private LreConfiguration BuildConfig() => new()
     {
-        ServerUrl                = PCServerURL.Text.Trim(),
+        ServerUrl                 = PCServerURL.Text.Trim(),
         UseTokenForAuthentication = UseTokenForAuthentication.IsChecked == true,
-        UserName                 = PCUserName.Text.Trim(),
-        Domain                   = Domain.Text.Trim(),
-        Project                  = Project.Text.Trim(),
-        TestId                   = TestID.Text.Trim(),
-        AutoTestInstance         = AutoTestInstance.IsChecked == true,
-        TestInstanceId           = (SpecifyTestInstance.IsChecked == true) ? TestInstanceID.Text.Trim() : string.Empty,
-        ProxyUrl                 = ProxyURL.Text.Trim(),
-        ProxyUserName            = ProxyUserName.Text.Trim(),
-        PostRunAction            = ((ComboBoxItem?)PostRunAction.SelectedItem)?.Tag?.ToString() ?? "CollateAndAnalyze",
-        Trending                 = DoNotTrend.IsChecked == true ? "DoNotTrend"
-                                 : AssociatedTrend.IsChecked == true ? "AssociatedTrend"
-                                 : "UseTrendReportID",
-        TrendReportId            = UseTrendReportID.IsChecked == true ? TrendReportID.Text.Trim() : string.Empty,
-        TimeslotDurationMinutes  = ValidateTimeslotDuration(),
-        UseVUDs                  = UseVUDs.IsChecked == true,
-        UseSLAInStatus           = UseSLAStatus.IsChecked == true,
-        TimeslotRepeat           = RepeatWithParameters.IsChecked == true ? "RepeatWithParameters" : "DoNotRepeat",
-        TimeslotRepeatDelay      = TimeslotRepeatDelay.Text.Trim(),
-        TimeslotRepeatAttempts   = TimeslotRepeatAttempts.Text.Trim(),
-        ArtifactsDirectory       = ArtifactsDirectory.Text.Trim(),
-        NodeDistPath             = NodeDistPath.Text.Trim(),
-        Description              = DescriptionText.Text.Trim()
+        UserName                  = PCUserName.Text.Trim(),
+        Domain                    = Domain.Text.Trim(),
+        Project                   = Project.Text.Trim(),
+        TestId                    = TestID.Text.Trim(),
+        AutoTestInstance          = AutoTestInstance.IsChecked == true,
+        TestInstanceId            = (SpecifyTestInstance.IsChecked == true) ? TestInstanceID.Text.Trim() : string.Empty,
+        ProxyUrl                  = ProxyURL.Text.Trim(),
+        ProxyUserName             = ProxyUserName.Text.Trim(),
+        PostRunAction             = ((ComboBoxItem?)PostRunAction.SelectedItem)?.Tag?.ToString() ?? "CollateAndAnalyze",
+        Trending                  = DoNotTrend.IsChecked == true ? "DoNotTrend"
+                                  : AssociatedTrend.IsChecked == true ? "AssociatedTrend"
+                                  : "UseTrendReportID",
+        TrendReportId             = UseTrendReportID.IsChecked == true ? TrendReportID.Text.Trim() : string.Empty,
+        TimeslotDurationMinutes   = ValidateTimeslotDuration(),
+        UseVUDs                   = UseVUDs.IsChecked == true,
+        UseSLAInStatus            = UseSLAStatus.IsChecked == true,
+        TimeslotRepeat            = RepeatWithParameters.IsChecked == true ? "RepeatWithParameters" : "DoNotRepeat",
+        TimeslotRepeatDelay       = TimeslotRepeatDelay.Text.Trim(),
+        TimeslotRepeatAttempts    = TimeslotRepeatAttempts.Text.Trim(),
+        ArtifactsDirectory        = ArtifactsDirectory.Text.Trim(),
+        NodeDistPath              = NodeDistPath.Text.Trim(),
+        Description               = DescriptionText.Text.Trim()
     };
 
-    /// <summary>Populate the form from a loaded <see cref="LreConfiguration"/>.</summary>
+    /// <summary>Read form fields into a new <see cref="LreSyncConfiguration"/> (Workspace Sync task).</summary>
+    private LreSyncConfiguration BuildSyncConfig() => new()
+    {
+        ServerUrl                 = PCServerURL.Text.Trim(),
+        UseTokenForAuthentication = UseTokenForAuthentication.IsChecked == true,
+        UserName                  = PCUserName.Text.Trim(),
+        Domain                    = Domain.Text.Trim(),
+        Project                   = Project.Text.Trim(),
+        ProxyUrl                  = ProxyURL.Text.Trim(),
+        ProxyUserName             = ProxyUserName.Text.Trim(),
+        WorkspaceDir              = SyncWorkspaceDir.Text.Trim(),
+        RuntimeOnly               = SyncRuntimeOnly.IsChecked == true,
+        ParallelUploads           = ValidateParallelUploads(),
+        SuccessThreshold          = ValidateSuccessThreshold(),
+        ArtifactsDirectory        = SyncArtifactsDirectory.Text.Trim(),
+        NodeDistPath              = SyncNodeDistPath.Text.Trim(),
+        Description               = SyncDescriptionText.Text.Trim()
+    };
+
+    /// <summary>Populate the CI form from a loaded <see cref="LreConfiguration"/>.</summary>
     private void ApplyConfig(LreConfiguration cfg)
     {
         PCServerURL.Text              = cfg.ServerUrl;
@@ -391,13 +506,11 @@ public partial class MainWindow : Window
         ProxyURL.Text                 = cfg.ProxyUrl;
         ProxyUserName.Text            = cfg.ProxyUserName;
 
-        // Post Run Action
         foreach (ComboBoxItem item in PostRunAction.Items)
             if (item.Tag?.ToString() == cfg.PostRunAction) { item.IsSelected = true; break; }
 
-        // Trending
-        DoNotTrend.IsChecked      = cfg.Trending == "DoNotTrend";
-        AssociatedTrend.IsChecked = cfg.Trending == "AssociatedTrend";
+        DoNotTrend.IsChecked       = cfg.Trending == "DoNotTrend";
+        AssociatedTrend.IsChecked  = cfg.Trending == "AssociatedTrend";
         UseTrendReportID.IsChecked = cfg.Trending == "UseTrendReportID";
         TrendReportID.Text         = cfg.TrendReportId;
 
@@ -405,15 +518,47 @@ public partial class MainWindow : Window
         UseVUDs.IsChecked            = cfg.UseVUDs;
         UseSLAStatus.IsChecked       = cfg.UseSLAInStatus;
 
-        DoNotRepeat.IsChecked           = cfg.TimeslotRepeat != "RepeatWithParameters";
-        RepeatWithParameters.IsChecked  = cfg.TimeslotRepeat == "RepeatWithParameters";
-        TimeslotRepeatDelay.Text        = cfg.TimeslotRepeatDelay;
-        TimeslotRepeatAttempts.Text     = cfg.TimeslotRepeatAttempts;
+        DoNotRepeat.IsChecked          = cfg.TimeslotRepeat != "RepeatWithParameters";
+        RepeatWithParameters.IsChecked = cfg.TimeslotRepeat == "RepeatWithParameters";
+        TimeslotRepeatDelay.Text       = cfg.TimeslotRepeatDelay;
+        TimeslotRepeatAttempts.Text    = cfg.TimeslotRepeatAttempts;
 
         ArtifactsDirectory.Text = cfg.ArtifactsDirectory;
         NodeDistPath.Text       = cfg.NodeDistPath;
         DescriptionText.Text    = cfg.Description;
     }
+
+    /// <summary>Populate the Sync form from a loaded <see cref="LreSyncConfiguration"/>.</summary>
+    private void ApplySyncConfig(LreSyncConfiguration cfg)
+    {
+        // Connection fields: only overwrite if the CI tab hasn't already set them
+        // (prefer not to clobber whatever ApplyConfig() already set)
+        if (string.IsNullOrWhiteSpace(PCServerURL.Text) || PCServerURL.Text == "https://MyServer:443")
+        {
+            PCServerURL.Text = cfg.ServerUrl;
+            UseTokenForAuthentication.IsChecked = cfg.UseTokenForAuthentication;
+            PCUserName.Text  = cfg.UserName;
+            Domain.Text      = cfg.Domain;
+            Project.Text     = cfg.Project;
+        }
+        if (string.IsNullOrWhiteSpace(ProxyURL.Text))
+        {
+            ProxyURL.Text      = cfg.ProxyUrl;
+            ProxyUserName.Text = cfg.ProxyUserName;
+        }
+
+        SyncWorkspaceDir.Text       = cfg.WorkspaceDir;
+        SyncRuntimeOnly.IsChecked   = cfg.RuntimeOnly;
+        SyncParallelUploads.Text    = cfg.ParallelUploads.ToString();
+        SyncSuccessThreshold.Text   = cfg.SuccessThreshold;
+        SyncArtifactsDirectory.Text = cfg.ArtifactsDirectory;
+        SyncNodeDistPath.Text       = cfg.NodeDistPath;
+        SyncDescriptionText.Text    = cfg.Description;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Validation
+    // ─────────────────────────────────────────────────────────────────────────
 
     private bool ValidateRequiredFields()
     {
@@ -422,7 +567,16 @@ public partial class MainWindow : Window
         if (string.IsNullOrWhiteSpace(PCUserName.Text))   errors.Add("User Name is required.");
         if (string.IsNullOrWhiteSpace(Domain.Text))       errors.Add("Domain is required.");
         if (string.IsNullOrWhiteSpace(Project.Text))      errors.Add("Project is required.");
-        if (string.IsNullOrWhiteSpace(TestID.Text))       errors.Add("Test ID is required.");
+
+        if (!IsSyncTab)
+        {
+            if (string.IsNullOrWhiteSpace(TestID.Text))   errors.Add("Test ID is required.");
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(SyncWorkspaceDir.Text))
+                errors.Add("Workspace directory is required.");
+        }
 
         if (errors.Count == 0) return true;
 
@@ -435,7 +589,7 @@ public partial class MainWindow : Window
     {
         if (int.TryParse(TimeslotDurationMinutes.Text, out int n))
         {
-            if (n < 30)  { TimeslotDurationMinutes.Text = "30";    return "30"; }
+            if (n < 30)    { TimeslotDurationMinutes.Text = "30";    return "30"; }
             if (n > 28800) { TimeslotDurationMinutes.Text = "28800"; return "28800"; }
             return n.ToString();
         }
@@ -443,18 +597,54 @@ public partial class MainWindow : Window
         return "30";
     }
 
-    // ── Output colour palette (dark terminal theme) ─────────────────────────
-    private static readonly SolidColorBrush _colDefault  = new(Color.FromRgb(0xD4, 0xD4, 0xD4)); // light grey
-    private static readonly SolidColorBrush _colError    = new(Color.FromRgb(0xFF, 0x6B, 0x6B)); // soft red
-    private static readonly SolidColorBrush _colWarn     = new(Color.FromRgb(0xFF, 0xD7, 0x00)); // gold
-    private static readonly SolidColorBrush _colSuccess  = new(Color.FromRgb(0x98, 0xD9, 0x82)); // soft green
-    private static readonly SolidColorBrush _colMeta     = new(Color.FromRgb(0x9C, 0xDC, 0xFE)); // light blue
+    private int ValidateParallelUploads()
+    {
+        if (int.TryParse(SyncParallelUploads.Text, out int n))
+        {
+            n = Math.Clamp(n, 1, 20);
+            SyncParallelUploads.Text = n.ToString();
+            return n;
+        }
+        SyncParallelUploads.Text = "1";
+        return 1;
+    }
+
+    /// <summary>
+    /// Returns the success threshold as a string suitable for the INPUT_VARSUCCESSTHRESHOLD env var.
+    /// Empty string → not set → the task uses its default (50%).
+    /// An integer in [0, 100] → passed through as-is.
+    /// An integer outside [0, 100] → cleared to empty (let the task fall back to 50%).
+    /// Non-numeric input → cleared to empty.
+    /// </summary>
+    private string ValidateSuccessThreshold()
+    {
+        var raw = SyncSuccessThreshold.Text.Trim();
+        if (string.IsNullOrEmpty(raw)) return "";
+        if (int.TryParse(raw, out int n))
+        {
+            if (n >= 0 && n <= 100) return n.ToString();
+            // Out of range → fall back to default; clear the field to signal "not set"
+            SyncSuccessThreshold.Text = "";
+            return "";
+        }
+        SyncSuccessThreshold.Text = "";
+        return "";
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Output colour palette (dark terminal theme)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private static readonly SolidColorBrush _colDefault = new(Color.FromRgb(0xD4, 0xD4, 0xD4));
+    private static readonly SolidColorBrush _colError   = new(Color.FromRgb(0xFF, 0x6B, 0x6B));
+    private static readonly SolidColorBrush _colWarn    = new(Color.FromRgb(0xFF, 0xD7, 0x00));
+    private static readonly SolidColorBrush _colSuccess = new(Color.FromRgb(0x98, 0xD9, 0x82));
+    private static readonly SolidColorBrush _colMeta    = new(Color.FromRgb(0x9C, 0xDC, 0xFE));
 
     private void AppendOutput(string line)
     {
         if (!Dispatcher.CheckAccess()) { Dispatcher.InvokeAsync(() => AppendOutput(line)); return; }
 
-        // Pick colour based on line prefix / keywords
         SolidColorBrush brush;
         if      (line.StartsWith("[ERR]",  StringComparison.Ordinal))                                   brush = _colError;
         else if (line.StartsWith("[WARN]", StringComparison.Ordinal))                                   brush = _colWarn;
@@ -463,7 +653,8 @@ public partial class MainWindow : Window
                  line.Contains("completed",    StringComparison.OrdinalIgnoreCase))                     brush = _colSuccess;
         else if (line.StartsWith("[INFO] ───", StringComparison.Ordinal) ||
                  line.StartsWith("[INFO] Node", StringComparison.Ordinal) ||
-                 line.StartsWith("[INFO] Artifacts", StringComparison.Ordinal))                         brush = _colMeta;
+                 line.StartsWith("[INFO] Artifacts", StringComparison.Ordinal) ||
+                 line.StartsWith("[INFO] Workspace", StringComparison.Ordinal))                         brush = _colMeta;
         else                                                                                             brush = _colDefault;
 
         var para = new Paragraph(new Run(line) { Foreground = brush })
@@ -489,7 +680,10 @@ public partial class MainWindow : Window
         StopButton.IsEnabled           =  running;
         TestConnectionButton.IsEnabled = !running;
         LoadConfigButton.IsEnabled     = !running;
-        SetStatus(running ? "Running test…" : StatusText.Text);
+        TaskTabControl.IsEnabled       = !running;   // prevent tab switching during run
+        SetStatus(running
+            ? (IsSyncTab ? "Syncing workspace…" : "Running test…")
+            : StatusText.Text);
     }
 }
 

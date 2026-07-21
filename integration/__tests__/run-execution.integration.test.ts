@@ -8,7 +8,7 @@ import { LreClient } from '../../angular/LreCiTask/src/lre/LreClient';
 import { LreConfig, RunState, PostRunAction } from '../../angular/LreCiTask/src/models';
 import { PropertiesLoader, IntegrationTestConfig } from '../test-utils/PropertiesLoader';
 
-describe('LRE Run Execution Integration Tests', () => {
+describe('Enterprise Performance Engineering Run Execution Integration Tests', () => {
     let config: IntegrationTestConfig;
     let client: LreClient;
     let createdRunId: number | null = null;

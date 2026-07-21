@@ -70,27 +70,29 @@ $ErrorActionPreference = "Stop"
 
 # ── Resolve dist/index.js ──────────────────────────────────────────────────
 if ([string]::IsNullOrWhiteSpace($NodeDistPath)) {
-    # 1. Next to this script
-    $candidate = Join-Path $PSScriptRoot "dist\index.js"
+    # 1. Installer layout: LreCiTask\index.js (bootstrap) is one level above Scripts\
+    $candidate = Join-Path $PSScriptRoot "..\LreCiTask\index.js"
+    $candidate = [System.IO.Path]::GetFullPath($candidate)
     if (Test-Path $candidate) { $NodeDistPath = $candidate }
 }
 
 if ([string]::IsNullOrWhiteSpace($NodeDistPath)) {
-    # 2. Typical repo layout: PluginUI/PluginsUI/Scripts  →  angular/LreCiTask/dist
-    $candidate = Join-Path $PSScriptRoot "..\..\..\angular\LreCiTask\dist\index.js"
+    # 2. Typical repo layout: PluginUI/PluginsUI/Scripts  →  angular/LreCiTask/index.js (bootstrap)
+    $candidate = Join-Path $PSScriptRoot "..\..\..\angular\LreCiTask\index.js"
     $candidate = [System.IO.Path]::GetFullPath($candidate)
     if (Test-Path $candidate) { $NodeDistPath = $candidate }
 }
 
 if ([string]::IsNullOrWhiteSpace($NodeDistPath)) {
     Write-Error @"
-dist/index.js not found.
+LreCiTask index.js (bootstrap) not found.
 Build the angular project first:
-  cd angular\LreCiTask
+  cd angular
   npm install
   npm run build
 
-Then pass -NodeDistPath to this script or ensure dist\index.js is next to it.
+Then pass -NodeDistPath to this script, or ensure the installer layout is intact:
+  <install dir>\LreCiTask\index.js
 "@
     exit 1
 }

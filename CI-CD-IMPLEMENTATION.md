@@ -22,10 +22,12 @@
 - **Actions:**
   - Validates `release/deploy.txt` configuration
   - Only runs if `enabled=true`
-  - Updates versions in 3 files:
+  - Updates versions in 5 files:
     - `angular/vss-extension.json`
     - `angular/LreCiTask/task.json`
     - `angular/LreCiTask/package.json`
+    - `angular/LreWorkspaceSyncTask/task.json`
+    - `angular/LreWorkspaceSyncTask/package.json`
   - Runs full build (linter, tests, compile)
   - Packages VSIX
   - Creates GitHub Release with tag

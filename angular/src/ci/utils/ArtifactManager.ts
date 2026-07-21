@@ -1,5 +1,5 @@
 /**
- * ArtifactManager — file-system helpers for the LRE task.
+ * ArtifactManager — file-system helpers for the CI test task.
  * Mirrors the directory/zip/cleanup logic from lreLocalTask.ps1 and Configurator.cs.
  */
 

@@ -1,10 +1,19 @@
 # Integration with OpenText Enterprise Performance Engineering
 
-This extension enables you to include an **OpenText Enterprise Performance Engineering (LRE)** test execution as a task in a Microsoft Azure DevOps Server CI/CD pipeline. Configure your performance tests once and run them automatically on every build — no manual intervention required.
+This extension enables you to include **OpenText Enterprise Performance Engineering** operations as tasks in a Microsoft Azure DevOps Server CI/CD pipeline. Configure your performance tests and script repositories once and automate them on every build — no manual intervention required.
+
+The extension ships **two tasks**:
+
+| Task | What it does |
+|---|---|
+| **Enterprise Performance Engineering Test** | Run a performance test from a pipeline and collect results |
+| **Enterprise Performance Engineering Workspace Sync** | Scan a repository for script folders, zip them, and upload them to an Enterprise Performance Engineering project |
 
 ---
 
 ## Key Features
+
+### Enterprise Performance Engineering Test task
 
 - Run an OpenText Enterprise Performance Engineering test directly from an Azure DevOps pipeline
 - Authenticate with **username/password** or **API token** (required for SSO-configured servers)
@@ -17,6 +26,21 @@ This extension enables you to include an **OpenText Enterprise Performance Engin
 - Timestamped log output (millisecond precision) in the build log and a local artifact log file
 - Artifacts saved to the configured artifacts staging directory (ZIP result files, trend PDF)
 
+### Enterprise Performance Engineering Workspace Sync task
+
+- **Automatically keep an Enterprise Performance Engineering project in sync with a Git repository** — no manual script uploads needed
+- Recursively scans the workspace for Enterprise Performance Engineering performance test script folders:
+  - LoadRunner scripts: any folder containing a `.usr` file
+  - JMeter scripts: any folder containing a `.jmx` file
+  - Gatling scripts: any folder containing a `.scala` or `.java` file
+  - DevWeb scripts: any folder containing both `main.js` and `rts.yml`
+- Compresses each detected script folder into a ZIP archive and uploads it to the corresponding Enterprise Performance Engineering test plan path
+- Ensures all required Enterprise Performance Engineering test plan sub-folders exist before starting uploads
+- **Configurable success threshold** — decide how many upload failures are acceptable before failing the pipeline (see below)
+- **Sequential uploads by default** (`varParallelUploads = 1`) — safe with all Enterprise Performance Engineering server releases. Parallel uploads can be enabled for servers that support concurrent ingest
+- Proxy support with optional credentials
+- Upload log saved to the artifacts directory
+
 ---
 
 ## Supported Product Versions
@@ -25,11 +49,31 @@ This extension supports the **3 latest versions** of OpenText Enterprise Perform
 
 ---
 
+## What's New in Version 3.1.0
+
+> **July 2026**
+
+### 🆕 Enterprise Performance Engineering Workspace Sync — `varSuccessThreshold` parameter
+
+A new optional parameter controls how many upload failures the pipeline tolerates before failing the task.
+
+| `varSuccessThreshold` value | Task result |
+|---|---|
+| *(empty / not set)* | Default: passes when **≥ 50%** of scripts upload successfully |
+| `0` | Passes even if **no scripts** were uploaded (authentication failure still fails the task) |
+| `100` | Fails if **even one** script fails to upload |
+| Outside 0–100 | Falls back to the default (50%) |
+
+> **Always fails on 5 consecutive upload failures** — this abort rule applies regardless of the threshold setting.
+
+### ⚠️ Enterprise Performance Engineering Workspace Sync — `varParallelUploads` default changed to `1`
+---
+
 ## What's New in Version 3.0.0
 
 > **July 2026**
 
-Version 3.0.0 is a complete rewrite of the extension task in **TypeScript / Node.js**, replacing the legacy C# implementation. All existing task inputs and behaviours are preserved.
+Version 3.0.0 is a complete rewrite of the extension in **TypeScript / Node.js**, replacing the legacy C# implementation. All existing task inputs and behaviours are preserved.
 
 ### Highlights
 
@@ -43,12 +87,12 @@ Version 3.0.0 is a complete rewrite of the extension task in **TypeScript / Node
   1. Retrieves existing test set folders and locates (or creates) a *"CI Test Sets"* folder under the project Root
   2. Creates a new test set inside that folder
   3. Creates a test instance for the configured test
-- Eliminates the most common first-run failure mode — no manual LRE UI setup required
+- Eliminates the most common first-run failure mode — no manual Enterprise Performance Engineering UI setup required
 
 #### ⚙️ Azure DevOps Compliance
 - Minimum agent version requirement updated to `2.144.0`
 - Agent proxy auto-detected from Azure DevOps agent configuration when no explicit proxy URL is provided in the task inputs
-- Every log line is simultaneously written to a `LreCiTask.log` file in the artifacts directory
+- Every log line is simultaneously written to a log file in the artifacts directory
 
 ---
 

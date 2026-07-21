@@ -18,10 +18,16 @@ $ErrorActionPreference = "Stop"
 
 $installerDir  = Split-Path $MyInvocation.MyCommand.Path -Parent
 $pluginUiDir   = Split-Path $installerDir -Parent
+$repoRoot        = Split-Path $pluginUiDir -Parent
 $prepareScript = Join-Path $pluginUiDir "prepare-release.ps1"
-$vsixPath      = [System.IO.Path]::GetFullPath(
-    (Join-Path $pluginUiDir "..\angular\out\Micro-Focus.PCIntegration-3.0.0.vsix"))
+$extensionDir  = Join-Path $repoRoot "Extension"
 $stagingDir    = Join-Path $pluginUiDir "staging"
+
+# Pick the latest .vsix from Extension\ (sorted by LastWriteTime)
+$latestVsix = Get-ChildItem $extensionDir -Filter "*.vsix" -ErrorAction SilentlyContinue |
+                Sort-Object LastWriteTime -Descending |
+                Select-Object -First 1
+$vsixPath = if ($latestVsix) { $latestVsix.FullName } else { "" }
 
 if ([string]::IsNullOrWhiteSpace($OutputWxs)) {
     $OutputWxs = Join-Path $installerDir "Files.wxs"
@@ -47,8 +53,8 @@ else
         Write-Host "  Mode: FULL BUILD (PLUGINSUI_FULL_BUILD=1)"
         & $prepareScript -Configuration $Configuration
     }
-    elseif (Test-Path $vsixPath) {
-        Write-Host "  Mode: -FromVsix" -ForegroundColor Green
+    elseif ($vsixPath -and (Test-Path $vsixPath)) {
+        Write-Host "  Mode: -FromVsix  ($vsixPath)" -ForegroundColor Green
         & $prepareScript -Configuration $Configuration -FromVsix -VsixPath $vsixPath
     }
     else {

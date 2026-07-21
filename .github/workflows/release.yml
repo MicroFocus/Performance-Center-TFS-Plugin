@@ -64,7 +64,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: 'angular/LreCiTask/package-lock.json'
+          cache-dependency-path: 'angular/package-lock.json'
 
       - name: Update version in vss-extension.json
         run: |
@@ -73,57 +73,76 @@ jobs:
           sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" angular/vss-extension.json
           cat angular/vss-extension.json | grep version
 
-      - name: Update version in task.json
+      - name: Update version in task.json (LreCiTask)
         run: |
           VERSION="${{ needs.check-release.outputs.version }}"
           MAJOR=$(echo $VERSION | cut -d'.' -f1)
           MINOR=$(echo $VERSION | cut -d'.' -f2)
           PATCH=$(echo $VERSION | cut -d'.' -f3)
           
-          echo "Updating task.json with version - Major: $MAJOR, Minor: $MINOR, Patch: $PATCH"
+          echo "Updating LreCiTask/task.json with version - Major: $MAJOR, Minor: $MINOR, Patch: $PATCH"
           sed -i "s/\"Major\": [0-9]*/\"Major\": $MAJOR/" angular/LreCiTask/task.json
           sed -i "s/\"Minor\": [0-9]*/\"Minor\": $MINOR/" angular/LreCiTask/task.json
           sed -i "s/\"Patch\": [0-9]*/\"Patch\": $PATCH/" angular/LreCiTask/task.json
           cat angular/LreCiTask/task.json | grep -A 3 "\"version\":"
 
-      - name: Update version in package.json
+      - name: Update version in task.json (LreWorkspaceSyncTask)
         run: |
           VERSION="${{ needs.check-release.outputs.version }}"
-          echo "Updating package.json version to: $VERSION"
+          MAJOR=$(echo $VERSION | cut -d'.' -f1)
+          MINOR=$(echo $VERSION | cut -d'.' -f2)
+          PATCH=$(echo $VERSION | cut -d'.' -f3)
+          
+          echo "Updating LreWorkspaceSyncTask/task.json with version - Major: $MAJOR, Minor: $MINOR, Patch: $PATCH"
+          sed -i "s/\"Major\": [0-9]*/\"Major\": $MAJOR/" angular/LreWorkspaceSyncTask/task.json
+          sed -i "s/\"Minor\": [0-9]*/\"Minor\": $MINOR/" angular/LreWorkspaceSyncTask/task.json
+          sed -i "s/\"Patch\": [0-9]*/\"Patch\": $PATCH/" angular/LreWorkspaceSyncTask/task.json
+          cat angular/LreWorkspaceSyncTask/task.json | grep -A 3 "\"version\":"
+
+      - name: Update version in package.json (root)
+        run: |
+          VERSION="${{ needs.check-release.outputs.version }}"
+          echo "Updating angular/package.json version to: $VERSION"
+          npm version $VERSION --prefix angular --no-git-tag-version --allow-same-version
+
+      - name: Update version in package.json (LreCiTask)
+        run: |
+          VERSION="${{ needs.check-release.outputs.version }}"
+          echo "Updating LreCiTask/package.json version to: $VERSION"
           npm version $VERSION --prefix angular/LreCiTask --no-git-tag-version --allow-same-version
 
+      - name: Update version in package.json (LreWorkspaceSyncTask)
+        run: |
+          VERSION="${{ needs.check-release.outputs.version }}"
+          echo "Updating LreWorkspaceSyncTask/package.json version to: $VERSION"
+          npm version $VERSION --prefix angular/LreWorkspaceSyncTask --no-git-tag-version --allow-same-version
+
       - name: Install dependencies
-        working-directory: ./angular/LreCiTask
+        working-directory: ./angular
         run: npm ci
 
       - name: Audit dependencies
-        working-directory: ./angular/LreCiTask
+        working-directory: ./angular
         run: npm run security:audit
 
       - name: Run linter
-        working-directory: ./angular/LreCiTask
+        working-directory: ./angular
         run: npm run lint
 
-      - name: Run tests
-        working-directory: ./angular/LreCiTask
+      - name: Run tests (type-check both tasks)
+        working-directory: ./angular
         run: npm test
 
-      - name: Build TypeScript
-        working-directory: ./angular/LreCiTask
+      - name: Build both tasks
+        working-directory: ./angular
         run: npm run build
-
-      # Remove devDependencies from node_modules before packaging so they are
-      # not bundled into the VSIX (saves ~45 MB: typescript, esbuild, eslint…).
-      - name: Prune dev dependencies
-        working-directory: ./angular/LreCiTask
-        run: npm prune --omit=dev
 
       - name: Install TFX CLI
         run: npm install -g tfx-cli
 
       - name: Package VSIX
         working-directory: ./angular
-        run: npm run package:vsix --prefix LreCiTask
+        run: npm run package:vsix
 
       - name: Create Release and Upload Asset
         env:
@@ -158,8 +177,11 @@ jobs:
           message: "Release v${{ needs.check-release.outputs.version }}: Reset deploy.txt and update version files"
           add: |
             angular/vss-extension.json
+            angular/package.json
             angular/LreCiTask/task.json
             angular/LreCiTask/package.json
+            angular/LreWorkspaceSyncTask/task.json
+            angular/LreWorkspaceSyncTask/package.json
             release/deploy.txt
           push: true
           fetch: true

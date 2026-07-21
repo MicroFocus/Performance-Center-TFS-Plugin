@@ -40,40 +40,34 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: 'angular/LreCiTask/package-lock.json'
+          cache-dependency-path: 'angular/package-lock.json'
 
       - name: Install dependencies
-        working-directory: ./angular/LreCiTask
+        working-directory: ./angular
         run: npm ci
 
       - name: Audit dependencies
-        working-directory: ./angular/LreCiTask
+        working-directory: ./angular
         run: npm run security:audit
 
       - name: Run linter
-        working-directory: ./angular/LreCiTask
+        working-directory: ./angular
         run: npm run lint
 
-      - name: Run tests
-        working-directory: ./angular/LreCiTask
+      - name: Run tests (type-check both tasks)
+        working-directory: ./angular
         run: npm test
 
-      - name: Build TypeScript
-        working-directory: ./angular/LreCiTask
+      - name: Build both tasks
+        working-directory: ./angular
         run: npm run build
-
-      # Remove devDependencies from node_modules before packaging so they are
-      # not bundled into the VSIX (saves ~45 MB: typescript, esbuild, eslint…).
-      - name: Prune dev dependencies
-        working-directory: ./angular/LreCiTask
-        run: npm prune --omit=dev
 
       - name: Install TFX CLI
         run: npm install -g tfx-cli
 
       - name: Package VSIX
         working-directory: ./angular
-        run: npm run package:vsix --prefix LreCiTask
+        run: npm run package:vsix
 
       - name: Resolve built VSIX path
         id: vsix

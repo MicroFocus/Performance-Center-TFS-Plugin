@@ -8,12 +8,12 @@ using System.IO;
 namespace PluginsUI.Services;
 
 /// <summary>
-/// Tests connectivity and authentication against an LRE server by delegating
+/// Tests connectivity and authentication against an Enterprise Performance Engineering server by delegating
 /// entirely to <c>Scripts/test-connection.js</c> — the same Node.js runtime and
 /// HTTP stack used by the main task, so the request is byte-for-byte identical.
 ///
 /// No C# HttpClient: avoids Content-Type charset, wrong XML element names, or
-/// missing XML namespace mismatches that cause LRE error 1101.
+/// missing XML namespace mismatches that cause server error 1101.
 /// </summary>
 public static class LreConnectionTester
 {

@@ -9,7 +9,7 @@ using PluginsUI.Models;
 namespace PluginsUI.Services;
 
 /// <summary>
-/// Runs the angular LRE task (<c>node dist/index.js</c>) as a child process,
+/// Runs the angular Enterprise Performance Engineering test task (<c>node dist/index.js</c>) as a child process,
 /// wiring up all <c>INPUT_*</c> environment variables that <c>azure-pipelines-task-lib</c> expects.
 /// Streams stdout/stderr back via <see cref="IProgress{T}"/>.
 /// No dependency on PC.Plugins.* assemblies.
@@ -40,14 +40,12 @@ public sealed class LreTaskRunner : IDisposable
         var distPath = ResolveDistPath(config.NodeDistPath);
         if (distPath is null)
         {
-            progress.Report("[ERROR] Cannot locate dist/index.js.");
+            progress.Report("[ERROR] Cannot locate LreCiTask/index.js.");
             progress.Report("[ERROR] Set 'Node dist path' in the Advanced section,");
             progress.Report("[ERROR] or build the angular project first:");
-            progress.Report("[ERROR]   cd angular\\LreCiTask && npm install && npm run build");
+            progress.Report("[ERROR]   cd angular && npm install && npm run build:ci");
             return -1;
         }
-
-        // ── Resolve artifacts directory ─────────────────────────
         var artifactsDir = string.IsNullOrWhiteSpace(config.ArtifactsDirectory)
             ? Path.Combine(Path.GetTempPath(), "LrePluginArtifacts",
                            DateTime.Now.ToString("yyyyMMdd_HHmmss"))
@@ -62,9 +60,13 @@ public sealed class LreTaskRunner : IDisposable
         // azure-pipelines-task-lib writes a .taskkey file to process.cwd() on startup.
         // Using the artifacts directory (always writable, already created) avoids the
         // EPERM error when running from a protected install location.
-        var distDir  = Path.GetDirectoryName(distPath)!;              // …/dist
-        var taskRoot = Path.GetDirectoryName(distDir)                 // …/LreCiTask  or  <install dir>
-                       ?? distDir;                                     // fallback: same dir
+        // When running the bootstrap index.js (at <taskDir>/index.js):
+        //   distPath  = <appDir>/LreCiTask/index.js
+        //   distDir   = <appDir>/LreCiTask
+        //   taskRoot  = <appDir>          ← parent of LreCiTask
+        //   NODE_PATH = <appDir>/node_modules  ← shared node_modules (single copy)
+        var distDir  = Path.GetDirectoryName(distPath)!;              // LreCiTask dir
+        var taskRoot = Path.GetDirectoryName(distDir) ?? distDir;     // app root (contains node_modules)
 
         var psi = new ProcessStartInfo("node", $"\"{distPath}\"")
         {
@@ -89,7 +91,7 @@ public sealed class LreTaskRunner : IDisposable
 
         SetEnvironmentVariables(psi.Environment, config, password, proxyPassword, artifactsDir);
 
-        progress.Report($"[INFO] ─── LRE task starting ───────────────────────────");
+                progress.Report($"[INFO] ─── Enterprise Performance Engineering task starting ───────────────────────────");
         progress.Report($"[INFO] Node dist : {distPath}");
         progress.Report($"[INFO] Task root : {taskRoot}  (node_modules resolved here)");
         progress.Report($"[INFO] Work dir  : {artifactsDir}  (.taskkey written here)");
@@ -165,19 +167,23 @@ public sealed class LreTaskRunner : IDisposable
     // ─────────────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Resolves the path to <c>dist/index.js</c>.
+    /// Resolves the path to the LreCiTask bootstrap <c>index.js</c>.
     ///
     /// Priority order (stops at the first match):
     ///   1. Explicit path set by the user in the Advanced section.
-    ///   2. <c>dist\index.js</c> in the same directory as <c>PluginsUI.exe</c>
-    ///      — this is the standard installer layout:
+    ///   2. <c>LreCiTask\index.js</c> in the same directory as <c>PluginsUI.exe</c>
+    ///      — installer / staged build layout:
     ///      <code>
     ///        PluginsUI.exe
-    ///        dist\index.js        ← here
-    ///        Scripts\test-connection.js
+    ///        node_modules\…              ← shared production deps
+    ///        LreCiTask\index.js          ← bootstrap (polyfills + loads dist)
+    ///        LreCiTask\dist\…            ← compiled TypeScript
+    ///        LreWorkspaceSyncTask\index.js
+    ///        LreWorkspaceSyncTask\dist\…
+    ///        Scripts\…
     ///        Assets\…
     ///      </code>
-    ///   3. Dev-repo convention: <c>&lt;repoRoot&gt;\angular\LreCiTask\dist\index.js</c>
+    ///   3. Dev-repo convention: <c>&lt;repoRoot&gt;\angular\LreCiTask\index.js</c>
     ///      (only reached when running directly from a build output folder).
     /// </summary>
     public static string? ResolveDistPath(string? configured)
@@ -186,14 +192,14 @@ public sealed class LreTaskRunner : IDisposable
         if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
             return configured;
 
-        // 2. dist\ next to the exe  ← primary auto-detect for installer deployment
-        var nextToExe = Path.Combine(AppContext.BaseDirectory, "dist", "index.js");
+        // 2. LreCiTask\index.js next to the exe  ← installer / staged layout
+        var nextToExe = Path.Combine(AppContext.BaseDirectory, "LreCiTask", "index.js");
         if (File.Exists(nextToExe)) return nextToExe;
 
         // 3. Dev-repo layout: bin/Debug/net10.0-windows → ../../../../.. → repo root
         var repoRoot  = Path.GetFullPath(
             Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
-        var repoGuess = Path.Combine(repoRoot, "angular", "LreCiTask", "dist", "index.js");
+        var repoGuess = Path.Combine(repoRoot, "angular", "LreCiTask", "index.js");
         if (File.Exists(repoGuess)) return repoGuess;
 
         return null;

@@ -1,5 +1,5 @@
 /**
- * LreTestRunner — orchestrates the full run lifecycle for one LRE test execution.
+ * LreTestRunner — orchestrates the full run lifecycle for one Enterprise Performance Engineering test execution.
  *
  * The caller is responsible for:
  *   1. Calling client.authenticate() before execute()
@@ -15,7 +15,7 @@
  */
 
 import { LreClient } from './LreClient';
-import { Logger } from '../utils/Logger';
+import { Logger } from '../../shared/utils/Logger';
 import {
     LreRunEventLogRecord,
     LreRunResponse,
@@ -107,7 +107,7 @@ export class LreTestRunner {
         // 3. Start the run (with configurable retry on timeslot failure)
         const runResponse = await this.startRunWithRetry(updatedConfig, testInstanceId);
         if (!runResponse?.ID) {
-            throw new Error('Failed to start the LRE run after all configured attempts.');
+            throw new Error('Failed to start the performance test run after all configured attempts.');
         }
 
         const runId = runResponse.ID;
@@ -123,7 +123,7 @@ export class LreTestRunner {
     // ── Private helpers ───────────────────────────────────────────────────────
 
     /**
-     * Polls the LRE server at regular intervals until the run reaches a terminal
+     * Polls the server at regular intervals until the run reaches a terminal
      * state, then returns a structured result.
      *
      * Responsibilities:
@@ -143,7 +143,7 @@ export class LreTestRunner {
         const pollStart    = Date.now();
 
         while (true) {
-            // Guard against stuck runs — LRE may return a non-terminal state
+            // Guard against stuck runs — server may return a non-terminal state
             // indefinitely if something goes wrong on the server side.
             if (this.maxPollDurationMs > 0) {
                 const elapsed = Date.now() - pollStart;
@@ -290,7 +290,7 @@ export class LreTestRunner {
      * Folder name: "CI Test Sets"
      * Test set name: "CI Test Set <testId>"
      *
-     * NOTE: The LRE API forbids creating a test set directly under the
+     * NOTE: The API forbids creating a test set directly under the
      * built-in "Root" or "Unattached" folders — a user-created folder is
      * required.  We therefore:
      *   a) strip those two system folders from the list before searching,
@@ -357,7 +357,7 @@ export class LreTestRunner {
             if (folderId == null) {
                 throw new Error(
                     `Failed to create test set folder "${DEFAULT_FOLDER_NAME}". ` +
-                    'Please create a test set folder manually in the LRE UI and re-run the task.'
+                    'Please create a test set folder manually in the Enterprise Performance Engineering UI and re-run the task.'
                 );
             }
             this.logger.info(`Created test set folder "${DEFAULT_FOLDER_NAME}" (ID: ${folderId})`);
@@ -372,7 +372,7 @@ export class LreTestRunner {
         if (testSetId == null) {
             throw new Error(
                 `Failed to create test set "${DEFAULT_TESTSET_NAME}" in folder ${folderId}. ` +
-                'Please create a test set manually in the LRE UI and re-run the task.'
+                'Please create a test set manually in the Enterprise Performance Engineering UI and re-run the task.'
             );
         }
 
@@ -405,7 +405,7 @@ export class LreTestRunner {
         if (!lreTest?.ReportId || lreTest.ReportId <= 0) {
             this.logger.warn(
                 'No trend report is associated with this test. ' +
-                'Enable Automatic Trending in the LRE UI, or use ' +
+                'Enable Automatic Trending in the Enterprise Performance Engineering UI, or use ' +
                 '"Add run to trend report with ID" instead. Trending disabled for this run.'
             );
             return {

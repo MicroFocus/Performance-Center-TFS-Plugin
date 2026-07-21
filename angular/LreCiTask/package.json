@@ -1,53 +1,7 @@
 {
   "name": "lrecitask",
-  "version": "3.0.0",
-  "description": "Azure DevOps task for executing OpenText Enterprise Performance Engineering tests",
+  "version": "3.1.0",
+  "description": "Azure DevOps CI task for OpenText Enterprise Performance Engineering",
   "main": "index.js",
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
-    "typecheck": "tsc --noEmit",
-    "rebuild": "npm run clean && npm run build",
-    "test": "npm run typecheck",
-    "test:watch": "tsc --noEmit --watch",
-    "test:integration": "tsx ../../integration/test-utils/run-integration-tests.ts",
-    "test:integration:safe": "cross-env INTEGRATION_SAFE_MODE=true tsx ../../integration/test-utils/run-integration-tests.ts",
-    "lint": "eslint src/**/*.ts",
-    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
-    "security:audit": "npm audit --audit-level=moderate",
-    "package:vsix": "npm prune --omit=dev && cd .. && tfx extension create --manifest-globs vss-extension.json --output-path ../Extension && npm --prefix LreCiTask install"
-  },
-  "keywords": [
-    "loadrunner",
-    "performance-testing",
-    "azure-devops"
-  ],
-  "author": "OpenText",
-  "license": "MIT",
-  "type": "commonjs",
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "dependencies": {
-    "adm-zip": "^0.5.18",
-    "axios": "^1.18.1",
-    "axios-cookiejar-support": "^5.0.5",
-    "azure-pipelines-task-lib": "^5.276.0",
-    "fast-xml-parser": "^5.9.3",
-    "tough-cookie": "^4.1.4"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.39.4",
-    "@types/adm-zip": "^0.5.5",
-    "@types/node": "^26.0.1",
-    "@types/q": "^1.5.8",
-    "@types/tough-cookie": "^4.0.5",
-    "@typescript-eslint/eslint-plugin": "^8.62.0",
-    "@typescript-eslint/parser": "^8.62.0",
-    "cross-env": "^7.0.3",
-    "eslint": "^9.39.4",
-    "globals": "^17.7.0",
-    "tsx": "^4.22.4",
-    "typescript": "^5.9.3"
-  }
+  "type": "commonjs"
 }

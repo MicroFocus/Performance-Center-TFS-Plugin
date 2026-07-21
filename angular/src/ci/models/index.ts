@@ -86,7 +86,7 @@ export interface LreTestInstances {
 
 export interface LreTestSet {
     TestSetID: number;
-    /** The field name in the LRE API XML response is TestSetName (C# PCTestSet.cs). */
+    /** The field name in the API XML response is TestSetName (C# PCTestSet.cs). */
     TestSetName?: string;
     /** Kept for backwards-compat with older code that expected Name. */
     Name?: string;
@@ -98,7 +98,7 @@ export interface LreTestSets {
 }
 
 export interface LreTestSetFolder {
-    /** Numeric ID of this folder as returned by the LRE API.
+    /** Numeric ID of this folder as returned by the API.
      *  Note: field name from server is TestSetFolderId (lowercase 'd'). Root folder = 0. */
     TestSetFolderId: number;
     /** Display name returned by the API as TestSetFolderName. */
@@ -193,7 +193,7 @@ export interface LreAuthenticationClient {
 
 
 export interface LreConfig {
-    serverUrl: string; // e.g., "https://lre.example.com"
+    serverUrl: string; // e.g., "https://server.example.com"
     domain: string;
     project: string;
     useToken: boolean;
@@ -285,7 +285,7 @@ export class LreTestInstanceRequestXml implements XmlSerializable {
 /**
  * Creates a test set folder.
  * API field names (from docs): TestSetFolderName + Parent (numeric folder ID).
- * The xmlns namespace is required by the LRE API (error 1005 if omitted).
+ * The xmlns namespace is required by the API (error 1005 if omitted).
  *
  * The Parent field must be a real user-folder ID or the Root folder ID.
  * You cannot create test sets (not folders) directly under Root/Unattached,
@@ -306,7 +306,7 @@ export class LreTestSetFolderRequestXml implements XmlSerializable {
 /**
  * Creates a test set inside a folder.
  * Field names match C# PCTestSet: TestSetName + TestSetParentId.
- * The xmlns namespace is required by the LRE API (error 1005 if omitted).
+ * The xmlns namespace is required by the API (error 1005 if omitted).
  */
 export class LreTestSetRequestXml implements XmlSerializable {
     constructor(public TestSetName: string, public TestSetParentId: number) {}

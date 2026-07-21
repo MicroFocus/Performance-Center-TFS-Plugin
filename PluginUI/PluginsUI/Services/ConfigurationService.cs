@@ -4,13 +4,12 @@
  */
 using System.IO;
 using System.Text.Json;
-using PluginsUI.Models;
 
 namespace PluginsUI.Services;
 
 /// <summary>
-/// Saves and loads <see cref="LreConfiguration"/> as a human-readable JSON file.
-/// Passwords are never written to disk.
+/// Saves and loads configuration objects as human-readable JSON files.
+/// Passwords are never written to disk — the caller is responsible for omitting them.
 /// </summary>
 public static class ConfigurationService
 {
@@ -20,30 +19,30 @@ public static class ConfigurationService
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    /// <summary>Serialise configuration to <paramref name="filePath"/>.</summary>
-    public static void Save(LreConfiguration config, string filePath)
+    /// <summary>Serialise <typeparamref name="T"/> to <paramref name="filePath"/>.</summary>
+    public static void Save<T>(T config, string filePath)
     {
         var json = JsonSerializer.Serialize(config, _opts);
         File.WriteAllText(filePath, json);
     }
 
-    /// <summary>Deserialise configuration from <paramref name="filePath"/>.</summary>
-    /// <returns>Loaded configuration, or a fresh default if the file is missing or corrupt.</returns>
-    public static LreConfiguration Load(string filePath)
+    /// <summary>
+    /// Deserialise <typeparamref name="T"/> from <paramref name="filePath"/>.
+    /// Returns a fresh default instance if the file is missing or corrupt.
+    /// </summary>
+    public static T Load<T>(string filePath) where T : new()
     {
         if (!File.Exists(filePath))
-            return new LreConfiguration();
+            return new T();
 
         try
         {
             var json = File.ReadAllText(filePath);
-            return JsonSerializer.Deserialize<LreConfiguration>(json, _opts)
-                   ?? new LreConfiguration();
+            return JsonSerializer.Deserialize<T>(json, _opts) ?? new T();
         }
-        catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException or InvalidOperationException)
+        catch (Exception ex) when (ex is IOException or JsonException or InvalidOperationException)
         {
-            return new LreConfiguration();
+            return new T();
         }
     }
 }
-

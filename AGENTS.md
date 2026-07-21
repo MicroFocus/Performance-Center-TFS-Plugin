@@ -6,41 +6,71 @@ Azure DevOps extension that runs **OpenText Enterprise Performance Engineering**
 
 ## Architecture
 
-**Two implementations coexist — only the TypeScript one is actively maintained:**
+**Three implementations coexist — only the TypeScript tasks are actively maintained:**
 
 | Layer | Location | Status |
 |---|---|---|
-| TypeScript/Node.js extension | `angular/LreCiTask/` | ✅ Active — primary codebase |
+| TypeScript/Node.js CI task | `angular/LreCiTask/` | ✅ Active — primary codebase |
+| TypeScript/Node.js workspace sync task | `angular/LreWorkspaceSyncTask/` | ✅ Active — second task |
 | Legacy C#/.NET plugins | `PC.Plugins.*/`, `PC.TFS.BuildTask/` | 🔒 Legacy — do not modify |
 
-The `angular/` directory is a standalone workspace; it builds, tests, and packages independently.
+The `angular/` directory contains both tasks as independent workspaces (each has its own `package.json`, `tsconfig.json`, `task.json`, and `dist/`); they must be built separately.
 
-### TypeScript Extension Structure (`angular/LreCiTask/`)
+### TypeScript Extension Structure (`angular/`)
 
 ```
-index.ts                  # Task entrypoint — reads task.json inputs, orchestrates execution
-src/lre/
-  LreClient.ts            # All LRE REST API HTTP calls (auth, test mgmt, run mgmt, reports)
-  LreAuthenticator.ts     # Auth helpers
-  LreTestRunner.ts        # Polling loop — monitors run state until terminal state
-  LreReportDownloader.ts  # Downloads result ZIPs and trend PDFs
-src/models/index.ts       # TypeScript interfaces (ported from C# PCEntities namespace)
-src/utils/
-  Logger.ts               # Log wrapper (writes to artifacts dir + tl.debug/error/warning)
-  ArtifactManager.ts      # File/directory helpers
-  XmlUtils.ts             # XML serialization helpers
-task.json                 # Azure DevOps task manifest — input names are the contract
+package.json                      # Single project root — all deps + all scripts
+scripts/package-vsix.js           # VSIX packaging helper (builds → copies node_modules → tfx → cleanup)
+src/
+  ci/                             # LreCiTask source (CI test run)
+    lre/
+      LreClient.ts                # All Enterprise Performance Engineering REST API HTTP calls
+      LreAuthenticator.ts         # Auth helpers
+      LreTestRunner.ts            # Polling loop — monitors run state
+      LreReportDownloader.ts      # Downloads result ZIPs and trend PDFs
+    models/index.ts               # TypeScript interfaces for CI task
+    utils/
+      ArtifactManager.ts          # File/directory helpers
+      XmlUtils.ts                 # XML serialization helpers (placeholder)
+  sync/                           # LreWorkspaceSyncTask source (workspace sync)
+    lre/
+      LreScriptUploader.ts        # Enterprise Performance Engineering REST API: auth, folder creation, script upload
+      LreWorkspaceSyncRunner.ts   # Orchestrator — scans, zips, uploads
+      ZipFolderCompressor.ts      # Compresses a script folder to a ZIP buffer
+    models/index.ts               # TypeScript interfaces for sync task
+    scanner/
+      WorkspaceScriptFolderScanner.ts  # Walks workspace and identifies Enterprise Performance Engineering script folders
+  shared/                         # Shared code used by both tasks
+    utils/
+      Logger.ts                   # Unified log wrapper (both tasks share this)
+      serverUtils.ts              # parseServerInput() — shared URL/tenant parser
+LreCiTask/                        # CI task manifest + entry point only
+  index.ts                        # Task entrypoint — reads task.json inputs, orchestrates run
+  index.js                        # Bootstrap (Node version guard + polyfills)
+  task.json                       # Azure DevOps task manifest
+  tsconfig.json                   # Includes ../src/ci/**/*.ts + ../src/shared/**/*.ts
+  package.json                    # Metadata only (name, version, type) — no deps
+LreWorkspaceSyncTask/             # Sync task manifest + entry point only
+  index.ts                        # Task entrypoint — reads task.json inputs, orchestrates sync
+  index.js                        # Bootstrap
+  task.json                       # Azure DevOps task manifest
+  tsconfig.json                   # Includes ../src/sync/**/*.ts + ../src/shared/**/*.ts
+  package.json                    # Metadata only
 ```
+
+**Script detection rules** (in `WorkspaceScriptFolderScanner`): a folder is an Enterprise Performance Engineering script if it contains a file ending in `.usr`, `.jmx`, `.scala`, or `.java`, **or** if it contains both `main.js` and `rts.yml` (DevWeb scripts). Once a script folder is identified, its subtree is pruned — subdirectories are not recursed into.
 
 ## Critical Patterns
 
-### LRE REST API Uses XML, Not JSON
+### Enterprise Performance Engineering REST API Uses XML, Not JSON
 All requests/responses use `application/xml`. The `fast-xml-parser` library is used. **Key gotcha**: the parser returns a single object when there is one child element, or an array when there are many — always normalize to array:
 ```typescript
 const all = raw.TestInstance
     ? (Array.isArray(raw.TestInstance) ? raw.TestInstance : [raw.TestInstance])
     : [];
 ```
+
+**Exception — `LreWorkspaceSyncTask`**: the `/Scripts` endpoint returns **JSON**, not XML. Script *upload* uses `multipart/form-data` (via the `form-data` package): the ZIP file is part 1 and an XML metadata envelope is part 2. The `axios` instance still uses `validateStatus: () => true` and the same `isSuccessResponse()` pattern.
 
 ### HTTP Errors Are Never Thrown — Check Manually
 `axios` is configured with `validateStatus: () => true`. Always check with the private `isSuccessResponse()` helper (accepts 200/201/202/204):
@@ -58,46 +88,66 @@ Azure DevOps picks the highest version the agent supports. `Node20_1` is a newer
 > ⚠️ The polyfills patch `crypto.randomUUID` via `crypto.randomBytes` — functionally correct but weaker entropy guarantees than the native implementation.
 
 ### Input Name Casing Must Match `task.json` Exactly
-Two known traps in `index.ts`:
+Two known traps in `LreCiTask/index.ts`:
 - `varPassWord` (capital W) — not `varPassword`
 - `vartimeslotRepeat` (lowercase t) — not `varTimeslotRepeat`
+
+`LreWorkspaceSyncTask/index.ts` shares the same `varPassWord` trap. Additional inputs to watch:
+- `varUseTokenForAuthentication` (full name) — not `varUseToken`
+- `varParallelUploads` — controls concurrent upload goroutines (clamped 1–20, **default 1** — sequential is the safe default for servers that don't yet support concurrent multipart uploads)
+- `varSuccessThreshold` — optional integer 0–100 (empty string = default 50%). Parsed by `parseSuccessThreshold()` in `index.ts`; out-of-range values fall back to 50. Controls the pass/fail decision in `processUploads()` inside `LreWorkspaceSyncRunner.ts`.
 
 ### Tenant Parsing
 Server URL may carry `?tenant=<guid>`. It is parsed out in `parseServerInput()` and appended only to auth endpoints (`/authenticate`, `/authenticateclient`, `/logout`), not to resource endpoints.
 
-### Version Is Kept in Three Files
+### Resilience Rules (LreWorkspaceSyncTask)
+
+- **`MAX_CONSECUTIVE_FAILURES = 5`** (fixed constant in `LreWorkspaceSyncRunner.ts`) — if 5 uploads fail in a row, the task aborts immediately with failure, regardless of `successThreshold`.
+- **`successThreshold`** (0–100, default 50) — after all uploads complete (or if there were no consecutive-failure aborts), the task passes only if `successfulUploads / total >= successThreshold / 100`. With threshold = 0 the task always passes unless aborted; with threshold = 100 any single failure causes a task failure.
+
+### Version Is Kept in Five Files
 These must stay in sync; the release workflow updates them automatically from `release/deploy.txt`:
 - `angular/vss-extension.json` → `"version"`
 - `angular/LreCiTask/task.json` → `"version": { "Major", "Minor", "Patch" }`
 - `angular/LreCiTask/package.json` → `"version"`
+- `angular/LreWorkspaceSyncTask/task.json` → `"version": { "Major", "Minor", "Patch" }`
+- `angular/LreWorkspaceSyncTask/package.json` → `"version"`
 
 ## Developer Workflows
 
-All commands run from `angular/LreCiTask/` unless noted.
+All commands run from `angular/` — there is now a **single project root** for both tasks.
 
 ```powershell
-# Install dependencies
+# Install all dependencies (once, covers both tasks)
+cd angular
 npm install
 
-# Type-check only (this IS the "test" script)
-npm test          # runs: tsc --noEmit
+# Type-check both tasks
+npm test               # runs: tsc --noEmit on both tasks
 
-# Build to dist/
+# Build both tasks to dist/
 npm run build
+
+# Build a single task
+npm run build:ci       # LreCiTask only
+npm run build:sync     # LreWorkspaceSyncTask only
 
 # Lint
 npm run lint
 
-# Package VSIX (output goes to angular/out/)
-npm run package:vsix   # requires tfx-cli: npm install -g tfx-cli
+# Security audit
+npm run security:audit
 
-# Local task test with PowerShell wrapper
-cd angular
-.\test-local.ps1 -PCServer "http://lre-server:80" -Domain "DEFAULT" -Project "MyProject" -TestID "1" -UserName "admin" -Password "pass"
+# Package VSIX (output goes to angular/../Extension/)
+npm run package:vsix   # requires tfx-cli: npm install -g tfx-cli
 ```
 
-**Local env vars** for direct `node dist/index.js` execution:
+**Local env vars** for direct `node dist/LreCiTask/index.js` execution (LreCiTask):
 `INPUT_VARPCSERVER`, `INPUT_VARUSERNAME`, `INPUT_VARPASSWORD`, `INPUT_VARDOMAIN`, `INPUT_VARPROJECT`, `INPUT_VARTESTID`, `INPUT_VARARTIFACTSDIR`
+
+**LreWorkspaceSyncTask** shares the same `angular/` project root — run from `angular/` with:
+`npm run build:sync` and use env vars:
+`INPUT_VARPCSERVER`, `INPUT_VARUSERNAME`, `INPUT_VARPASSWORD`, `INPUT_VARDOMAIN`, `INPUT_VARPROJECT`, `INPUT_VARWORKSPACEDIR`, `INPUT_VARRUNTIMEONLY`, `INPUT_VARPARALLELUPLOADS`, `INPUT_VARARTIFACTSDIR`
 
 ## Release Process
 
@@ -107,13 +157,13 @@ cd angular
 
 ## Integration Tests
 
-Require a live LRE server. Config is **not committed**:
+Require a live Enterprise Performance Engineering server. Config is **not committed**:
 ```powershell
 cd integration
 Copy-Item integration-tests.properties.template integration-tests.properties
 # Edit with real server URL + credentials
 ```
-Run from `angular/LreCiTask`:
+Run from `angular/` (the single project root):
 ```powershell
 npm run test:integration          # full tests (may execute real runs)
 npm run test:integration:safe     # read-only, no run execution, no license consumption
@@ -123,9 +173,15 @@ npm run test:integration:safe     # read-only, no run execution, no license cons
 
 | Purpose | File |
 |---|---|
-| Task inputs contract | `angular/LreCiTask/task.json` |
-| REST API implementation | `angular/LreCiTask/src/lre/LreClient.ts` |
-| All entity types | `angular/LreCiTask/src/models/index.ts` |
+| Task inputs contract (CI run) | `angular/LreCiTask/task.json` |
+| REST API implementation (CI run) | `angular/src/ci/lre/LreClient.ts` |
+| All entity types (CI run) | `angular/src/ci/models/index.ts` |
+| Task inputs contract (workspace sync) | `angular/LreWorkspaceSyncTask/task.json` |
+| Script upload + REST API (workspace sync) | `angular/src/sync/lre/LreScriptUploader.ts` |
+| Script folder scanner | `angular/src/sync/scanner/WorkspaceScriptFolderScanner.ts` |
+| Sync entity types | `angular/src/sync/models/index.ts` |
+| Shared Logger | `angular/src/shared/utils/Logger.ts` |
+| Shared server URL parser | `angular/src/shared/utils/serverUtils.ts` |
 | Extension manifest | `angular/vss-extension.json` |
 | Release trigger | `release/deploy.txt` |
 | Local test options | `angular/LOCAL-TESTING-GUIDE.md` |

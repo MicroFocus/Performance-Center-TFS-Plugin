@@ -44,7 +44,7 @@ public class LreConfiguration
     // ── Advanced / paths ─────────────────────────────────────────
     /// <summary>Where result artifacts are written. Falls back to a temp folder if empty.</summary>
     public string ArtifactsDirectory      { get; set; } = "";
-    /// <summary>Full path to dist/index.js of the angular LreCiTask build. Auto-detected if empty.</summary>
+    /// <summary>Full path to the LreCiTask bootstrap index.js. Auto-detected if empty.</summary>
     public string NodeDistPath            { get; set; } = "";
     public string Description             { get; set; } = "";
 }

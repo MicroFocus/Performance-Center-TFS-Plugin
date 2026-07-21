@@ -7,7 +7,7 @@
 import * as path from 'path';
 import { LreClient } from './LreClient';
 import { ArtifactManager } from '../utils/ArtifactManager';
-import { Logger } from '../utils/Logger';
+import { Logger } from '../../shared/utils/Logger';
 
 export interface DownloadRunResultsOptions {
     /** Whether to extract each downloaded ZIP. Default true. */

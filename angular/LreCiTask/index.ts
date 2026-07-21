@@ -8,12 +8,13 @@
  */
 
 import * as tl from 'azure-pipelines-task-lib/task';
-import { LreClient } from './src/lre/LreClient';
-import { LreTestRunner } from './src/lre/LreTestRunner';
-import { LreReportDownloader } from './src/lre/LreReportDownloader';
-import { ArtifactManager } from './src/utils/ArtifactManager';
-import { Logger } from './src/utils/Logger';
-import { LreConfig, LreTestExecutionConfig, PostRunAction, RunState } from './src/models';
+import { LreClient } from '../src/ci/lre/LreClient';
+import { LreTestRunner } from '../src/ci/lre/LreTestRunner';
+import { LreReportDownloader } from '../src/ci/lre/LreReportDownloader';
+import { ArtifactManager } from '../src/ci/utils/ArtifactManager';
+import { Logger } from '../src/shared/utils/Logger';
+import { parseServerInput } from '../src/shared/utils/serverUtils';
+import { LreConfig, LreTestExecutionConfig, PostRunAction, RunState } from '../src/ci/models';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -36,22 +37,6 @@ function mapPostRunAction(raw: string): PostRunAction {
     }
 }
 
-/**
- * Parses varPCServer which may be a bare host:port or a full URL with a
- * tenant query-string: https://host/?tenant=<guid>
- */
-function parseServerInput(raw: string): { serverUrl: string; tenant?: string } {
-    try {
-        const parsed = new URL(raw);
-        return {
-            serverUrl: parsed.origin,
-            tenant: parsed.searchParams.get('tenant') ?? undefined
-        };
-    } catch {
-        // Bare value — return as-is so LreClient can still work
-        return { serverUrl: raw };
-    }
-}
 
 /**
  * If the artifacts path still contains an unresolved $(...) variable token,

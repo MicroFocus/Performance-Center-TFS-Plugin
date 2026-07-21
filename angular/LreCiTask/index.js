@@ -143,11 +143,11 @@ function logRuntimeSelection(flavor, bundlePath) {
 }
 
 process.env.LRE_TASK_RUNTIME_FLAVOR = "modern";
-process.env.LRE_TASK_RUNTIME_BUNDLE = "./dist/index.js";
+process.env.LRE_TASK_RUNTIME_BUNDLE = "./dist/LreCiTask/index.js";
 
-logRuntimeSelection("modern", "./dist/index.js");
+logRuntimeSelection("modern", "./dist/LreCiTask/index.js");
 
-var runtimeModule = require("./dist/index.js");
+var runtimeModule = require("./dist/LreCiTask/index.js");
 
 if (runtimeModule && typeof runtimeModule.runEntrypoint === "function") {
   module.exports = runtimeModule;

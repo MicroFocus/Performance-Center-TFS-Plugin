@@ -14,7 +14,7 @@ cp integration-tests.properties.template integration-tests.properties
 Fill in your actual LRE values:
 
 ```properties
-lre.server.url=https://your-actual-lre-server.com:443
+lre.server.url=https://your-actual-server.com:443
 lre.domain=DEFAULT
 lre.project=YourActualProject
 lre.auth.username=your-actual-username
@@ -89,7 +89,7 @@ npm run test:integration
 ✅ Configuration loaded successfully
 
 📋 Test Configuration:
-   Server: https://your-lre-server.com
+   Server: https://your-server.com
    Project: DEFAULT/YourProject
    Proxy: None
    Tenant: None
@@ -148,7 +148,7 @@ Check these in `integration-tests.properties`:
 ### ❌ "Cannot find test ID"
 
 Your test ID doesn't exist in LRE. Get a valid one:
-1. Log into LRE web interface
+1. Log into the Enterprise Performance Engineering web UI
 2. Go to **Test Management** > **Test Plan**
 3. Find your test, note the ID
 4. Update `lre.test.id` in properties file
@@ -165,7 +165,7 @@ npm run build
 
 Once integration tests pass:
 
-1. ✅ Your LreClient is working with real LRE!
+1. ✅ Your LreClient is working with a real server!
 2. ✅ Continue implementing Step 5 (LreTestRunner)
 3. ✅ Build the complete solution
 

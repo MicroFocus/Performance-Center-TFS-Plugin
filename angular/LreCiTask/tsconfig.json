@@ -26,7 +26,10 @@
 
     /* Modules */
     "module": "commonjs",                                /* Specify what module code is generated. */
-    "rootDir": "./",                                      /* Root of source files. */
+    // rootDir is intentionally omitted — TypeScript infers the common ancestor
+    // of this task's source and the shared/ utilities (i.e. the angular/ directory).
+    // This causes compiled output to land at dist/LreCiTask/… and dist/shared/…
+    // Packages are resolved from the single angular/node_modules/ — no paths hack needed.
     // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
     // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
     // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
@@ -106,5 +109,10 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules"],
+  "include": [
+    "index.ts",
+    "../src/ci/**/*.ts",
+    "../src/shared/**/*.ts"
+  ]
 }

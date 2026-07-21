@@ -78,7 +78,7 @@ export class PropertiesLoader {
                 `Integration test properties file not found: ${propsPath}\n\n` +
                 `Please copy the template and configure it:\n` +
                 `  cp ${templatePath} ${propsPath}\n\n` +
-                `Then edit ${this.PROPERTIES_FILE} with your LRE server details.`
+                `Then edit ${this.PROPERTIES_FILE} with your server details.`
             );
         }
 

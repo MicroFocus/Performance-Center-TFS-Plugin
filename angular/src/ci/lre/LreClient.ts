@@ -1,5 +1,5 @@
 /**
- * LRE HTTP Client
+ * Enterprise Performance Engineering HTTP Client
  * Handles all REST API communication with OpenText Enterprise Performance Engineering server
  */
 
@@ -195,7 +195,7 @@ export class LreClient {
 
     async getTestInstances(testId: number): Promise<LreTestInstances | null> {
         try {
-            // The query-filter syntax is not supported on all LRE versions;
+            // The query-filter syntax is not supported on all server versions;
             // fetch ALL test instances and filter client-side by TestID.
             const response = await this.httpClient.get(
                 `${this.resourceBaseUrl}/testinstances`
@@ -486,7 +486,7 @@ export class LreClient {
                 return null;
             }
 
-            // LRE returns <RunResults><RunResult>...</RunResult></RunResults>
+            // Server returns <RunResults><RunResult>...</RunResult></RunResults>
             // with RunResult as either a single object or an array.
             const raw = this.parseXmlResponse<{ RunResult?: LreRunResult | LreRunResult[] }>(
                 response.data
@@ -606,7 +606,7 @@ export class LreClient {
      * cookie interceptors.  Setting `Cookie` on axios.defaults.headers is
      * proxy-transparent and always works.
      *
-     * The LRE server returns LWSSO_COOKIE_KEY under several path variants
+     * The server returns LWSSO_COOKIE_KEY under several path variants
      * (/loadtest, /Loadtest, /LoadTest, /FrontEnd, /SNV …).  We collect all
      * unique name=value pairs (deduplicating by value) so the server receives
      * whichever one it recognises.
@@ -642,7 +642,7 @@ export class LreClient {
 
             const parsed = this.xmlParser.parse(xmlData);
 
-            // Navigate through XML structure (LRE responses typically have root element)
+            // Navigate through XML structure (responses typically have root element)
             const rootKey = Object.keys(parsed)[0];
             return parsed[rootKey] as T;
         } catch (error) {

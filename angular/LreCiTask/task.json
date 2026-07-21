@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
   "id": "91008DAF-AFE5-3E2A-A6FF-8ACF9D229E3A",
   "name": "LoadRunnerEnterpriseTesting",
@@ -14,7 +14,7 @@
   "minimumAgentVersion": "2.144.0",
   "version": {
     "Major": 3,
-    "Minor": 0,
+    "Minor": 1,
     "Patch": 0
   },
   "inputs": [
@@ -32,7 +32,7 @@
       "label": "server and port",
       "defaultValue": "https://MyServer:443",
       "required": true,
-      "helpMarkDown": "Enter the hostname or IP address and port of the server in the format: http(s)://(Server):(port#). If you are required to use a tenant, use the following format: http(s)://(LREServer):(port#)/?tenant=(guid#). For example: https://MyLreServer.MyCompanyDomain.com:444/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3"
+      "helpMarkDown": "Enter the hostname or IP address and port of the server in the format: http(s)://(Server):(port#). If you are required to use a tenant, use the following format: http(s)://(Server):(port#)/?tenant=(guid#). For example: https://MyServer.MyCompanyDomain.com:444/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3"
     },
     {
       "name": "varUseTokenForAuthentication",
@@ -40,7 +40,7 @@
       "label": "Authenticate with token",
       "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "Turn on this option to use a token for authentication. This option is the only way of authentication for LRE servers configured with SSO."
+      "helpMarkDown": "Turn on this option to use a token for authentication. This option is the only way of authentication for Enterprise Performance Engineering servers configured with SSO."
     },
     {
       "name": "varUserName",
@@ -222,7 +222,7 @@
       "aliases": [ "artifactsDirectory" ],
       "type": "filePath",
       "label": "Artifacts directory",
-      "defaultValue": "$(Build.ArtifactStagingDirectory)/LRETest",
+      "defaultValue": "$(Build.ArtifactStagingDirectory)/EPETest",
       "required": true,
       "helpMarkDown": "Enter the path to the artifacts directory where the result files are stored."
     }

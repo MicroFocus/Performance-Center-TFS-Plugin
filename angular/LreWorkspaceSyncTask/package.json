@@ -1,0 +1,7 @@
+{
+  "name": "lreworkspacesynctask",
+  "version": "3.1.0",
+  "description": "Azure DevOps workspace sync task for OpenText Enterprise Performance Engineering",
+  "main": "index.js",
+  "type": "commonjs"
+}

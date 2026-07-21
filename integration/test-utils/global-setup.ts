@@ -18,7 +18,7 @@ export default async function globalSetup() {
         console.warn('   To run integration tests:');
         console.warn('   1. cd integration');
         console.warn('   2. cp integration-tests.properties.template integration-tests.properties');
-        console.warn('   3. Edit integration-tests.properties with your LRE credentials');
+        console.warn('   3. Edit integration-tests.properties with your server credentials');
         console.warn('');
         return;
     }

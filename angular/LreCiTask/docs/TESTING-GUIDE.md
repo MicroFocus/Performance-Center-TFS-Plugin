@@ -26,7 +26,7 @@ const { LreClient } = require('./src/lre/LreClient');
 
 async function testLreClient() {
 	const config = {
-		serverUrl: 'https://your-lre-server.com',
+		serverUrl: 'https://your-server.com',
 		domain: 'DEFAULT',
 		project: 'YourProject',
 		useToken: false,
@@ -103,10 +103,10 @@ npm run test:integration
 
 ## Manual Integration Testing
 
-### Test Against Real LRE Server
+### Test Against Real Enterprise Performance Engineering Server
 
 1. **Update credentials** in `test.js`
-2. **Ensure LRE server is accessible** from your network
+2. **Ensure the server is accessible** from your network
 3. **Run the test**:
    ```bash
    node test.js
@@ -158,7 +158,7 @@ This will show all `tl.debug()` messages from the LreClient.
 ### Check Cookies
 
 ```javascript
-console.log('Cookies:', client.cookieJar.getCookiesSync('https://your-lre-server.com'));
+console.log('Cookies:', client.cookieJar.getCookiesSync('https://your-server.com'));
 ```
 
 ### Inspect Raw XML
@@ -180,9 +180,9 @@ tl.debug(`Response XML: ${response.data}`);
 ### ❌ "Authentication failed: No response from server"
 
 **Possible Causes**:
-1. LRE server URL is incorrect
+1. Server URL is incorrect
 2. Proxy is blocking the request
-3. LRE server is down or unreachable
+3. Server is down or unreachable
 
 **Debug**:
 ```javascript
@@ -194,7 +194,7 @@ const config = {
 
 ### ❌ "XML parsing failed"
 
-**Cause**: LRE returned HTML error page instead of XML
+**Cause**: Server returned HTML error page instead of XML
 
 **Debug**:
 ```typescript
@@ -251,10 +251,10 @@ for (let i = 0; i < 10; i++) {
 
 ## CI/CD Integration Test
 
-Create `.github/workflows/test-lre-client.yml` (if using GitHub):
+Create `.github/workflows/test-epe-client.yml` (if using GitHub):
 
 ```yaml
-name: Test LRE Client
+name: Test Enterprise Performance Engineering Client
 
 on: [push]
 

@@ -2,9 +2,12 @@
 
 This directory contains integration tests that run against a **real LRE server**.
 
+> **Scope:** These tests cover the **CI Test Run task** (`LreCiTask`).  
+> Integration tests for the **Enterprise Performance Engineering Workspace Sync task** (`LreWorkspaceSyncTask`) are run from `angular/LreWorkspaceSyncTask/` using the same `npm run test:integration` and `npm run test:integration:safe` scripts (see `AGENTS.md` for details).
+
 ## ⚠️ Important Notes
 
-- **These tests require a live LRE instance**
+- **These tests require a live Enterprise Performance Engineering server instance**
 - **Tests may consume VUD licenses if `executeRun=true`**
 - **Credentials are NEVER committed to the repository**
 
@@ -19,10 +22,10 @@ cp integration-tests.properties.template integration-tests.properties
 
 ### 2. Edit Configuration
 
-Edit `integration-tests.properties` with your LRE server details:
+Edit `integration-tests.properties` with your server details:
 
 ```properties
-lre.server.url=https://your-lre-server.com:443
+lre.server.url=https://your-server.com:443
 lre.domain=DEFAULT
 lre.project=YourProject
 lre.auth.username=your-username
@@ -158,8 +161,8 @@ lre.test.maxWaitMinutes=120
 
 ### ❌ "Cannot find test ID"
 
-**Solution**: Use an existing test ID from your LRE instance:
-1. Log into LRE web UI
+**Solution**: Use an existing test ID from your server instance:
+1. Log into the Enterprise Performance Engineering web UI
 2. Go to Test Management > Test Plan
 3. Find your test ID
 

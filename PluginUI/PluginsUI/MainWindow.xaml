@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Plugin for OpenText Enterprise Performance Engineering - Configuration"
-        Height="900" Width="1000" MinHeight="700" MinWidth="800"
+        Height="980" Width="1000" MinHeight="780" MinWidth="800"
         ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
         Closing="Window_Closing"
@@ -32,11 +32,7 @@
         <Border DockPanel.Dock="Bottom" Background="#F8F8F8" BorderBrush="#DDDDDD"
                 BorderThickness="0,1,0,0" Height="52" Padding="12,0">
             <DockPanel VerticalAlignment="Center">
-                <!-- Status text (left) -->
-                <TextBlock x:Name="StatusText" DockPanel.Dock="Left"
-                           VerticalAlignment="Center" Foreground="#666666"
-                           Text="Ready." FontSize="12" Margin="0,0,16,0"/>
-                <!-- Buttons (right) -->
+                <!-- Buttons declared first (Right) so they always claim their fixed space -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button x:Name="LoadConfigButton"  Style="{StaticResource MainButton}"
                             Content="Load Config"  Width="100" Click="LoadConfig_Click"
@@ -47,18 +43,23 @@
                     <Rectangle Width="1" Fill="#DDDDDD" Margin="8,8,8,8"/>
                     <Button x:Name="TestConnectionButton" Style="{StaticResource MainButton}"
                             Content="Test Connection" Width="130" Click="TestConnection_Click"
-                            ToolTip="Verify connectivity to the LRE server"/>
+                            ToolTip="Verify connectivity to the Enterprise Performance Engineering server"/>
                     <Button x:Name="RunButton"  Style="{StaticResource MainButton}"
                             Content="▶  Run"  Width="88"  Click="Run_Click"
-                            ToolTip="Run the performance test"/>
+                            ToolTip="Run the active task (CI test or workspace sync)"/>
                     <Button x:Name="StopButton" Style="{StaticResource DangerButton}"
                             Content="■  Stop" Width="88"  Click="Stop_Click"
                             IsEnabled="False"
-                            ToolTip="Stop the running test"/>
+                            ToolTip="Stop the running task"/>
                     <Rectangle Width="1" Fill="#DDDDDD" Margin="8,8,8,8"/>
                     <Button x:Name="CloseButton" Style="{StaticResource MainButton}"
                             Content="Close"  Width="80"  Click="Close_Click"/>
                 </StackPanel>
+                <!-- Status text last — fills remaining left space; trims with ellipsis on overflow -->
+                <TextBlock x:Name="StatusText"
+                           VerticalAlignment="Center" Foreground="#666666"
+                           Text="Ready." FontSize="12" Margin="0,0,16,0"
+                           TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
             </DockPanel>
         </Border>
 
@@ -74,11 +75,6 @@
                             Click="ClearOutput_Click" FontSize="11"/>
                 </StackPanel>
             </GroupBox.Header>
-            <!--
-                Style="{x:Null}" clears the implicit global TextBox style (Height=28).
-                RichTextBox lets us colour individual lines: errors red, warnings yellow, success green.
-                PageWidth=9999 on the FlowDocument suppresses word-wrap (like TextWrapping=NoWrap).
-            -->
             <RichTextBox x:Name="OutputTextBox"
                          Style="{x:Null}"
                          IsReadOnly="True"
@@ -94,7 +90,6 @@
                          Padding="4"
                          IsDocumentEnabled="False">
                 <RichTextBox.Document>
-                    <!-- PageWidth=9999 disables horizontal word-wrap -->
                     <FlowDocument PageWidth="9999" TextAlignment="Left"
                                   FontFamily="Consolas, Courier New" FontSize="12"
                                   Background="#1E1E1E" Foreground="#D4D4D4"/>
@@ -109,7 +104,7 @@
                       HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="0,4,0,8">
 
-                <!-- ── 1. Connection ──────────────────────────── -->
+                <!-- ── 1. Connection (shared) ─────────────────── -->
                 <GroupBox Header="Connection">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -134,7 +129,7 @@
                                     <TextBlock>
                                         Enter the server URL in the format: http(s)://&lt;server&gt;:&lt;port&gt;<LineBreak/>
                                         For multi-tenant: http(s)://&lt;server&gt;:&lt;port&gt;/?tenant=&lt;guid&gt;<LineBreak/>
-                                        Example: https://lre.mycompany.com:444/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3
+                                        Example: https://epe.mycompany.com:444/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3
                                     </TextBlock>
                                 </Button.ToolTip>
                                 <Image Source="Assets/qicon.png" Width="16" Height="16"/>
@@ -148,7 +143,7 @@
                         <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">Authenticate with token:</Label>
                         <DockPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
                             <CheckBox x:Name="UseTokenForAuthentication" DockPanel.Dock="Left"
-                                      Content="Use token (required for SSO-only LRE servers)"
+                                      Content="Use token (required for SSO-only Enterprise Performance Engineering servers)"
                                       Margin="0,0,0,0"/>
                             <Button DockPanel.Dock="Left" Style="{StaticResource NoChromeButton}" Margin="6,0,0,0">
                                 <Button.ToolTip>
@@ -193,57 +188,7 @@
                     </Grid>
                 </GroupBox>
 
-                <!-- ── 2. Test ─────────────────────────────────── -->
-                <GroupBox Header="Test">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="168"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="38"/>
-                            <RowDefinition Height="Auto" MinHeight="38"/>
-                        </Grid.RowDefinitions>
-
-                        <!-- Test ID -->
-                        <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Test ID:</Label>
-                        <DockPanel Grid.Row="0" Grid.Column="1">
-                            <Button DockPanel.Dock="Right" Style="{StaticResource NoChromeButton}" Margin="4,0,0,0" VerticalAlignment="Center">
-                                <Button.ToolTip>
-                                    The numeric Test ID from LRE Test Management > Test Plan.
-                                    Find it in General Details: Test Name (Id).
-                                </Button.ToolTip>
-                                <Image Source="Assets/qicon.png" Width="16" Height="16"/>
-                            </Button>
-                            <TextBox x:Name="TestID" VerticalAlignment="Center"/>
-                        </DockPanel>
-
-                        <!-- Test Instance -->
-                        <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right"
-                               VerticalAlignment="Top" Margin="0,10,6,0">Test Instance ID:</Label>
-                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,6,0,6">
-                            <RadioButton x:Name="AutoTestInstance" IsChecked="True"
-                                         GroupName="TestInstance"
-                                         Checked="TestInstance_Checked"
-                                         Content="Automatically select existing or create new if none exists"/>
-                            <RadioButton x:Name="SpecifyTestInstance"
-                                         GroupName="TestInstance"
-                                         Checked="TestInstance_Checked"
-                                         Margin="0,4,0,0">
-                                <RadioButton.Content>
-                                    <DockPanel>
-                                        <TextBlock VerticalAlignment="Center" Margin="0,0,8,0">Manual selection:</TextBlock>
-                                        <TextBox x:Name="TestInstanceID" Width="200"
-                                                 IsEnabled="False" VerticalAlignment="Center"
-                                                 ToolTip="Test Instance ID from LRE Test Lab > Performance Test Set"/>
-                                    </DockPanel>
-                                </RadioButton.Content>
-                            </RadioButton>
-                        </StackPanel>
-                    </Grid>
-                </GroupBox>
-
-                <!-- ── 3. Proxy (optional) ───────────────────── -->
+                <!-- ── 2. Proxy (shared) ──────────────────────── -->
                 <GroupBox Header="Proxy (optional)">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -271,194 +216,414 @@
                     </Grid>
                 </GroupBox>
 
-                <!-- ── 4. Run Options ─────────────────────────── -->
-                <GroupBox Header="Run Options">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="168"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="38"/>
-                            <RowDefinition Height="Auto" MinHeight="38"/>
-                            <RowDefinition Height="38"/>
-                            <RowDefinition Height="38"/>
-                            <RowDefinition Height="38"/>
-                            <RowDefinition Height="Auto" MinHeight="38"/>
-                        </Grid.RowDefinitions>
+                <!-- ── 3. Task tabs ────────────────────────────── -->
+                <TabControl x:Name="TaskTabControl" Margin="8,4,8,0"
+                            SelectionChanged="TaskTab_SelectionChanged">
 
-                        <!-- Post Run Action -->
-                        <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Post run action:</Label>
-                        <ComboBox x:Name="PostRunAction" Grid.Row="0" Grid.Column="1"
-                                  VerticalAlignment="Center" Width="240"
-                                  HorizontalAlignment="Left"
-                                  SelectionChanged="PostRunAction_SelectionChanged">
-                            <ComboBoxItem Tag="CollateResults">Collate Results</ComboBoxItem>
-                            <ComboBoxItem Tag="CollateAndAnalyze" IsSelected="True">Collate and Analyze</ComboBoxItem>
-                            <ComboBoxItem Tag="DoNotCollate">Do Not Collate</ComboBoxItem>
-                        </ComboBox>
+                    <!-- ══ Tab 1: CI Test Run ═════════════════════════ -->
+                    <TabItem Header="  CI Test Run  ">
+                        <StackPanel>
 
-                        <!-- Trending -->
-                        <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right"
-                               VerticalAlignment="Top" Margin="0,10,6,0">Trending:</Label>
-                        <StackPanel x:Name="TrendingGroup" Grid.Row="1" Grid.Column="1"
-                                    Margin="0,6,0,6">
-                            <RadioButton x:Name="DoNotTrend" IsChecked="True"
-                                         GroupName="Trending" Checked="Trending_Checked"
-                                         Content="Do not trend"/>
-                            <RadioButton x:Name="AssociatedTrend"
-                                         GroupName="Trending" Checked="Trending_Checked"
-                                         Margin="0,4,0,0"
-                                         Content="Use trend report associated with the test"/>
-                            <RadioButton x:Name="UseTrendReportID"
-                                         GroupName="Trending" Checked="Trending_Checked"
-                                         Margin="0,4,0,0">
-                                <RadioButton.Content>
-                                    <DockPanel>
-                                        <TextBlock VerticalAlignment="Center" Margin="0,0,8,0">Add run to trend report with ID:</TextBlock>
-                                        <TextBox x:Name="TrendReportID" Width="160"
-                                                 IsEnabled="False" VerticalAlignment="Center"
-                                                 ToolTip="Trend report ID from LRE"/>
+                            <!-- Test -->
+                            <GroupBox Header="Test" Margin="0,4,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="168"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="Auto" MinHeight="38"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Test ID -->
+                                    <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Test ID:</Label>
+                                    <DockPanel Grid.Row="0" Grid.Column="1">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource NoChromeButton}" Margin="4,0,0,0" VerticalAlignment="Center">
+                                            <Button.ToolTip>
+                                                The numeric Test ID from Enterprise Performance Engineering Test Management > Test Plan.
+                                                Find it in General Details: Test Name (Id).
+                                            </Button.ToolTip>
+                                            <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                        </Button>
+                                        <TextBox x:Name="TestID" VerticalAlignment="Center"/>
                                     </DockPanel>
-                                </RadioButton.Content>
-                            </RadioButton>
-                        </StackPanel>
 
-                        <!-- Timeslot Duration -->
-                        <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">Timeslot duration:</Label>
-                        <DockPanel Grid.Row="2" Grid.Column="1" VerticalAlignment="Center">
-                            <Button DockPanel.Dock="Right" Style="{StaticResource NoChromeButton}" Margin="4,0,0,0">
-                                <Button.ToolTip>
-                                    Duration in minutes. Minimum 30, maximum 28800 (480 hours).
-                                </Button.ToolTip>
-                                <Image Source="Assets/qicon.png" Width="16" Height="16"/>
-                            </Button>
-                            <TextBox x:Name="TimeslotDurationMinutes" Width="80"
-                                     HorizontalAlignment="Left" VerticalAlignment="Center" Text="30"/>
-                            <TextBlock VerticalAlignment="Center" Style="{StaticResource HintText}">minutes (min 30)</TextBlock>
-                        </DockPanel>
-
-                        <!-- Use VUDs -->
-                        <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">Use VUDs:</Label>
-                        <DockPanel Grid.Row="3" Grid.Column="1" VerticalAlignment="Center">
-                            <CheckBox x:Name="UseVUDs" DockPanel.Dock="Left"
-                                      Content="Use Virtual User Days license"/>
-                            <Button DockPanel.Dock="Left" Style="{StaticResource NoChromeButton}" Margin="6,0,0,0">
-                                <Button.ToolTip>
-                                    <TextBlock>
-                                        A Virtual User Day (VUD) license lets you run an unlimited number of<LineBreak/>
-                                        times within a 24 h period. Ensure VUD licenses are applied on the server.
-                                    </TextBlock>
-                                </Button.ToolTip>
-                                <Image Source="Assets/qicon.png" Width="16" Height="16"/>
-                            </Button>
-                        </DockPanel>
-
-                        <!-- SLA Status -->
-                        <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">Status per SLA:</Label>
-                        <DockPanel Grid.Row="4" Grid.Column="1" VerticalAlignment="Center">
-                            <CheckBox x:Name="UseSLAStatus" DockPanel.Dock="Left"
-                                      Content="Set build status according to SLA result"/>
-                            <Button DockPanel.Dock="Left" Style="{StaticResource NoChromeButton}" Margin="6,0,0,0">
-                                <Button.ToolTip>
-                                    <TextBlock>
-                                        When checked, the task will fail if the SLA configured in the<LineBreak/>
-                                        performance test is not met.  Otherwise the task passes as long as<LineBreak/>
-                                        no errors occurred.
-                                    </TextBlock>
-                                </Button.ToolTip>
-                                <Image Source="Assets/qicon.png" Width="16" Height="16"/>
-                            </Button>
-                        </DockPanel>
-
-                        <!-- On Timeslot Creation Failure -->
-                        <Label Grid.Row="5" Grid.Column="0" HorizontalAlignment="Right"
-                               VerticalAlignment="Top" Margin="0,10,6,0">On timeslot&#x0a;creation failure:</Label>
-                        <StackPanel x:Name="TimeslotCreationFailure" Grid.Row="5" Grid.Column="1"
-                                    Margin="0,6,0,6">
-                            <RadioButton x:Name="DoNotRepeat" IsChecked="True"
-                                         GroupName="TimeslotRepeat" Checked="TimeslotRepeat_Checked"
-                                         Content="Do not repeat"/>
-                            <RadioButton x:Name="RepeatWithParameters"
-                                         GroupName="TimeslotRepeat" Checked="TimeslotRepeat_Checked"
-                                         Margin="0,4,0,0">
-                                <RadioButton.Content>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">Repeat with:</TextBlock>
-                                        <TextBlock VerticalAlignment="Center" Margin="0,0,4,0">delay</TextBlock>
-                                        <TextBox x:Name="TimeslotRepeatDelay" Width="60"
-                                                 IsEnabled="False" VerticalAlignment="Center"
-                                                 ToolTip="Minutes between attempts (1–10)"/>
-                                        <TextBlock VerticalAlignment="Center" Margin="6,0,4,0">min,</TextBlock>
-                                        <TextBox x:Name="TimeslotRepeatAttempts" Width="60"
-                                                 IsEnabled="False" VerticalAlignment="Center"
-                                                 ToolTip="Number of attempts (2–10)"/>
-                                        <TextBlock VerticalAlignment="Center" Margin="6,0,0,0">attempts</TextBlock>
+                                    <!-- Test Instance -->
+                                    <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right"
+                                           VerticalAlignment="Top" Margin="0,10,6,0">Test Instance ID:</Label>
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,6,0,6">
+                                        <RadioButton x:Name="AutoTestInstance" IsChecked="True"
+                                                     GroupName="TestInstance"
+                                                     Checked="TestInstance_Checked"
+                                                     Content="Automatically select existing or create new if none exists"/>
+                                        <RadioButton x:Name="SpecifyTestInstance"
+                                                     GroupName="TestInstance"
+                                                     Checked="TestInstance_Checked"
+                                                     Margin="0,4,0,0">
+                                            <RadioButton.Content>
+                                                <DockPanel>
+                                                    <TextBlock VerticalAlignment="Center" Margin="0,0,8,0">Manual selection:</TextBlock>
+                                                    <TextBox x:Name="TestInstanceID" Width="200"
+                                                             IsEnabled="False" VerticalAlignment="Center"
+                                                             ToolTip="Test Instance ID from Enterprise Performance Engineering Test Lab > Performance Test Set"/>
+                                                </DockPanel>
+                                            </RadioButton.Content>
+                                        </RadioButton>
                                     </StackPanel>
-                                </RadioButton.Content>
-                            </RadioButton>
+                                </Grid>
+                            </GroupBox>
+
+                            <!-- Run Options -->
+                            <GroupBox Header="Run Options">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="168"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="Auto" MinHeight="38"/>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="Auto" MinHeight="38"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Post Run Action -->
+                                    <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Post run action:</Label>
+                                    <ComboBox x:Name="PostRunAction" Grid.Row="0" Grid.Column="1"
+                                              VerticalAlignment="Center" Width="240"
+                                              HorizontalAlignment="Left"
+                                              SelectionChanged="PostRunAction_SelectionChanged">
+                                        <ComboBoxItem Tag="CollateResults">Collate Results</ComboBoxItem>
+                                        <ComboBoxItem Tag="CollateAndAnalyze" IsSelected="True">Collate and Analyze</ComboBoxItem>
+                                        <ComboBoxItem Tag="DoNotCollate">Do Not Collate</ComboBoxItem>
+                                    </ComboBox>
+
+                                    <!-- Trending -->
+                                    <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right"
+                                           VerticalAlignment="Top" Margin="0,10,6,0">Trending:</Label>
+                                    <StackPanel x:Name="TrendingGroup" Grid.Row="1" Grid.Column="1"
+                                                Margin="0,6,0,6">
+                                        <RadioButton x:Name="DoNotTrend" IsChecked="True"
+                                                     GroupName="Trending" Checked="Trending_Checked"
+                                                     Content="Do not trend"/>
+                                        <RadioButton x:Name="AssociatedTrend"
+                                                     GroupName="Trending" Checked="Trending_Checked"
+                                                     Margin="0,4,0,0"
+                                                     Content="Use trend report associated with the test"/>
+                                        <RadioButton x:Name="UseTrendReportID"
+                                                     GroupName="Trending" Checked="Trending_Checked"
+                                                     Margin="0,4,0,0">
+                                            <RadioButton.Content>
+                                                <DockPanel>
+                                                    <TextBlock VerticalAlignment="Center" Margin="0,0,8,0">Add run to trend report with ID:</TextBlock>
+                                                    <TextBox x:Name="TrendReportID" Width="160"
+                                                             IsEnabled="False" VerticalAlignment="Center"
+                                                             ToolTip="Trend report ID from Enterprise Performance Engineering"/>
+                                                </DockPanel>
+                                            </RadioButton.Content>
+                                        </RadioButton>
+                                    </StackPanel>
+
+                                    <!-- Timeslot Duration -->
+                                    <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">Timeslot duration:</Label>
+                                    <DockPanel Grid.Row="2" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource NoChromeButton}" Margin="4,0,0,0">
+                                            <Button.ToolTip>
+                                                Duration in minutes. Minimum 30, maximum 28800 (480 hours).
+                                            </Button.ToolTip>
+                                            <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                        </Button>
+                                        <TextBox x:Name="TimeslotDurationMinutes" Width="80"
+                                                 HorizontalAlignment="Left" VerticalAlignment="Center" Text="30"/>
+                                        <TextBlock VerticalAlignment="Center" Style="{StaticResource HintText}">minutes (min 30)</TextBlock>
+                                    </DockPanel>
+
+                                    <!-- Use VUDs -->
+                                    <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">Use VUDs:</Label>
+                                    <DockPanel Grid.Row="3" Grid.Column="1" VerticalAlignment="Center">
+                                        <CheckBox x:Name="UseVUDs" DockPanel.Dock="Left"
+                                                  Content="Use Virtual User Days license"/>
+                                        <Button DockPanel.Dock="Left" Style="{StaticResource NoChromeButton}" Margin="6,0,0,0">
+                                            <Button.ToolTip>
+                                                <TextBlock>
+                                                    A Virtual User Day (VUD) license lets you run an unlimited number of<LineBreak/>
+                                                    times within a 24 h period. Ensure VUD licenses are applied on the server.
+                                                </TextBlock>
+                                            </Button.ToolTip>
+                                            <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                        </Button>
+                                    </DockPanel>
+
+                                    <!-- SLA Status -->
+                                    <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">Status per SLA:</Label>
+                                    <DockPanel Grid.Row="4" Grid.Column="1" VerticalAlignment="Center">
+                                        <CheckBox x:Name="UseSLAStatus" DockPanel.Dock="Left"
+                                                  Content="Set build status according to SLA result"/>
+                                        <Button DockPanel.Dock="Left" Style="{StaticResource NoChromeButton}" Margin="6,0,0,0">
+                                            <Button.ToolTip>
+                                                <TextBlock>
+                                                    When checked, the task will fail if the SLA configured in the<LineBreak/>
+                                                    performance test is not met.  Otherwise the task passes as long as<LineBreak/>
+                                                    no errors occurred.
+                                                </TextBlock>
+                                            </Button.ToolTip>
+                                            <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                        </Button>
+                                    </DockPanel>
+
+                                    <!-- On Timeslot Creation Failure -->
+                                    <Label Grid.Row="5" Grid.Column="0" HorizontalAlignment="Right"
+                                           VerticalAlignment="Top" Margin="0,10,6,0">On timeslot&#x0a;creation failure:</Label>
+                                    <StackPanel x:Name="TimeslotCreationFailure" Grid.Row="5" Grid.Column="1"
+                                                Margin="0,6,0,6">
+                                        <RadioButton x:Name="DoNotRepeat" IsChecked="True"
+                                                     GroupName="TimeslotRepeat" Checked="TimeslotRepeat_Checked"
+                                                     Content="Do not repeat"/>
+                                        <RadioButton x:Name="RepeatWithParameters"
+                                                     GroupName="TimeslotRepeat" Checked="TimeslotRepeat_Checked"
+                                                     Margin="0,4,0,0">
+                                            <RadioButton.Content>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">Repeat with:</TextBlock>
+                                                    <TextBlock VerticalAlignment="Center" Margin="0,0,4,0">delay</TextBlock>
+                                                    <TextBox x:Name="TimeslotRepeatDelay" Width="60"
+                                                             IsEnabled="False" VerticalAlignment="Center"
+                                                             ToolTip="Minutes between attempts (1–10)"/>
+                                                    <TextBlock VerticalAlignment="Center" Margin="6,0,4,0">min,</TextBlock>
+                                                    <TextBox x:Name="TimeslotRepeatAttempts" Width="60"
+                                                             IsEnabled="False" VerticalAlignment="Center"
+                                                             ToolTip="Number of attempts (2–10)"/>
+                                                    <TextBlock VerticalAlignment="Center" Margin="6,0,0,0">attempts</TextBlock>
+                                                </StackPanel>
+                                            </RadioButton.Content>
+                                        </RadioButton>
+                                    </StackPanel>
+                                </Grid>
+                            </GroupBox>
+
+                            <!-- Advanced (CI) -->
+                            <GroupBox Header="Advanced">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="168"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Artifacts Directory -->
+                                    <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Artifacts directory:</Label>
+                                    <DockPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource BrowseButton}"
+                                                Content="Browse…" Click="BrowseArtifacts_Click"/>
+                                        <TextBox x:Name="ArtifactsDirectory" VerticalAlignment="Center"
+                                                 ToolTip="Directory where result files will be stored. Leave blank to use a temp folder."/>
+                                    </DockPanel>
+
+                                    <!-- Node dist path (CI task) -->
+                                    <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">Node dist path:</Label>
+                                    <DockPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource BrowseButton}"
+                                                Content="Browse…" Click="BrowseNodeDist_Click"/>
+                                        <Button x:Name="DetectNodeDistButton" DockPanel.Dock="Right"
+                                                Style="{StaticResource BrowseButton}" Content="Detect"
+                                                Click="DetectNodeDist_Click"
+                                                ToolTip="Auto-detect LreCiTask dist/index.js and fill this field"/>
+                                        <TextBox x:Name="NodeDistPath" VerticalAlignment="Center">
+                                            <TextBox.ToolTip>
+                                                <TextBlock>
+                                                    Full path to <Bold>dist\index.js</Bold> from the angular LreCiTask build.<LineBreak/>
+                                                    <LineBreak/>
+                                                    <Bold>Leave blank</Bold> to auto-detect in this order:<LineBreak/>
+                                                    1. LreCiTask\dist\index.js <Italic>next to PluginsUI.exe</Italic> (installer layout)<LineBreak/>
+                                                    2. angular\LreCiTask\dist\index.js <Italic>in the repo root</Italic> (dev layout)<LineBreak/>
+                                                    <LineBreak/>
+                                                    Click <Bold>Detect</Bold> to discover and fill the path automatically.
+                                                </TextBlock>
+                                            </TextBox.ToolTip>
+                                        </TextBox>
+                                    </DockPanel>
+
+                                    <!-- Description -->
+                                    <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">Description:</Label>
+                                    <TextBox x:Name="DescriptionText" Grid.Row="2" Grid.Column="1"
+                                             VerticalAlignment="Center"
+                                             ToolTip="Optional free-text description for this run"/>
+                                </Grid>
+                            </GroupBox>
+
                         </StackPanel>
+                    </TabItem>
 
-                    </Grid>
-                </GroupBox>
+                    <!-- ══ Tab 2: Workspace Sync ══════════════════════ -->
+                    <TabItem Header="  Workspace Sync  ">
+                        <StackPanel>
 
-                <!-- ── 5. Advanced ────────────────────────────── -->
-                <GroupBox Header="Advanced">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="168"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="38"/>
-                            <RowDefinition Height="38"/>
-                            <RowDefinition Height="38"/>
-                        </Grid.RowDefinitions>
+                            <!-- Workspace -->
+                            <GroupBox Header="Workspace" Margin="0,4,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="168"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                    </Grid.RowDefinitions>
 
-                        <!-- Artifacts Directory -->
-                        <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Artifacts directory:</Label>
-                        <DockPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
-                            <Button DockPanel.Dock="Right" Style="{StaticResource BrowseButton}"
-                                    Content="Browse…" Click="BrowseArtifacts_Click"/>
-                            <TextBox x:Name="ArtifactsDirectory" VerticalAlignment="Center"
-                                     ToolTip="Directory where result files will be stored. Leave blank to use a temp folder."/>
-                        </DockPanel>
+                                    <!-- Workspace directory -->
+                                    <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Workspace directory:</Label>
+                                    <DockPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource NoChromeButton}"
+                                                Margin="4,0,0,0" VerticalAlignment="Center">
+                                            <Button.ToolTip>
+                                                <TextBlock>
+                                                    Root directory to scan recursively for Enterprise Performance Engineering script folders.<LineBreak/>
+                                                    A folder is treated as a script if it contains:<LineBreak/>
+                                                    • A file ending in .usr, .jmx, .scala, or .java<LineBreak/>
+                                                    • Both main.js and rts.yml (DevWeb scripts)<LineBreak/>
+                                                    <LineBreak/>
+                                                    Once identified, subdirectories are not recursed into.
+                                                </TextBlock>
+                                            </Button.ToolTip>
+                                            <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                        </Button>
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource BrowseButton}"
+                                                Content="Browse…" Click="BrowseSyncWorkspace_Click"/>
+                                        <TextBox x:Name="SyncWorkspaceDir" VerticalAlignment="Center"
+                                                 ToolTip="Root of the local workspace to scan and upload to Enterprise Performance Engineering"/>
+                                    </DockPanel>
 
-                        <!-- Node dist path -->
-                        <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">Node dist path:</Label>
-                        <DockPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
-                            <Button DockPanel.Dock="Right" Style="{StaticResource BrowseButton}"
-                                    Content="Browse…" Click="BrowseNodeDist_Click"/>
-                            <Button x:Name="DetectNodeDistButton" DockPanel.Dock="Right"
-                                    Style="{StaticResource BrowseButton}" Content="Detect"
-                                    Click="DetectNodeDist_Click"
-                                    ToolTip="Auto-detect dist/index.js and fill this field"/>
-                            <TextBox x:Name="NodeDistPath" VerticalAlignment="Center">
-                                <TextBox.ToolTip>
-                                    <TextBlock>
-                                        Full path to <Bold>dist\index.js</Bold> from the angular LreCiTask build.<LineBreak/>
-                                        <LineBreak/>
-                                        <Bold>Leave blank</Bold> to auto-detect in this order:<LineBreak/>
-                                        1. dist\index.js <Italic>next to PluginsUI.exe</Italic> (installer layout)<LineBreak/>
-                                        2. angular\LreCiTask\dist\index.js <Italic>in the repo root</Italic> (dev layout)<LineBreak/>
-                                        <LineBreak/>
-                                        Click <Bold>Detect</Bold> to discover and fill the path automatically.
-                                    </TextBlock>
-                                </TextBox.ToolTip>
-                            </TextBox>
-                        </DockPanel>
+                                    <!-- Runtime only -->
+                                    <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">Runtime only:</Label>
+                                    <DockPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
+                                        <CheckBox x:Name="SyncRuntimeOnly" DockPanel.Dock="Left"
+                                                  Content="Upload only runtime scripts (DevWeb / JMeter / Gatling)"/>
+                                        <Button DockPanel.Dock="Left" Style="{StaticResource NoChromeButton}" Margin="6,0,0,0">
+                                            <Button.ToolTip>
+                                                <TextBlock>
+                                                    When checked, only scripts that have a runtime component<LineBreak/>
+                                                    (DevWeb main.js+rts.yml, JMeter .jmx, Gatling .scala) are uploaded.<LineBreak/>
+                                                    When unchecked, all detected script types including .usr are uploaded.
+                                                </TextBlock>
+                                            </Button.ToolTip>
+                                            <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                        </Button>
+                                    </DockPanel>
 
-                        <!-- Description -->
-                        <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">Description:</Label>
-                        <TextBox x:Name="DescriptionText" Grid.Row="2" Grid.Column="1"
-                                 VerticalAlignment="Center"
-                                 ToolTip="Optional free-text description for this run"/>
-                    </Grid>
-                </GroupBox>
+                                    <!-- Parallel uploads -->
+                                    <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">Parallel uploads:</Label>
+                                    <DockPanel Grid.Row="2" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource NoChromeButton}" Margin="4,0,0,0">
+                                            <Button.ToolTip>
+                                                <TextBlock>
+                                                    Number of concurrent script uploads (1–20). Default: 1 (sequential).<LineBreak/>
+                                                    Increase only when the target Enterprise Performance Engineering server supports concurrent uploads.
+                                                </TextBlock>
+                                            </Button.ToolTip>
+                                            <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                        </Button>
+                                        <TextBox x:Name="SyncParallelUploads" Width="60"
+                                                 HorizontalAlignment="Left" VerticalAlignment="Center" Text="1"/>
+                                        <TextBlock VerticalAlignment="Center" Style="{StaticResource HintText}"> concurrent uploads (1–20)</TextBlock>
+                                    </DockPanel>
+
+                                    <!-- Success threshold -->
+                                    <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">Success threshold (%):</Label>
+                                    <DockPanel Grid.Row="3" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource NoChromeButton}" Margin="4,0,0,0">
+                                            <Button.ToolTip>
+                                                <TextBlock>
+                                                    Minimum percentage of scripts that must upload successfully for the task to pass.<LineBreak/>
+                                                    Leave empty to use the default (50%).<LineBreak/>
+                                                    <LineBreak/>
+                                                    0   = pass even if no script uploads succeed (auth failure still fails the task).<LineBreak/>
+                                                    100 = fail if even one script fails to upload.<LineBreak/>
+                                                    Values outside 0–100 fall back to the default (50%).<LineBreak/>
+                                                    <LineBreak/>
+                                                    Note: 5 consecutive upload failures always abort the task with failure<LineBreak/>
+                                                    regardless of this setting.
+                                                </TextBlock>
+                                            </Button.ToolTip>
+                                            <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                        </Button>
+                                        <TextBox x:Name="SyncSuccessThreshold" Width="60"
+                                                 HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                 ToolTip="0–100 integer, or leave empty for default (50%)"/>
+                                        <TextBlock VerticalAlignment="Center" Style="{StaticResource HintText}"> % (0–100, empty = default 50%)</TextBlock>
+                                    </DockPanel>
+                                </Grid>
+                            </GroupBox>
+
+                            <!-- Advanced (Sync) -->
+                            <GroupBox Header="Advanced">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="168"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Artifacts Directory (Sync) -->
+                                    <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Artifacts directory:</Label>
+                                    <DockPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource BrowseButton}"
+                                                Content="Browse…" Click="BrowseSyncArtifacts_Click"/>
+                                        <TextBox x:Name="SyncArtifactsDirectory" VerticalAlignment="Center"
+                                                 ToolTip="Directory where upload logs will be stored. Leave blank to use a temp folder."/>
+                                    </DockPanel>
+
+                                    <!-- Node dist path (Sync task) -->
+                                    <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">Node dist path:</Label>
+                                    <DockPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource BrowseButton}"
+                                                Content="Browse…" Click="BrowseSyncNodeDist_Click"/>
+                                        <Button x:Name="DetectSyncNodeDistButton" DockPanel.Dock="Right"
+                                                Style="{StaticResource BrowseButton}" Content="Detect"
+                                                Click="DetectSyncNodeDist_Click"
+                                                ToolTip="Auto-detect LreWorkspaceSyncTask dist/index.js"/>
+                                        <TextBox x:Name="SyncNodeDistPath" VerticalAlignment="Center">
+                                            <TextBox.ToolTip>
+                                                <TextBlock>
+                                                    Full path to <Bold>dist\index.js</Bold> from the angular LreWorkspaceSyncTask build.<LineBreak/>
+                                                    <LineBreak/>
+                                                    <Bold>Leave blank</Bold> to auto-detect in this order:<LineBreak/>
+                                                    1. LreWorkspaceSyncTask\dist\index.js <Italic>next to PluginsUI.exe</Italic> (installer layout)<LineBreak/>
+                                                    2. angular\LreWorkspaceSyncTask\dist\index.js <Italic>in the repo root</Italic> (dev layout)<LineBreak/>
+                                                    <LineBreak/>
+                                                    Click <Bold>Detect</Bold> to discover and fill the path automatically.
+                                                </TextBlock>
+                                            </TextBox.ToolTip>
+                                        </TextBox>
+                                    </DockPanel>
+
+                                    <!-- Description (Sync) -->
+                                    <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">Description:</Label>
+                                    <TextBox x:Name="SyncDescriptionText" Grid.Row="2" Grid.Column="1"
+                                             VerticalAlignment="Center"
+                                             ToolTip="Optional free-text description for this sync run"/>
+                                </Grid>
+                            </GroupBox>
+
+                        </StackPanel>
+                    </TabItem>
+
+                </TabControl>
 
             </StackPanel>
         </ScrollViewer>
 
     </DockPanel>
 </Window>
-

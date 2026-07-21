@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "PCIntegration",
   "name": "OpenText Enterprise Performance Engineering CI",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "publisher": "Micro-Focus",
   "targets": [
     {
@@ -75,7 +75,13 @@
     { "path": "LreCiTask/index.js" },
     { "path": "LreCiTask/package.json" },
     { "path": "LreCiTask/dist" },
-    { "path": "LreCiTask/node_modules" }
+    { "path": "LreCiTask/node_modules" },
+    { "path": "LreWorkspaceSyncTask/task.json" },
+    { "path": "LreWorkspaceSyncTask/icon.png" },
+    { "path": "LreWorkspaceSyncTask/index.js" },
+    { "path": "LreWorkspaceSyncTask/package.json" },
+    { "path": "LreWorkspaceSyncTask/dist" },
+    { "path": "LreWorkspaceSyncTask/node_modules" }
   ],
   "scopes": [
     "vso.test",
@@ -90,6 +96,16 @@
       ],
       "properties": {
         "name": "LreCiTask"
+      }
+    },
+    {
+      "id": "build-task-lre-workspace-sync",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "LreWorkspaceSyncTask"
       }
     }
   ],

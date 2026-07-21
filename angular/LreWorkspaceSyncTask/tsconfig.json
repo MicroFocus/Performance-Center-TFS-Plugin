@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "commonjs",
+    "lib": ["ES2019"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "outDir": "./dist",
+    // rootDir intentionally omitted — TypeScript infers the common ancestor (angular/)
+    // so compiled output lands at dist/LreWorkspaceSyncTask/… and dist/shared/…
+    // Packages are resolved from the single angular/node_modules/ — no paths hack needed.
+    "declaration": false,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "sourceMap": true
+  },
+  "include": [
+    "index.ts",
+    "../src/sync/**/*.ts",
+    "../src/shared/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

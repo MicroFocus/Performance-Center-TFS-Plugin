@@ -154,14 +154,14 @@ When destructive operations are enabled, you see:
 ```
 ⚠️⚠️⚠️  RUN EXECUTION TESTS ENABLED  ⚠️⚠️⚠️
    This will execute a REAL test and consume VUD licenses!
-   Server: https://your-lre-server.com
+   Server: https://your-server.com
    Duration: 30 minutes
 ```
 
 ### 5. **Automatic Cleanup**
 Even if tests fail, cleanup runs:
 - Stops any running tests created during the test
-- Logs out of LRE session
+- Logs out of the server session
 
 ---
 
@@ -213,7 +213,7 @@ integration.test.downloadReports=true
 ✅ Configuration loaded successfully
 
 📋 Test Configuration:
-   Server: https://lre-dev.yourcompany.com
+   Server: https://epe.yourcompany.com
    Project: DEFAULT/PerformanceTests
    Proxy: None
    Tenant: None
@@ -234,7 +234,7 @@ integration.test.downloadReports=true
 
 ───────────────────────────────────────────────────────────────
 
-🔗 Testing against: https://lre-dev.yourcompany.com
+🔗 Testing against: https://epe.yourcompany.com
 📦 Project: DEFAULT/PerformanceTests
 🔑 Auth method: Username/Password
 
@@ -280,7 +280,7 @@ Before running tests, verify your configuration file looks like this:
 
 ```properties
 # Required fields
-lre.server.url=https://your-lre.com          # ✅ Your actual LRE server
+lre.server.url=https://your-server.com          # ✅ your actual server
 lre.domain=DEFAULT                            # ✅ Your domain
 lre.project=YourProject                       # ✅ Your project
 lre.auth.username=your-user                   # ✅ Your username
@@ -334,7 +334,7 @@ integration.test.downloadReports=false        # ✅ SAFE
 
 5. **If all passes** ✅:
    - Your TypeScript LreClient is working!
-   - Your LRE connection is validated!
+   - Your server connection is validated!
    - Ready to continue with Step 5 (LreTestRunner)
 
 ---

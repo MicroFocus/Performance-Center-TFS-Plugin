@@ -1,13 +1,13 @@
 /**
  * Integration Tests: Authentication
- * Tests authentication against a real LRE server
+ * Tests authentication against a real Enterprise Performance Engineering server
  */
 
 import { LreClient } from '../../angular/LreCiTask/src/lre/LreClient';
 import { LreConfig } from '../../angular/LreCiTask/src/models';
 import { PropertiesLoader, IntegrationTestConfig } from '../test-utils/PropertiesLoader';
 
-describe('LRE Authentication Integration Tests', () => {
+describe('Enterprise Performance Engineering Authentication Integration Tests', () => {
     let config: IntegrationTestConfig;
     let lreConfig: LreConfig;
 

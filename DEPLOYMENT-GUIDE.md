@@ -123,11 +123,11 @@ Result: 9 tests pass, 6 skipped (no actual runs)
    - Normal behavior, no change needed
 
 3. **Post-run action** — Results may not be available if "Do Not Collate"
-   - This is expected LRE server behavior
+   - This is expected server behavior
 
 ## Support Resources
 
-- **LRE API Docs**: https://admhelp.microfocus.com/lre/en/all/api_refs/Performance_Center_REST_API/Content/Welcome.htm
+- **Enterprise Performance Engineering API Docs**: https://admhelp.microfocus.com/lre/en/all/api_refs/Performance_Center_REST_API/Content/Welcome.htm
 - **Implementation Notes**: `PC.TFS.BuildTask/LreCiExtension/LreCiTask/docs/LRE-API-Analysis.md`
 - **Progress Tracking**: `PC.TFS.BuildTask/LreCiExtension/LreCiTask/docs/IMPLEMENTATION-PROGRESS.md`
 

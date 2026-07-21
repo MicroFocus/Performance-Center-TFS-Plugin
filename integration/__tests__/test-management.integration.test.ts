@@ -10,7 +10,7 @@ import { LreClient } from '../../angular/LreCiTask/src/lre/LreClient';
 import { LreConfig } from '../../angular/LreCiTask/src/models';
 import { PropertiesLoader, IntegrationTestConfig } from '../test-utils/PropertiesLoader';
 
-describe('LRE Test Management Integration Tests', () => {
+describe('Enterprise Performance Engineering Test Management Integration Tests', () => {
     let config: IntegrationTestConfig;
     let client: LreClient;
 

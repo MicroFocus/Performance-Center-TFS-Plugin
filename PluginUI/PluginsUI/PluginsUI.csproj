@@ -28,10 +28,80 @@
     <Content Include="Scripts\run-lre-task.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Scripts\run-workspace-sync.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Scripts\test-connection.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <!--
+    Copies the Angular task artifacts (bootstrap index.js, compiled dist/, shared
+    node_modules) into the build output directory so PluginsUI.exe can run the
+    Node.js tasks without requiring a separate installation step.
+
+    Layout in output:
+      <OutputDir>/
+        node_modules/               ← shared production deps (single copy)
+        LreCiTask/
+          index.js                  ← bootstrap (polyfills + loads dist)
+          dist/                     ← compiled TypeScript
+        LreWorkspaceSyncTask/
+          index.js
+          dist/
+
+    Condition: only runs when the angular source tree is present next to the repo root.
+    Set SkipAngularCopy=true on the command line to suppress (e.g. when running in a
+    CI environment that handles its own staging).
+  -->
+  <Target Name="CopyAngularTasks" AfterTargets="Build"
+          Condition="'$(SkipAngularCopy)' != 'true' and Exists('$(MSBuildThisFileDirectory)..\..\angular\LreCiTask\index.js')">
+
+    <PropertyGroup>
+      <AngularRoot>$(MSBuildThisFileDirectory)..\..\angular\</AngularRoot>
+    </PropertyGroup>
+
+    <Message Importance="high" Text="--- Staging Angular task files into $(OutputPath) ---" />
+
+    <!-- ── LreCiTask bootstrap ── -->
+    <Copy SourceFiles="$(AngularRoot)LreCiTask\index.js"
+          DestinationFolder="$(OutputPath)LreCiTask"
+          SkipUnchangedFiles="true" />
+
+    <!-- ── LreCiTask dist ── -->
+    <ItemGroup>
+      <_CiDistFiles Include="$(AngularRoot)LreCiTask\dist\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_CiDistFiles)"
+          DestinationFiles="@(_CiDistFiles->'$(OutputPath)LreCiTask\dist\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+
+    <!-- ── LreWorkspaceSyncTask bootstrap ── -->
+    <Copy SourceFiles="$(AngularRoot)LreWorkspaceSyncTask\index.js"
+          DestinationFolder="$(OutputPath)LreWorkspaceSyncTask"
+          SkipUnchangedFiles="true" />
+
+    <!-- ── LreWorkspaceSyncTask dist ── -->
+    <ItemGroup>
+      <_SyncDistFiles Include="$(AngularRoot)LreWorkspaceSyncTask\dist\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SyncDistFiles)"
+          DestinationFiles="@(_SyncDistFiles->'$(OutputPath)LreWorkspaceSyncTask\dist\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+
+    <!-- ── Shared node_modules (single copy; robocopy mirrors incrementally) ── -->
+    <!--
+      robocopy exit codes: 0 = nothing copied, 1 = files copied — both are success.
+      Exit codes >= 8 indicate errors.  IgnoreExitCode="true" suppresses MSBuild's
+      default "non-zero = failure" behaviour; we check for a real error separately.
+    -->
+    <Exec Command="robocopy &quot;$(AngularRoot)node_modules&quot; &quot;$(OutputPath)node_modules&quot; /E /NFL /NDL /NJH /NJS /nc /ns /np"
+          IgnoreExitCode="true"
+          Condition="Exists('$(AngularRoot)node_modules')" />
+
+    <Message Importance="high" Text="--- Angular task staging complete ---" />
+  </Target>
 
   <!--
     Workaround: HeatWave (WiX VS extension) is not yet compatible with VS 2026.

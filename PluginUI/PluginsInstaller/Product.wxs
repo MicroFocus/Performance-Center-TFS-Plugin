@@ -34,7 +34,7 @@
 
     <!--
       Prerequisite note:
-        .NET 8 Desktop Runtime (x64) and Node.js >= 20 are required at runtime.
+        .NET 10 Desktop Runtime (x64) and Node.js >= 20 are required at runtime.
         PluginsUI.exe will show clear error messages if either is missing.
         If you need hard-block checks in the MSI, add a WiX Burn bootstrapper
         that wraps this MSI and uses <util:PackageSearch> / <util:RegistrySearch>
