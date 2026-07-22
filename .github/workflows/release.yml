@@ -178,6 +178,7 @@ jobs:
           add: |
             angular/vss-extension.json
             angular/package.json
+            angular/package-lock.json
             angular/LreCiTask/task.json
             angular/LreCiTask/package.json
             angular/LreWorkspaceSyncTask/task.json

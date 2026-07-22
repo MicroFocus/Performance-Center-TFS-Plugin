@@ -106,9 +106,11 @@ Server URL may carry `?tenant=<guid>`. It is parsed out in `parseServerInput()` 
 - **`MAX_CONSECUTIVE_FAILURES = 5`** (fixed constant in `LreWorkspaceSyncRunner.ts`) — if 5 uploads fail in a row, the task aborts immediately with failure, regardless of `successThreshold`.
 - **`successThreshold`** (0–100, default 50) — after all uploads complete (or if there were no consecutive-failure aborts), the task passes only if `successfulUploads / total >= successThreshold / 100`. With threshold = 0 the task always passes unless aborted; with threshold = 100 any single failure causes a task failure.
 
-### Version Is Kept in Five Files
+### Version Is Kept in Six Files
 These must stay in sync; the release workflow updates them automatically from `release/deploy.txt`:
 - `angular/vss-extension.json` → `"version"`
+- `angular/package.json` → `"version"`
+- `angular/package-lock.json` → `"version"` (updated automatically by `npm version`, committed by the release workflow)
 - `angular/LreCiTask/task.json` → `"version": { "Major", "Minor", "Patch" }`
 - `angular/LreCiTask/package.json` → `"version"`
 - `angular/LreWorkspaceSyncTask/task.json` → `"version": { "Major", "Minor", "Patch" }`
