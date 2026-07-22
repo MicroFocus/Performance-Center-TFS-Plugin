@@ -12,6 +12,8 @@ Scan a Git repository for Enterprise Performance Engineering performance test sc
 
 **Detected script types:** LoadRunner (`.usr`), JMeter (`.jmx`), Gatling (`.scala` / `.java`), DevWeb (`main.js` + `rts.yml`).
 
+**Differential sync:** pass a git commit SHA via the `varBaseCommitSha` input to upload only the script folders that changed since that commit. Leave the input empty for a full sync (default). Falls back to a full sync automatically if the git diff cannot be computed.
+
 ## This extension currently supports:
 
 * The three latest versions of OpenText Enterprise Performance Engineering.
