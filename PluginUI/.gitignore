@@ -12,8 +12,8 @@ out/
 # Staging folder (populated by prepare-release.ps1)
 staging/
 
-# Auto-generated WXS file (regenerated every build by PreBuild.ps1)
-PluginsInstaller/Files.wxs
+# Auto-generated WXS file (regenerated every build by PreBuild.ps1 — do not commit build output)
+# Files.wxs is tracked with its default empty content; do not commit after building the installer
 
 # Visual Studio
 .vs/
