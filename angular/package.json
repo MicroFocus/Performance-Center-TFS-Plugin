@@ -4,49 +4,50 @@
   "private": true,
   "description": "Azure DevOps extension for OpenText Enterprise Performance Engineering (LreCiTask + LreWorkspaceSyncTask)",
   "type": "commonjs",
-  "engines": { "node": ">=20.0.0" },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
-    "build":          "npm run build:ci && npm run build:sync",
-    "build:ci":       "tsc -p LreCiTask/tsconfig.json",
-    "build:sync":     "tsc -p LreWorkspaceSyncTask/tsconfig.json",
-    "clean":          "node -e \"['LreCiTask/dist','LreWorkspaceSyncTask/dist'].forEach(d=>require('fs').rmSync(d,{recursive:true,force:true}))\"",
-    "rebuild":        "npm run clean && npm run build",
-    "typecheck":      "npm run typecheck:ci && npm run typecheck:sync",
-    "typecheck:ci":   "tsc -p LreCiTask/tsconfig.json --noEmit",
+    "build": "npm run build:ci && npm run build:sync",
+    "build:ci": "tsc -p LreCiTask/tsconfig.json",
+    "build:sync": "tsc -p LreWorkspaceSyncTask/tsconfig.json",
+    "clean": "node -e \"['LreCiTask/dist','LreWorkspaceSyncTask/dist'].forEach(d=>require('fs').rmSync(d,{recursive:true,force:true}))\"",
+    "rebuild": "npm run clean && npm run build",
+    "typecheck": "npm run typecheck:ci && npm run typecheck:sync",
+    "typecheck:ci": "tsc -p LreCiTask/tsconfig.json --noEmit",
     "typecheck:sync": "tsc -p LreWorkspaceSyncTask/tsconfig.json --noEmit",
-    "test":           "npm run typecheck",
-    "lint":           "eslint src/**/*.ts",
+    "test": "npm run typecheck",
+    "lint": "eslint src/**/*.ts",
     "security:audit": "npm audit --audit-level=moderate",
-    "package:vsix":   "node scripts/package-vsix.js",
-    "test:integration":      "tsx ../integration/test-utils/run-integration-tests.ts",
+    "package:vsix": "node scripts/package-vsix.js",
+    "test:integration": "tsx ../integration/test-utils/run-integration-tests.ts",
     "test:integration:safe": "cross-env INTEGRATION_SAFE_MODE=true tsx ../integration/test-utils/run-integration-tests.ts"
   },
   "dependencies": {
-    "adm-zip":                  "^0.6.0",
-    "axios":                    "^1.18.1",
-    "axios-cookiejar-support":  "^5.0.5",
+    "adm-zip": "^0.6.0",
+    "axios": "^1.18.1",
+    "axios-cookiejar-support": "^5.0.5",
     "azure-pipelines-task-lib": "^5.278.0",
-    "fast-xml-parser":          "^5.9.3",
-    "form-data":                "^4.0.4",
-    "tough-cookie":             "^4.1.4"
+    "fast-xml-parser": "^5.9.3",
+    "form-data": "^4.0.4",
+    "tough-cookie": "^4.1.4"
   },
   "devDependencies": {
-    "@eslint/js":                        "^9.39.4",
-    "@types/adm-zip":                    "^0.5.5",
-    "@types/form-data":                  "^2.5.2",
-    "@types/node":                       "^26.0.1",
-    "@types/q":                          "^1.5.8",
-    "@types/tough-cookie":               "^4.0.5",
-    "@typescript-eslint/eslint-plugin":  "^8.62.0",
-    "@typescript-eslint/parser":         "^8.62.0",
-    "cross-env":                         "^7.0.3",
-    "eslint":                            "^9.39.4",
-    "globals":                           "^17.7.0",
-    "tsx":                               "^4.22.4",
-    "typescript":                        "^5.9.3"
+    "@eslint/js": "^9.39.4",
+    "@types/adm-zip": "^0.5.5",
+    "@types/form-data": "^2.5.2",
+    "@types/node": "^26.0.1",
+    "@types/q": "^1.5.8",
+    "@types/tough-cookie": "^4.0.5",
+    "@typescript-eslint/eslint-plugin": "^8.62.0",
+    "@typescript-eslint/parser": "^8.62.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.39.4",
+    "globals": "^17.7.0",
+    "tsx": "^4.22.4",
+    "typescript": "^5.9.3"
   },
   "overrides": {
     "brace-expansion": "1.1.16"
   }
 }
-
