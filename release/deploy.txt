@@ -2,5 +2,5 @@
 # 1) Set enabled=true
 # 2) Set version=X.Y.Z to match angular/vss-extension.json and angular/LreCiTask/task.json
 # 3) Commit and push this file to master — the release workflow fires automatically
-enabled=true
+enabled=false
 version=3.2.0
