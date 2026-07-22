@@ -20,6 +20,12 @@ export interface LreSyncConfig {
     workspaceDir: string;
     runtimeOnly: boolean;
     artifactsDir: string;
+    /**
+     * Optional git commit SHA to use as the base for differential sync.
+     * When set, only script folders containing files changed since this
+     * commit are uploaded. Falls back to full sync if git diff fails.
+     */
+    baseCommitSha?: string;
 }
 
 export interface ScriptFolder {

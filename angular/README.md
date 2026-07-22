@@ -36,6 +36,7 @@ The extension ships **two tasks**:
   - DevWeb scripts: any folder containing both `main.js` and `rts.yml`
 - Compresses each detected script folder into a ZIP archive and uploads it to the corresponding Enterprise Performance Engineering test plan path
 - Ensures all required Enterprise Performance Engineering test plan sub-folders exist before starting uploads
+- **Differential sync** — pass a git commit SHA via `varBaseCommitSha` and the task uploads **only script folders that contain changed files since that commit**. Falls back to full sync automatically if git diff is unavailable
 - **Configurable success threshold** — decide how many upload failures are acceptable before failing the pipeline (see below)
 - **Sequential uploads by default** (`varParallelUploads = 1`) — safe with all Enterprise Performance Engineering server releases. Parallel uploads can be enabled for servers that support concurrent ingest
 - Proxy support with optional credentials
@@ -46,6 +47,109 @@ The extension ships **two tasks**:
 ## Supported Product Versions
 
 This extension supports the **3 latest versions** of OpenText Enterprise Performance Engineering.
+
+---
+
+## What's New in Version 3.2.0
+
+> **July 2026**
+
+### 🆕 Differential sync (`varBaseCommitSha`)
+
+A new optional input `varBaseCommitSha` enables **differential sync**: the task runs `git diff --name-only <sha> HEAD` inside the workspace directory and uploads **only the script folders containing changed files** since that commit. All unchanged scripts are skipped.
+
+| Scenario | Behaviour |
+|---|---|
+| `varBaseCommitSha` is empty | Full sync — every detected script folder is uploaded (default) |
+| `varBaseCommitSha` contains a valid SHA | Differential sync — only folders with changed files are uploaded |
+| `git diff` fails (shallow clone, bad SHA) | Warning logged; falls back to full sync automatically |
+
+#### Pipeline example — automatic differential sync (Azure DevOps Server on-premises)
+
+The snippet below stores the GitLab HEAD SHA as a build artifact and retrieves it at the start of each build. The **first run** performs a full sync; **subsequent runs** upload only changed scripts.
+
+> **Requirement:** enable **"Allow scripts to access the OAuth token"** on the agent job (pipeline Settings → Agent job → Additional options).
+
+```yaml
+steps:
+- script: |
+    git clone https://$(GitLabUser):$(GitLabToken)@<your-gitlab-host>/<repo>.git gitlab-src
+  displayName: 'Checkout GitLab repo'
+
+# ── Find the last successful build and download its stored SHA ────────────────
+- powershell: |
+    $orgUri   = $env:SYSTEM_TEAMFOUNDATIONSERVERURI
+    $project  = $env:SYSTEM_TEAMPROJECTID
+    $defId    = $env:SYSTEM_DEFINITIONID
+    $curBuild = [int]$env:BUILD_BUILDID
+    $token    = $env:SYSTEM_ACCESSTOKEN
+    $headers  = @{ Authorization = "Bearer $token" }
+
+    $buildsUrl = "${orgUri}${project}/_apis/build/builds?definitions=${defId}&resultFilter=succeeded&statusFilter=completed&`$top=10&api-version=6.0"
+    $builds    = Invoke-RestMethod -Uri $buildsUrl -Headers $headers -ErrorAction SilentlyContinue
+    $prev      = $builds.value | Where-Object { $_.id -ne $curBuild } | Select-Object -First 1
+
+    if (-not $prev) {
+      Write-Host "No previous successful build — full sync will run."
+      Write-Host "##vso[task.setvariable variable=lastSyncSha]"
+      exit 0
+    }
+
+    Write-Host "Previous successful build: $($prev.id)"
+    $artUrl = "${orgUri}${project}/_apis/build/builds/$($prev.id)/artifacts?artifactName=last-sync-sha&api-version=6.0"
+    try {
+      $art     = Invoke-RestMethod -Uri $artUrl -Headers $headers -ErrorAction Stop
+      $zipPath = "$(Agent.TempDirectory)\last-sync-sha-dl.zip"
+      Invoke-WebRequest -Uri $art.resource.downloadUrl -Headers $headers -OutFile $zipPath
+      Expand-Archive -Path $zipPath -DestinationPath "$(System.ArtifactsDirectory)\last-sync-sha" -Force
+      $shaFile = Get-ChildItem -Path "$(System.ArtifactsDirectory)\last-sync-sha" -Filter sha.txt -Recurse | Select-Object -First 1
+      if ($shaFile) {
+        $sha = (Get-Content $shaFile.FullName).Trim()
+        Write-Host "Last sync SHA: $sha"
+        Write-Host "##vso[task.setvariable variable=lastSyncSha]$sha"
+      } else {
+        Write-Host "sha.txt not found — full sync will run."
+        Write-Host "##vso[task.setvariable variable=lastSyncSha]"
+      }
+    } catch {
+      Write-Host "Artifact not found in build $($prev.id) — full sync will run."
+      Write-Host "##vso[task.setvariable variable=lastSyncSha]"
+    }
+  displayName: 'Download last sync SHA'
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+# ── Sync (differential when SHA available, full on first run) ─────────────────
+- task: LoadRunnerEnterpriseSync@3
+  inputs:
+    varPCServer: 'https://<lre-server>:<port>/?tenant=<guid>'
+    varUserName: '<username>'
+    varPassWord: '$(PCPassword)'
+    varDomain: '<domain>'
+    varProject: '<project>'
+    varWorkspaceDir: '$(Build.SourcesDirectory)/gitlab-src'
+    varBaseCommitSha: '$(lastSyncSha)'   # empty on first run → full sync
+    varParallelUploads: '5'
+    varSuccessThreshold: '80'
+
+# ── Save HEAD SHA for the next build ─────────────────────────────────────────
+- powershell: |
+    $sha = (& git -C "$(Build.SourcesDirectory)\gitlab-src" rev-parse HEAD).Trim()
+    $dir = "$(Agent.TempDirectory)\last-sync-sha"
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    Set-Content -Path "$dir\sha.txt" -Value $sha
+    Write-Host "Saved SHA: $sha"
+  displayName: 'Save current sync SHA'
+  condition: succeeded()
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish last sync SHA'
+  condition: succeeded()
+  inputs:
+    PathtoPublish: '$(Agent.TempDirectory)\last-sync-sha'
+    ArtifactName: 'last-sync-sha'
+    publishLocation: 'Container'
+```
 
 ---
 

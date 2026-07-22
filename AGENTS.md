@@ -96,6 +96,7 @@ Two known traps in `LreCiTask/index.ts`:
 - `varUseTokenForAuthentication` (full name) — not `varUseToken`
 - `varParallelUploads` — controls concurrent upload goroutines (clamped 1–20, **default 1** — sequential is the safe default for servers that don't yet support concurrent multipart uploads)
 - `varSuccessThreshold` — optional integer 0–100 (empty string = default 50%). Parsed by `parseSuccessThreshold()` in `index.ts`; out-of-range values fall back to 50. Controls the pass/fail decision in `processUploads()` inside `LreWorkspaceSyncRunner.ts`.
+- `varBaseCommitSha` — optional git commit SHA. When non-empty, `LreWorkspaceSyncRunner` calls `git diff --name-only <sha> HEAD` in `workspaceDir` and filters the discovered script folders to those containing at least one changed file. Falls back to full sync (with a warning) if the git command fails. Implemented via `getChangedPaths()` + `filterChangedScripts()` private helpers in `LreWorkspaceSyncRunner.ts`.
 
 ### Tenant Parsing
 Server URL may carry `?tenant=<guid>`. It is parsed out in `parseServerInput()` and appended only to auth endpoints (`/authenticate`, `/authenticateclient`, `/logout`), not to resource endpoints.
@@ -112,6 +113,8 @@ These must stay in sync; the release workflow updates them automatically from `r
 - `angular/LreCiTask/package.json` → `"version"`
 - `angular/LreWorkspaceSyncTask/task.json` → `"version": { "Major", "Minor", "Patch" }`
 - `angular/LreWorkspaceSyncTask/package.json` → `"version"`
+
+> Current version: **3.2.0**
 
 ## Developer Workflows
 

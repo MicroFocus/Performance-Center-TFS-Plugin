@@ -75,6 +75,7 @@ The **Enterprise Performance Engineering Workspace Sync** task scans a local dir
 | `varParallelUploads` | **1** | Concurrent uploads (1–20). Default is **1 (sequential)** — increase only when the target Enterprise Performance Engineering release supports concurrent uploads |
 | `varSuccessThreshold` | *(empty)* | Minimum % of scripts that must upload successfully for the task to pass (see below) |
 | `varRuntimeOnly` | `false` | Upload scripts as runtime-only (cannot be edited in the Enterprise Performance Engineering UI) |
+| `varBaseCommitSha` | *(empty)* | Git commit SHA to use as the differential sync baseline — only changed scripts are uploaded (see below) |
 
 ### Success threshold rules
 
@@ -88,6 +89,106 @@ The `varSuccessThreshold` parameter (optional, integer 0–100) controls the pas
 | Outside 0–100 | Falls back to the default (50%) |
 
 > **Note:** 5 consecutive upload failures always abort the task with failure, regardless of the threshold setting.
+
+### Differential sync — upload only changed scripts
+
+When `varBaseCommitSha` is provided the task runs `git diff --name-only <sha> HEAD` inside `varWorkspaceDir` and uploads **only the script folders that contain at least one changed file**. All other scripts are skipped.
+
+- If `varBaseCommitSha` is empty the task performs a **full sync** (uploads every detected script folder — the default behaviour).
+- If the git diff command fails (e.g. shallow clone, invalid SHA) the task logs a warning and **falls back to a full sync** automatically — it never fails because of a missing git history.
+
+#### Pipeline example — differential sync with automatic SHA tracking (Azure DevOps Server on-premises)
+
+The snippet below stores the GitLab HEAD commit SHA as a build artifact after each successful sync and retrieves it at the start of the next build. The first run always performs a full sync; every subsequent run uploads only the scripts that changed since the previous successful build.
+
+> **Requirement:** enable **"Allow scripts to access the OAuth token"** on the agent job (pipeline Settings → Agent job → Additional options).
+
+```yaml
+trigger:
+- main
+
+pool:
+  name: default
+
+steps:
+- script: |
+    git clone https://$(GitLabUser):$(GitLabToken)@<your-gitlab-host>/<repo>.git gitlab-src
+  displayName: 'Checkout GitLab repo'
+
+# ── Find the last successful build and download its stored SHA ────────────────
+- powershell: |
+    $orgUri   = $env:SYSTEM_TEAMFOUNDATIONSERVERURI
+    $project  = $env:SYSTEM_TEAMPROJECTID
+    $defId    = $env:SYSTEM_DEFINITIONID
+    $curBuild = [int]$env:BUILD_BUILDID
+    $token    = $env:SYSTEM_ACCESSTOKEN
+    $headers  = @{ Authorization = "Bearer $token" }
+
+    $buildsUrl = "${orgUri}${project}/_apis/build/builds?definitions=${defId}&resultFilter=succeeded&statusFilter=completed&`$top=10&api-version=6.0"
+    $builds    = Invoke-RestMethod -Uri $buildsUrl -Headers $headers -ErrorAction SilentlyContinue
+    $prev      = $builds.value | Where-Object { $_.id -ne $curBuild } | Select-Object -First 1
+
+    if (-not $prev) {
+      Write-Host "No previous successful build found — full sync will run."
+      Write-Host "##vso[task.setvariable variable=lastSyncSha]"
+      exit 0
+    }
+
+    Write-Host "Previous successful build: $($prev.id)"
+    $artUrl  = "${orgUri}${project}/_apis/build/builds/$($prev.id)/artifacts?artifactName=last-sync-sha&api-version=6.0"
+    try {
+      $art       = Invoke-RestMethod -Uri $artUrl -Headers $headers -ErrorAction Stop
+      $zipPath   = "$(Agent.TempDirectory)\last-sync-sha-dl.zip"
+      Invoke-WebRequest -Uri $art.resource.downloadUrl -Headers $headers -OutFile $zipPath
+      Expand-Archive -Path $zipPath -DestinationPath "$(System.ArtifactsDirectory)\last-sync-sha" -Force
+      $shaFile = Get-ChildItem -Path "$(System.ArtifactsDirectory)\last-sync-sha" -Filter sha.txt -Recurse | Select-Object -First 1
+      if ($shaFile) {
+        $sha = (Get-Content $shaFile.FullName).Trim()
+        Write-Host "Last sync SHA: $sha"
+        Write-Host "##vso[task.setvariable variable=lastSyncSha]$sha"
+      } else {
+        Write-Host "sha.txt not found — full sync will run."
+        Write-Host "##vso[task.setvariable variable=lastSyncSha]"
+      }
+    } catch {
+      Write-Host "Artifact not found in build $($prev.id) — full sync will run."
+      Write-Host "##vso[task.setvariable variable=lastSyncSha]"
+    }
+  displayName: 'Download last sync SHA'
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+# ── Sync scripts (differential when SHA available, full on first run) ─────────
+- task: LoadRunnerEnterpriseSync@3
+  inputs:
+    varPCServer: 'https://<lre-server>:<port>/?tenant=<guid>'
+    varUserName: '<username>'
+    varPassWord: '$(PCPassword)'
+    varDomain: '<domain>'
+    varProject: '<project>'
+    varWorkspaceDir: '$(Build.SourcesDirectory)/gitlab-src'
+    varBaseCommitSha: '$(lastSyncSha)'   # empty on first run → full sync
+    varParallelUploads: '5'
+    varSuccessThreshold: '80'
+
+# ── Save current HEAD SHA for the next build ──────────────────────────────────
+- powershell: |
+    $sha = (& git -C "$(Build.SourcesDirectory)\gitlab-src" rev-parse HEAD).Trim()
+    $dir = "$(Agent.TempDirectory)\last-sync-sha"
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    Set-Content -Path "$dir\sha.txt" -Value $sha
+    Write-Host "Saved SHA: $sha"
+  displayName: 'Save current sync SHA'
+  condition: succeeded()
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish last sync SHA'
+  condition: succeeded()
+  inputs:
+    PathtoPublish: '$(Agent.TempDirectory)\last-sync-sha'
+    ArtifactName: 'last-sync-sha'
+    publishLocation: 'Container'
+```
 
 ## Developer Quick Start
 
@@ -112,3 +213,18 @@ See [`angular/LOCAL-TESTING-GUIDE.md`](./angular/LOCAL-TESTING-GUIDE.md) for loc
 
 1. Edit `release/deploy.txt`: set `enabled=true` and `version=X.Y.Z`
 2. Commit and push to `master` — the `release.yml` workflow updates all version files (both tasks + extension manifest), builds the VSIX, creates a GitHub Release, then resets `enabled=false`
+
+## What's New
+
+### Version 3.2.0 — July 2026
+
+#### 🆕 Differential sync (`varBaseCommitSha`)
+
+The **Enterprise Performance Engineering Workspace Sync** task now supports **differential sync**: pass a git commit SHA via the new `varBaseCommitSha` input and the task uploads only the script folders that contain files changed since that commit. Scripts with no changes are skipped entirely, significantly reducing sync time for large repositories.
+
+See the [Differential sync pipeline example](#differential-sync--upload-only-changed-scripts) above for the full Azure DevOps pipeline snippet.
+
+#### 🔧 ESLint v9 flat config
+
+The `angular/` workspace now ships with a root-level `eslint.config.mjs` (ESLint v9 flat config format), resolving the `npm run lint` failure introduced when ESLint 9 dropped support for legacy `.eslintrc.*` files.
+
