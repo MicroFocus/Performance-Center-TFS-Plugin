@@ -50,6 +50,7 @@ export async function runEntrypoint(): Promise<void> {
                              ?? tl.getVariable('Build.SourcesDirectory')
                              ?? process.cwd();
         const runtimeOnly  = parseBool(tl.getInput('varRuntimeOnly', false));
+        const baseCommitSha = (tl.getInput('varBaseCommitSha', false) ?? '').trim() || undefined;
         const parallelUploads = Math.min(20, Math.max(1,
                              parseInt(tl.getInput('varParallelUploads', false) ?? '1', 10) || 1));
         const successThreshold = parseSuccessThreshold(tl.getInput('varSuccessThreshold', false) ?? '');
@@ -78,7 +79,8 @@ export async function runEntrypoint(): Promise<void> {
             proxyPassword: proxyPassword || undefined,
             workspaceDir,
             runtimeOnly,
-            artifactsDir
+            artifactsDir,
+            baseCommitSha
         };
 
         logger = new Logger(artifactsDir || undefined);
@@ -89,6 +91,7 @@ export async function runEntrypoint(): Promise<void> {
         logger.log(`Runtime only: ${runtimeOnly}`);
         logger.log(`Parallel uploads: ${parallelUploads}`);
         logger.log(`Success threshold: ${successThreshold}%`);
+        logger.log(`Differential sync base SHA: ${baseCommitSha ?? '(none — full sync)'}`);
 
         const runner = new LreWorkspaceSyncRunner(config, logger, parallelUploads, successThreshold);
         const success = await runner.run();

@@ -83,6 +83,14 @@
       "helpMarkDown": "Path to the root of the git repository to scan for performance test scripts. Defaults to the pipeline's source directory."
     },
     {
+      "name": "varBaseCommitSha",
+      "type": "string",
+      "label": "Base commit SHA (differential sync)",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Optional. Git commit SHA to use as the baseline for differential sync. When provided, only script folders containing files changed since this commit are uploaded. Leave empty to upload all scripts (full sync). Typically set to the SHA stored from the previous successful build."
+    },
+    {
       "name": "varRuntimeOnly",
       "type": "boolean",
       "label": "Runtime only",

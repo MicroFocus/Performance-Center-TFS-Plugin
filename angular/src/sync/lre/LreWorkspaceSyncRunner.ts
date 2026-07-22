@@ -28,6 +28,8 @@ import { WorkspaceScriptFolderScanner } from '../scanner/WorkspaceScriptFolderSc
 import { ZipFolderCompressor } from './ZipFolderCompressor';
 import { ILogSink, LreScriptUploader } from './LreScriptUploader';
 import * as fs from 'fs';
+import * as path from 'path';
+import { execSync } from 'child_process';
 
 const DEFAULT_CONCURRENCY        = 1;
 const DEFAULT_SUCCESS_THRESHOLD  = 50; // percent
@@ -90,11 +92,30 @@ export class LreWorkspaceSyncRunner {
         }
 
         try {
-            const scriptFolders = this.scanner.findScriptFolders(this.config.workspaceDir);
+            let scriptFolders = this.scanner.findScriptFolders(this.config.workspaceDir);
 
             if (scriptFolders.length === 0) {
                 this.logger.log('No script folders found in workspace. Nothing to upload.');
                 return true;
+            }
+
+            // Differential sync — filter to only changed scripts when a base SHA is given
+            if (this.config.baseCommitSha) {
+                const changedPaths = this.getChangedPaths(this.config.baseCommitSha);
+                if (changedPaths !== null) {
+                    const totalFound = scriptFolders.length;
+                    scriptFolders = this.filterChangedScripts(scriptFolders, changedPaths);
+                    this.logger.log(
+                        `Differential sync: ${scriptFolders.length} of ${totalFound} script(s) ` +
+                        `changed since ${this.config.baseCommitSha.substring(0, 8)}.`
+                    );
+                    if (scriptFolders.length === 0) {
+                        this.logger.log('No scripts changed since last sync. Nothing to upload.');
+                        return true;
+                    }
+                } else {
+                    this.logger.warning('Falling back to full sync.');
+                }
             }
 
             this.logger.log(`Found ${scriptFolders.length} script folder(s) to upload (concurrency: ${this.concurrency}).`);
@@ -113,6 +134,55 @@ export class LreWorkspaceSyncRunner {
         } finally {
             await this.uploader.logout();
         }
+    }
+
+    // ── Differential sync helpers ─────────────────────────────────────────────
+
+    /**
+     * Returns the set of file paths (relative to workspaceDir, forward-slash
+     * normalised) that changed between baseCommitSha and HEAD.
+     * Returns null when git is unavailable or the SHA is invalid — the caller
+     * should fall back to a full sync.
+     */
+    private getChangedPaths(baseCommitSha: string): Set<string> | null {
+        try {
+            const output = execSync(
+                `git diff --name-only ${baseCommitSha} HEAD`,
+                { cwd: this.config.workspaceDir, encoding: 'utf8', timeout: 30_000 }
+            );
+            const paths = output
+                .split('\n')
+                .map(p => p.trim().replace(/\\/g, '/'))
+                .filter(Boolean);
+            this.logger.debug(`Git diff found ${paths.length} changed file(s) since ${baseCommitSha.substring(0, 8)}.`);
+            return new Set(paths);
+        } catch (e) {
+            this.logger.warning(
+                `Could not run git diff from ${baseCommitSha.substring(0, 8)}: ${e}. ` +
+                'Uploading all scripts instead.'
+            );
+            return null;
+        }
+    }
+
+    /**
+     * Keeps only script folders that contain at least one file listed in
+     * changedPaths (paths relative to workspaceDir, forward-slash normalised).
+     */
+    private filterChangedScripts(
+        scriptFolders: ScriptFolder[],
+        changedPaths: Set<string>
+    ): ScriptFolder[] {
+        const absRoot = path.resolve(this.config.workspaceDir);
+        return scriptFolders.filter(folder => {
+            const relFolder = path
+                .relative(absRoot, folder.fullPath)
+                .replace(/\\/g, '/');
+            // A script folder matches if ANY changed file lives inside it
+            return [...changedPaths].some(
+                p => p === relFolder || p.startsWith(relFolder + '/')
+            );
+        });
     }
 
     // ── Parallel worker pool ──────────────────────────────────────────────────
