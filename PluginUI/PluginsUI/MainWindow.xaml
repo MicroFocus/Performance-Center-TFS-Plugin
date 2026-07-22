@@ -472,12 +472,13 @@
                                         <ColumnDefinition Width="168"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="38"/>
-                                        <RowDefinition Height="38"/>
-                                        <RowDefinition Height="38"/>
-                                        <RowDefinition Height="38"/>
-                                    </Grid.RowDefinitions>
+                                     <Grid.RowDefinitions>
+                                         <RowDefinition Height="38"/>
+                                         <RowDefinition Height="38"/>
+                                         <RowDefinition Height="38"/>
+                                         <RowDefinition Height="38"/>
+                                         <RowDefinition Height="38"/>
+                                     </Grid.RowDefinitions>
 
                                     <!-- Workspace directory -->
                                     <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Workspace directory:</Label>
@@ -555,15 +556,37 @@
                                             </Button.ToolTip>
                                             <Image Source="Assets/qicon.png" Width="16" Height="16"/>
                                         </Button>
-                                        <TextBox x:Name="SyncSuccessThreshold" Width="60"
-                                                 HorizontalAlignment="Left" VerticalAlignment="Center"
-                                                 ToolTip="0–100 integer, or leave empty for default (50%)"/>
-                                        <TextBlock VerticalAlignment="Center" Style="{StaticResource HintText}"> % (0–100, empty = default 50%)</TextBlock>
-                                    </DockPanel>
-                                </Grid>
-                            </GroupBox>
+                                         <TextBox x:Name="SyncSuccessThreshold" Width="60"
+                                                  HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                  ToolTip="0–100 integer, or leave empty for default (50%)"/>
+                                         <TextBlock VerticalAlignment="Center" Style="{StaticResource HintText}"> % (0–100, empty = default 50%)</TextBlock>
+                                     </DockPanel>
 
-                            <!-- Advanced (Sync) -->
+                                     <!-- Base Commit SHA (differential sync) -->
+                                     <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">Base commit SHA:</Label>
+                                     <DockPanel Grid.Row="4" Grid.Column="1" VerticalAlignment="Center">
+                                         <Button DockPanel.Dock="Right" Style="{StaticResource NoChromeButton}" Margin="4,0,0,0">
+                                             <Button.ToolTip>
+                                                 <TextBlock>
+                                                     Optional git commit SHA for <Bold>differential sync</Bold>.<LineBreak/>
+                                                     When set, only script folders containing files changed since<LineBreak/>
+                                                     this commit are uploaded. All other scripts are skipped.<LineBreak/>
+                                                     <LineBreak/>
+                                                     Leave <Bold>empty</Bold> to upload all scripts (full sync — default).<LineBreak/>
+                                                     <LineBreak/>
+                                                     If git diff fails (shallow clone, invalid SHA) the task<LineBreak/>
+                                                     logs a warning and falls back to a full sync automatically.
+                                                 </TextBlock>
+                                             </Button.ToolTip>
+                                             <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                         </Button>
+                                         <TextBox x:Name="SyncBaseCommitSha" VerticalAlignment="Center"
+                                                  ToolTip="Git commit SHA baseline for differential sync. Leave empty for full sync."/>
+                                     </DockPanel>
+                                 </Grid>
+                             </GroupBox>
+
+                             <!-- Advanced (Sync) -->
                             <GroupBox Header="Advanced">
                                 <Grid>
                                     <Grid.ColumnDefinitions>

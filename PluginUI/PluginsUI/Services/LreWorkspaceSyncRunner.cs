@@ -105,6 +105,7 @@ public sealed class LreWorkspaceSyncRunner : IDisposable
         progress.Report($"[INFO] Runtime only: {config.RuntimeOnly}");
         progress.Report($"[INFO] Parallel uploads: {config.ParallelUploads}");
         progress.Report($"[INFO] Success threshold: {(string.IsNullOrWhiteSpace(config.SuccessThreshold) ? "default (50%)" : config.SuccessThreshold + "%")}");
+        progress.Report($"[INFO] Differential sync SHA: {(string.IsNullOrWhiteSpace(config.BaseCommitSha) ? "(none — full sync)" : config.BaseCommitSha)}");
         progress.Report(string.Empty);
 
         // ── Start process ───────────────────────────────────────
@@ -246,6 +247,7 @@ public sealed class LreWorkspaceSyncRunner : IDisposable
         env["INPUT_VARPROXYUSER"]                 = config.ProxyUserName;
         env["INPUT_VARPROXYPASSWORD"]             = proxyPassword;
         env["INPUT_VARSUCCESSTHRESHOLD"]          = config.SuccessThreshold;
+        env["INPUT_VARBASECOMMITSHA"]             = config.BaseCommitSha;
         env["INPUT_VARARTIFACTSDIR"]              = artifactsDir;
     }
 }

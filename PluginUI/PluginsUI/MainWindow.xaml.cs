@@ -486,6 +486,7 @@ public partial class MainWindow : Window
         RuntimeOnly               = SyncRuntimeOnly.IsChecked == true,
         ParallelUploads           = ValidateParallelUploads(),
         SuccessThreshold          = ValidateSuccessThreshold(),
+        BaseCommitSha             = SyncBaseCommitSha.Text.Trim(),
         ArtifactsDirectory        = SyncArtifactsDirectory.Text.Trim(),
         NodeDistPath              = SyncNodeDistPath.Text.Trim(),
         Description               = SyncDescriptionText.Text.Trim()
@@ -551,6 +552,7 @@ public partial class MainWindow : Window
         SyncRuntimeOnly.IsChecked   = cfg.RuntimeOnly;
         SyncParallelUploads.Text    = cfg.ParallelUploads.ToString();
         SyncSuccessThreshold.Text   = cfg.SuccessThreshold;
+        SyncBaseCommitSha.Text      = cfg.BaseCommitSha;
         SyncArtifactsDirectory.Text = cfg.ArtifactsDirectory;
         SyncNodeDistPath.Text       = cfg.NodeDistPath;
         SyncDescriptionText.Text    = cfg.Description;

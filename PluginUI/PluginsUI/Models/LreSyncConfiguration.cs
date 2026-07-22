@@ -48,6 +48,14 @@ public class LreSyncConfiguration
     /// </summary>
     public string SuccessThreshold         { get; set; } = "";
 
+    /// <summary>
+    /// Optional git commit SHA used as the baseline for differential sync.
+    /// When set, only script folders containing files changed since this commit are uploaded.
+    /// Leave empty to always perform a full sync.
+    /// Falls back to full sync automatically if git diff fails (e.g. shallow clone, invalid SHA).
+    /// </summary>
+    public string BaseCommitSha            { get; set; } = "";
+
     // ── Advanced / paths ─────────────────────────────────────────
     /// <summary>Where upload logs and result files are written.</summary>
     public string ArtifactsDirectory       { get; set; } = "";
