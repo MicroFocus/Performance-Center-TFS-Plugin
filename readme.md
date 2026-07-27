@@ -365,7 +365,7 @@ See [`angular/LOCAL-TESTING-GUIDE.md`](./angular/LOCAL-TESTING-GUIDE.md) for loc
 
 ## What's New
 
-### Version 3.3.0 — July 2026 *(testing as `3.300.x`)*
+### Version 3.3.0 — July 2026
 
 #### 🆕 YAML-based test creation (`varTestID` accepts a YAML file path)
 
@@ -418,14 +418,12 @@ Pipeline usage:
 
 For the complete YAML schema reference see the [YAML Test Definition Reference](#yaml-test-definition-reference) section above.
 
-#### 🔧 Bug fixes in testing series
+#### 🔧 Bug fixes
 
-| Version | Fix |
-|---|---|
-| `3.300.1` | `getScripts()` always returned empty list — LRE returns XML not JSON; `<ScriptList>` wrapper absent in real responses |
-| `3.300.1` | `ensureTestPlanFolderExists()` threw on HTTP 400 "already exists" — now treated as no-op (same as 409) |
-| `3.300.1` | New `varWorkspaceDir` task input — allows PluginUI to pass an absolute workspace root while using a relative YAML path |
-| `3.300.2` | `GlobalCommandLine` XML used wrong field names (`<GroupName>/<CommandLine>`) — corrected to `<Name>/<Value>` per Java `CommandLine` class |
+- `getScripts()` always returned empty list — LRE returns XML not JSON; `<ScriptList>` wrapper absent in real responses
+- `ensureTestPlanFolderExists()` threw on HTTP 400 "already exists" — now treated as no-op (same as 409)
+- New `varWorkspaceDir` task input — allows PluginUI to pass an absolute workspace root while using a relative YAML path
+- `GlobalCommandLine` XML used wrong field names (`<GroupName>/<CommandLine>`) — corrected to `<Name>/<Value>` per Java `CommandLine` class
 
 #### 🔧 PluginUI — "Test ID or YAML" field
 

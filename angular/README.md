@@ -52,7 +52,7 @@ This extension supports the **3 latest versions** of OpenText Enterprise Perform
 
 ---
 
-## What's New in Version 3.3.0 *(testing as `3.300.x`)*
+## What's New in Version 3.3.0
 
 > **July 2026**
 
@@ -84,14 +84,14 @@ When a YAML path is provided the task:
 
 See [`YAML-TEST-CREATION-FEATURE.md`](../YAML-TEST-CREATION-FEATURE.md) for the complete schema reference and implementation notes.
 
-### 🔧 Bug fixes in `3.300.x` testing series
+### 🔧 Bug fixes in 3.3.0
 
-| Version | Fix |
-|---|---|
-| `3.300.1` | `getScripts()` always returned empty list — LRE returns XML not JSON; no `<ScriptList>` wrapper in real responses |
-| `3.300.1` | `ensureTestPlanFolderExists()` threw on HTTP 400 "already exists" — now treated as a no-op (same as 409) |
-| `3.300.1` | New `varWorkspaceDir` task input — allows PluginUI to pass an absolute workspace root while using a relative YAML path |
-| `3.300.2` | `GlobalCommandLine` XML used wrong field names (`<GroupName>`/`<CommandLine>`) — corrected to `<Name>`/`<Value>` per the LRE API spec |
+| Fix |
+|---|
+| `getScripts()` always returned empty list — LRE returns XML not JSON; no `<ScriptList>` wrapper in real responses |
+| `ensureTestPlanFolderExists()` threw on HTTP 400 "already exists" — now treated as a no-op (same as 409) |
+| New `varWorkspaceDir` task input — allows PluginUI to pass an absolute workspace root while using a relative YAML path |
+| `GlobalCommandLine` XML used wrong field names (`<GroupName>`/`<CommandLine>`) — corrected to `<Name>`/`<Value>` per the LRE API spec |
 
 ### 🔧 PluginUI — "Browse…" button for YAML files
 

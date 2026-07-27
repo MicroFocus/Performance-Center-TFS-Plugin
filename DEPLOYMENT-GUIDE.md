@@ -1,26 +1,19 @@
 # VSIX Deployment & Version Management Guide
 
-**Current Version**: `3.3.0` (production release — testing series was `3.300.x`)
+**Current Version**: `3.3.0`
 
 ---
 
 ## Versioning Convention
 
-| Scenario | Version format | Example |
-|---|---|---|
-| **Testing on ADO on-premises** | `3.300.x` — increment Patch for each test deployment | `3.300.0`, `3.300.1`, `3.300.2` … |
-| **Production release** | `3.3.0` — set once integration tests pass | `3.3.0` |
-
-### Files to update when bumping the patch counter
-
-Three files must always be kept in sync:
+Versions follow standard `Major.Minor.Patch` semver. When bumping the version, four files must always be kept in sync:
 
 | File | Field | Example |
 |---|---|---|
-| `angular/vss-extension.json` | `"version"` | `"3.300.1"` |
-| `angular/LreCiTask/task.json` | `"version".Patch` | `"Patch": 1` |
-| `angular/package.json` | `"version"` | `"3.300.1"` |
-| `angular/package-lock.json` | `"version"` (root) + `packages[""].version` | `"3.300.1"` |
+| `angular/vss-extension.json` | `"version"` | `"3.3.0"` |
+| `angular/LreCiTask/task.json` | `"version".Major/Minor/Patch` | `"Major": 3, "Minor": 3, "Patch": 0` |
+| `angular/package.json` | `"version"` | `"3.3.0"` |
+| `angular/package-lock.json` | `"version"` (root) + `packages[""].version` | `"3.3.0"` |
 
 ---
 
