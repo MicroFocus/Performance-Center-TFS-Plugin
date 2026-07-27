@@ -1,17 +1,27 @@
 # PowerShell script to build and test the LRE task locally
+# ⚠️  Never pass real credentials via command-line arguments (they appear in shell history).
+# Use the TEST_LRE_PASSWORD environment variable instead:
+#   $env:TEST_LRE_PASSWORD = "your-password"   # set in current shell, not committed
+#   .\test-local.ps1 -PCServer "https://myserver:443" -UserName "admin"
 
 param(
-    [string]$PCServer = "http://MyServer:80",
+    [string]$PCServer = $env:TEST_LRE_SERVER ?? "https://MyServer:443",
     [string]$Domain = "DEFAULT",
     [string]$Project = "MyProject",
     [string]$TestID = "1",
-    [string]$UserName = "admin",
-    [string]$Password = "password",
+    [string]$UserName = $env:TEST_LRE_USERNAME ?? "admin",
+    [string]$Password = $env:TEST_LRE_PASSWORD,
     [string]$TestInstanceID = "",
     [string]$ArtifactsDir = "$PSScriptRoot\test-artifacts"
 )
 
 $ErrorActionPreference = "Stop"
+
+# Guard: password must be supplied via env var, not hardcoded
+if ([string]::IsNullOrEmpty($Password)) {
+    Write-Error "Password is required. Set the TEST_LRE_PASSWORD environment variable:`n  `$env:TEST_LRE_PASSWORD = 'your-password'"
+    exit 1
+}
 
 Write-Host "=== LRE Task Local Test Runner ===" -ForegroundColor Cyan
 Write-Host "Building TypeScript..." -ForegroundColor Yellow

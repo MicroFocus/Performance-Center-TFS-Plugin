@@ -334,3 +334,73 @@ export class LreStopRunRequestXml implements XmlSerializable {
 </PostRunActions>`;
     }
 }
+
+// ============================================================================
+// YAML test creation models (Phase 2)
+// ============================================================================
+
+/**
+ * A single LRE script entry as returned by GET /Scripts.
+ * Mirrors the Java PcScript entity.
+ */
+export interface LreScript {
+    ID: number;
+    Name: string;
+    /** Path within the LRE test plan, e.g. "Subject\scripts\api" */
+    TestFolderPath: string;
+    Protocol?: string;
+}
+
+/**
+ * Shape returned by parseXmlResponse<> when the XML root is <Scripts>.
+ * fast-xml-parser strips the root tag, so the object starts directly at the
+ * children of <Scripts>.  The real LRE response has <Script> children directly
+ * under <Scripts> (no <ScriptList> wrapper):
+ *   <Scripts xmlns="..."><Script><ID>...</ID>...</Script></Scripts>
+ * → { "@_xmlns": "...", Script: [{...}, ...] }
+ * Script is a single object when there is one entry, or an array when many.
+ * ScriptList is kept as an optional fallback shape for older server versions.
+ * @internal
+ */
+export interface LreScriptsApiResponse {
+    Script?: LreScript | LreScript[];
+    ScriptList?: { Script?: LreScript | LreScript[] };
+}
+
+/**
+ * API response body for a successfully created or fetched LRE test.
+ * Returned by POST /tests (201) and GET /tests/{id}.
+ */
+export interface LreTestCreateResponse {
+    ID: number;
+    Name: string;
+    TestFolderPath: string;
+}
+
+/**
+ * Builds the XML body for POST /testplan (create test-plan folder).
+ *
+ * Path  — full path of the *parent* folder, e.g. "Subject\ci-tests"
+ * Name  — name of the new *leaf* folder, e.g. "api"
+ *
+ * The LRE server creates only one level at a time; call once per segment
+ * when building a deep path.
+ */
+export class LreTestPlanFolderRequestXml implements XmlSerializable {
+    constructor(
+        /** Full path of the parent folder (must already exist). */
+        public Path: string,
+        /** Name of the new leaf folder to create. */
+        public Name: string
+    ) {}
+
+    toXml(): string {
+        return (
+            `<TestPlanFolder xmlns="http://www.hp.com/PC/REST/API">` +
+            `<Path>${escapeXml(this.Path)}</Path>` +
+            `<Name>${escapeXml(this.Name)}</Name>` +
+            `</TestPlanFolder>`
+        );
+    }
+}
+

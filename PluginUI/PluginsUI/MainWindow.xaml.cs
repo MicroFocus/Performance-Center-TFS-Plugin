@@ -241,6 +241,42 @@ public partial class MainWindow : Window
     // Browse buttons — CI task
     // ─────────────────────────────────────────────────────────────────────────
 
+    private void BrowseYamlFile_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title  = "Select LRE test definition YAML file",
+            Filter = "YAML files (*.yaml;*.yml)|*.yaml;*.yml|All files (*.*)|*.*"
+        };
+
+        // Pre-open at the repo/workspace root when available
+        var guess = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        if (Directory.Exists(guess)) dlg.InitialDirectory = guess;
+
+        if (dlg.ShowDialog(this) == true)
+            TestID.Text = dlg.FileName;
+    }
+
+    private void BrowseWorkspaceDir_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFolderDialog
+        {
+            Title = "Select workspace / repository root directory"
+        };
+
+        // Default to the parent of the current YAML file path if one is set
+        if (!string.IsNullOrWhiteSpace(TestID.Text))
+        {
+            var dir = Path.GetDirectoryName(TestID.Text);
+            if (dir is not null && Directory.Exists(dir))
+                dlg.InitialDirectory = dir;
+        }
+
+        if (dlg.ShowDialog(this) == true)
+            WorkspaceDir.Text = dlg.FolderName;
+    }
+
     private void BrowseArtifacts_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new OpenFolderDialog { Title = "Select Artifacts Directory (CI Task)" };
@@ -452,6 +488,7 @@ public partial class MainWindow : Window
         Domain                    = Domain.Text.Trim(),
         Project                   = Project.Text.Trim(),
         TestId                    = TestID.Text.Trim(),
+        WorkspaceDir              = WorkspaceDir.Text.Trim(),
         AutoTestInstance          = AutoTestInstance.IsChecked == true,
         TestInstanceId            = (SpecifyTestInstance.IsChecked == true) ? TestInstanceID.Text.Trim() : string.Empty,
         ProxyUrl                  = ProxyURL.Text.Trim(),
@@ -501,6 +538,7 @@ public partial class MainWindow : Window
         Domain.Text                   = cfg.Domain;
         Project.Text                  = cfg.Project;
         TestID.Text                   = cfg.TestId;
+        WorkspaceDir.Text             = cfg.WorkspaceDir;
         AutoTestInstance.IsChecked    = cfg.AutoTestInstance;
         SpecifyTestInstance.IsChecked = !cfg.AutoTestInstance;
         TestInstanceID.Text           = cfg.TestInstanceId;
@@ -572,7 +610,20 @@ public partial class MainWindow : Window
 
         if (!IsSyncTab)
         {
-            if (string.IsNullOrWhiteSpace(TestID.Text))   errors.Add("Test ID is required.");
+            var testIdValue = TestID.Text.Trim();
+            if (string.IsNullOrWhiteSpace(testIdValue))
+            {
+                errors.Add("Test ID or YAML file is required.");
+            }
+            else
+            {
+                // Accept either a positive integer OR a path to a .yaml / .yml file
+                bool isYaml = testIdValue.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase)
+                           || testIdValue.EndsWith(".yml",  StringComparison.OrdinalIgnoreCase);
+
+                if (!isYaml && (!int.TryParse(testIdValue, out int parsedId) || parsedId <= 0))
+                    errors.Add("Test ID must be a positive integer, or specify a path to a .yaml/.yml file.");
+            }
         }
         else
         {

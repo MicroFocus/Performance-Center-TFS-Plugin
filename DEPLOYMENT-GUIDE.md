@@ -1,133 +1,124 @@
 # VSIX Deployment & Version Management Guide
 
-**Current Version**: 3.0.1
+**Current Version**: `3.3.0` (production release — testing series was `3.300.x`)
 
-## Deployment Requirements
+---
 
-### ADO Server Agent Prerequisites
-- **Node.js**: 16+  (NOT 6, NOT 10, NOT 14)
-  - The `task.json` execution handler `Node16` ensures Node 16+ is used
-  - If an agent doesn't have Node16 handler, it will fail (this is intentional)
-- **No PowerShell required** — runs cross-platform
-- **No .NET dependencies** — pure TypeScript/Node.js
+## Versioning Convention
 
-### Latest VSIX
-```
-C:\Git\plugin\Performance-Center-TFS-Plugin\Micro-Focus.PCIntegration-3.0.1.vsix
-```
+| Scenario | Version format | Example |
+|---|---|---|
+| **Testing on ADO on-premises** | `3.300.x` — increment Patch for each test deployment | `3.300.0`, `3.300.1`, `3.300.2` … |
+| **Production release** | `3.3.0` — set once integration tests pass | `3.3.0` |
 
-## Workflow for Future Changes
+### Files to update when bumping the patch counter
 
-### 1. When Code Changes Require New Build
+Three files must always be kept in sync:
 
-**Always:**
-```
-Version: OLD (e.g., 3.0.1) → NEW (e.g., 3.0.2)
-```
+| File | Field | Example |
+|---|---|---|
+| `angular/vss-extension.json` | `"version"` | `"3.300.1"` |
+| `angular/LreCiTask/task.json` | `"version".Patch` | `"Patch": 1` |
+| `angular/package.json` | `"version"` | `"3.300.1"` |
+| `angular/package-lock.json` | `"version"` (root) + `packages[""].version` | `"3.300.1"` |
 
-**Update 3 files:**
-- `PC.TFS.BuildTask/LreCiExtension/LreCiTask/package.json`
-  ```json
-  "version": "3.0.2"
-  ```
-- `PC.TFS.BuildTask/LreCiExtension/LreCiTask/task.json`
-  ```json
-  "version": {
-    "Major": 3,
-    "Minor": 0,
-    "Patch": 2
-  }
-  ```
-- `PC.TFS.BuildTask/LreCiExtension/vss-extension.json`
-  ```json3.0.1
-  "version": "3.0.2"
-  ```
+---
 
-### 2. Build & Package
+## Build & Package Workflow
 
 ```powershell
-# Navigate to task directory
-cd "C:\Git\plugin\Performance-Center-TFS-Plugin\PC.TFS.BuildTask\LreCiExtension\LreCiTask"
+# 1. Install / update dependencies (only needed once or after package.json changes)
+cd angular
+npm install
 
-# Compile TypeScript
+# 2. Type-check
+npm run typecheck
+
+# 3. Run unit tests
+npm run test:unit
+
+# 4. Compile TypeScript → dist/
 npm run build
 
-# Navigate to extension directory
-cd ".."
-
-# Create VSIX
-tfx extension create --manifest-globs vss-extension.json --output-path "C:\Git\plugin\Performance-Center-TFS-Plugin"
+# 5. Package VSIX (requires tfx-cli: npm install -g tfx-cli)
+npm run package:vsix
+# Output: Extension/Micro-Focus.PCIntegration-<version>.vsix
 ```
 
-### 3. Deploy to ADO Server
+---
 
-- Use ADO Server administration UI to upload new VSIX
-- Old version (3.0.1) and new version (3.0.2) coexist
-- Pipeline YAML/UI automatically picks up new version
+## Deploy to ADO Server
+
+1. In Azure DevOps Server Administration Console → **Extensions** → **Upload extension**
+2. Select the VSIX from `Extension/Micro-Focus.PCIntegration-<version>.vsix`
+3. The new version coexists with the previous one; pipeline tasks pick up the new version automatically (or pin the major version in `task.json` references)
+
+---
+
+## Key Source Files
+
+| File | Purpose |
+|---|---|
+| `angular/LreCiTask/index.ts` | Task entry-point — reads inputs, orchestrates auth → (YAML create) → run → download |
+| `angular/src/ci/lre/LreClient.ts` | All LRE REST API calls (auth, tests, scripts, runs, reports, testplan folders) |
+| `angular/src/ci/lre/LreTestRunner.ts` | Run lifecycle — polling, SLA evaluation, timeslot retry |
+| `angular/src/ci/lre/LreTestCreator.ts` | YAML pipeline — parse → resolve scripts → create/update test |
+| `angular/src/ci/yaml/YamlTestParser.ts` | Reads `.yaml`/`.yml` files, detects full-test vs content-only shape |
+| `angular/src/ci/yaml/TestContentXmlBuilder.ts` | Converts parsed YAML to LRE REST API XML (`<Test>` and `<Content>`) |
+| `angular/src/ci/yaml/SimplifiedModels.ts` | TypeScript interfaces for all YAML entity types |
+| `angular/src/ci/lre/LreReportDownloader.ts` | Report/PDF download with retry |
+| `angular/src/ci/models/index.ts` | Shared interfaces, XML helper classes |
+| `angular/LreCiTask/task.json` | ADO task manifest (inputs, execution handlers, version) |
+| `angular/vss-extension.json` | VSIX metadata (publisher, version, included files) |
+| `angular/package.json` | npm scripts, dependencies |
+
+---
+
+## Integration Tests (YAML test creation)
+
+The YAML test creation feature includes integration tests that run against a real LRE server. They are **disabled by default**.
+
+```properties
+# integration/integration-tests.properties
+integration.test.createTestFromYaml=true    # ← set to true to enable
+
+pc.yaml.scriptPath=scripts\\api\\my_script   # must exist in the LRE project
+pc.yaml.testFolderPath=ci-tests\\yaml-it
+pc.yaml.testName=YAML Integration Test
+```
+
+Run integration tests:
+
+```powershell
+cd angular
+npm run test:integration
+```
+
+---
 
 ## Troubleshooting
 
+### Issue: YAML script path not found
+- Verify the script exists in the LRE project (Test Management → Test Plan → Scripts)
+- The path is matched case-insensitively as `<TestFolderPath>\<Name>`
+- A name-only match (without folder prefix) is also attempted as a fallback
+
+### Issue: 409 conflict on `POST /tests` with no ID extracted
+- The LRE server returned a 409 but the error message contained no number
+- The regex tries `ID: <n>`, `test id: <n>`, `(<n>)`, and last-number fallback
+- Check `tl.debug` output (enable ADO task debug logging) for the raw error message
+
 ### Issue: Node 6 SyntaxError (spread operator)
-- ❌ Check `task.json` has `"Node": ...` (old, references v6)
-- ✅ Must have `"Node16": ...` (minimum)
-- ✅ Can also have `"Node20": ...` (newer agents)
+- Ensure `task.json` uses `"Node16"` or `"Node20"` execution handler — not legacy `"Node"`
 
 ### Issue: "No run results found" warning
-- Normal if:
-  - Run just finished (wait 3-9 seconds, task retries 3 times)
-  - Post-run action is "Do Not Collate"
-  - Server still generating analysis data
-- Adjust retry delays in `index.ts` if needed:
-  ```typescript
-  retryAttempts: 3,
-  retryDelayMs: 3000  // milliseconds
-  ```
+- Normal if the post-run action is "Do Not Collate" or results are still generating
+- The downloader retries 3 times with 3-second delays; adjust in `LreReportDownloader.ts` if needed
 
-### Issue: Trend PDF not found
-- Verify trend report ID is correct
-- Verify test has auto-trending configured
-- Check if trend is still being generated (same timing as results)
-
-## Test Coverage
-
-**Safe (read-only) tests:**
-```powershell
-cd "PC.TFS.BuildTask/LreCiExtension/LreCiTask"
-npm run test:integration:safe
-```
-Result: 9 tests pass, 6 skipped (no actual runs)
-
-**Full integration tests** (require `integration.test.executeRun=true`):
-- Starts real test runs (consumes licenses!)
-- Downloads reports from actual runs
-- Not recommended for frequent testing
-
-## Key Files
-
-| File | Purpose |
-|------|---------|
-| `index.ts` | Task entrypoint; orchestrates auth → run → download |
-| `src/lre/LreClient.ts` | HTTP client; all API communication |
-| `src/lre/LreTestRunner.ts` | Run lifecycle orchestration |
-| `src/lre/LreReportDownloader.ts` | Report download with retry mechanism |
-| `task.json` | ADO task manifest (execution handlers, inputs) |
-| `vss-extension.json` | VSIX metadata |
-
-## Known Limitations
-
-1. **Retry timing** — Hardcoded to 3 attempts, 3-second delays
-   - If server takes >9 seconds to generate results, may need adjustment
-   - Edit `index.ts` lines 184-186 and 192-194
-
-2. **Single-child XML elements** — Always normalized to arrays in collections
-   - Normal behavior, no change needed
-
-3. **Post-run action** — Results may not be available if "Do Not Collate"
-   - This is expected server behavior
+---
 
 ## Support Resources
 
 - **Enterprise Performance Engineering API Docs**: https://admhelp.microfocus.com/lre/en/all/api_refs/Performance_Center_REST_API/Content/Welcome.htm
-- **Implementation Notes**: `PC.TFS.BuildTask/LreCiExtension/LreCiTask/docs/LRE-API-Analysis.md`
-- **Progress Tracking**: `PC.TFS.BuildTask/LreCiExtension/LreCiTask/docs/IMPLEMENTATION-PROGRESS.md`
-
+- **Feature design & progress**: `YAML-TEST-CREATION-FEATURE.md`
+- **Local testing guide**: `angular/LOCAL-TESTING-GUIDE.md`

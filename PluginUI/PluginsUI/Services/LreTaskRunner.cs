@@ -96,8 +96,10 @@ public sealed class LreTaskRunner : IDisposable
         progress.Report($"[INFO] Task root : {taskRoot}  (node_modules resolved here)");
         progress.Report($"[INFO] Work dir  : {artifactsDir}  (.taskkey written here)");
         progress.Report($"[INFO] Artifacts : {artifactsDir}");
-        progress.Report($"[INFO] Server    : {config.ServerUrl}");
+        progress.Report($"[INFO] Server    : {MaskUrl(config.ServerUrl)}");
         progress.Report($"[INFO] Test ID   : {config.TestId}");
+        if (!string.IsNullOrWhiteSpace(config.WorkspaceDir))
+            progress.Report($"[INFO] Workspace : {config.WorkspaceDir}");
         progress.Report(string.Empty);
 
         // ── Start process ───────────────────────────────────────
@@ -232,6 +234,8 @@ public sealed class LreTaskRunner : IDisposable
         env["INPUT_VARDOMAIN"]                    = config.Domain;
         env["INPUT_VARPROJECT"]                   = config.Project;
         env["INPUT_VARTESTID"]                    = config.TestId;
+        if (!string.IsNullOrWhiteSpace(config.WorkspaceDir))
+            env["INPUT_VARWORKSPACEDIR"]           = config.WorkspaceDir;
         env["INPUT_VARAUTOTESTINSTANCE"]          = config.AutoTestInstance ? "true" : "false";
         env["INPUT_VARTESTINSTID"]                = config.TestInstanceId;
         env["INPUT_VARPROXYURL"]                  = config.ProxyUrl;
@@ -247,6 +251,24 @@ public sealed class LreTaskRunner : IDisposable
         env["INPUT_VARTIMESLOTREPEATDELAY"]       = config.TimeslotRepeatDelay;
         env["INPUT_VARTIMESLOTREPEATATTEMPTS"]    = config.TimeslotRepeatAttempts;
         env["INPUT_VARARTIFACTSDIR"]              = artifactsDir;
+    }
+
+    /// <summary>
+    /// Strips any embedded credentials from a URL before logging it.
+    /// E.g. "https://user:pass@server:443" becomes "https://server:443".
+    /// Returns the original string if it cannot be parsed as a URI.
+    /// </summary>
+    private static string MaskUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return "(none)";
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
+            !string.IsNullOrEmpty(uri.UserInfo))
+        {
+            return uri.GetComponents(
+                UriComponents.SchemeAndServer | UriComponents.PathAndQuery,
+                UriFormat.UriEscaped);
+        }
+        return url;
     }
 }
 

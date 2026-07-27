@@ -1,0 +1,27 @@
+# LRE integration test fixture — YAML test definition
+#
+# This file is used by the integration tests in run-integration-tests.ts.
+# The test name, folder path and script path are overridden at runtime from
+# integration-tests.properties (pc.yaml.*) so the values below are only
+# used as fall-backs when running without the properties file.
+#
+# IMPORTANT: the script_path value must match an existing script in the LRE
+# project configured in integration-tests.properties.
+
+test_name: "YAML Integration Test"
+test_folder_path: "ci-tests\\yaml-integration"
+test_content:
+  lg_amount: 1
+  group:
+    - group_name: "Integration Group"
+      vusers: 1
+      # script_path is replaced at runtime with pc.yaml.scriptPath
+      script_path: "scripts\\demo_script"
+      rts:
+        pacing:
+          number_of_iterations: 1
+          type: "immediately"
+  scheduler:
+    rampup: 0
+    duration: 0
+

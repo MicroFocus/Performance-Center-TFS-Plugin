@@ -11,3 +11,10 @@ integration/*.log
 **/docsLocal/
 **/.vs/
 **/.idea/
+**/node_modules/
+**/dist/
+**/obj/
+**/bin/
+**/staging/
+**/stagingSigned/
+**/stagingNotSigned/

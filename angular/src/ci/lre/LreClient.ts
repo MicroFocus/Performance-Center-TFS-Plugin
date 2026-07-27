@@ -33,7 +33,11 @@ import {
     LreTestInstanceRequestXml,
     LreTestSetFolderRequestXml,
     LreTestSetRequestXml,
-    LreStopRunRequestXml
+    LreStopRunRequestXml,
+    LreScript,
+    LreScriptsApiResponse,
+    LreTestCreateResponse,
+    LreTestPlanFolderRequestXml
 } from '../models';
 
 export class LreClient {
@@ -48,6 +52,14 @@ export class LreClient {
      *  Kept as a field so logout() can clear it. */
     private sessionCookieHeader: string | undefined;
 
+    /**
+     * Fixed protocol constant required by every LRE REST API request.
+     * This is a non-secret, publicly-documented header value defined by the
+     * OpenText Enterprise Performance Engineering server API specification.
+     * See docs/LRE-API-Analysis.md — "Required header".
+     */
+    private static readonly LRE_SECURITY_HEADER_VALUE = '12';
+
     constructor(private config: LreConfig) {
         this.cookieJar = new CookieJar();
 
@@ -61,7 +73,7 @@ export class LreClient {
             headers: {
                 'Content-Type': 'application/xml',
                 'Accept': 'application/xml',
-                'X-QC-HIDDEN-SECURITY-ID': '12'
+                'X-QC-HIDDEN-SECURITY-ID': LreClient.LRE_SECURITY_HEADER_VALUE
             },
             proxy: this.parseProxy()
         }));
@@ -354,6 +366,319 @@ export class LreClient {
             tl.error(`Failed to create test set: ${this.getErrorMessage(error)}`);
             return null;
         }
+    }
+
+    // ========================================================================
+    // YAML test creation (Phase 2)
+    // ========================================================================
+
+    /**
+     * Fetches all scripts in the current project via GET /Scripts.
+     *
+     * NOTE: The LRE /Scripts endpoint returns JSON, not XML (unlike most other
+     * LRE endpoints).  We therefore parse the response as JSON first and fall
+     * back to XML parsing for environments that may behave differently.
+     *
+     * Several JSON shapes are handled:
+     *   { ScriptList: [ {...}, ... ] }                     ← flat array under ScriptList
+     *   { ScriptList: { Script: [{...}] | {...} } }        ← XML-style nested object
+     *   [ {...}, ... ]                                      ← root-level array
+     */
+    async getScripts(): Promise<LreScript[]> {
+        tl.debug('getScripts: GET /Scripts');
+        const response = await this.httpClient.get(`${this.resourceBaseUrl}/Scripts`);
+
+        if (!this.isSuccessResponse(response)) {
+            const err = this.parseXmlResponse<LreErrorResponse>(response.data);
+            throw new Error(
+                `getScripts failed (HTTP ${response.status}): ${err?.ExceptionMessage ?? response.data}`
+            );
+        }
+
+        // Always log a snippet of the raw response so the caller can diagnose
+        // format issues by enabling ADO task debug logging.
+        const rawSnippet = typeof response.data === 'string'
+            ? response.data.substring(0, 500)
+            : JSON.stringify(response.data).substring(0, 500);
+        tl.debug(`getScripts: raw response snippet: ${rawSnippet}`);
+
+        // ── Attempt 1: JSON (the documented format for /Scripts) ──────────────
+        const scripts = this.extractScriptsFromJson(response.data);
+        if (scripts !== null) {
+            tl.debug(`getScripts: found ${scripts.length} script(s) (JSON)`);
+            return scripts;
+        }
+
+        // ── Attempt 2: XML fallback ────────────────────────────────────────────
+        // The actual LRE XML response is <Scripts><Script>...</Script></Scripts>
+        // parseXmlResponse strips the root tag, so raw = { Script: [...], "@_xmlns": "..." }
+        // raw.Script is the array — NOT raw.ScriptList.Script (no ScriptList wrapper in real responses)
+        if (typeof response.data === 'string') {
+            const raw = this.parseXmlResponse<LreScriptsApiResponse>(response.data);
+            const scriptEntry = raw?.Script ?? raw?.ScriptList?.Script;
+            if (scriptEntry) {
+                const list = Array.isArray(scriptEntry) ? scriptEntry : [scriptEntry];
+                tl.debug(`getScripts: found ${list.length} script(s) (XML)`);
+                return list;
+            }
+        }
+
+        // Non-empty response but completely unrecognised format — surface raw data in error
+        if (rawSnippet.trim().length > 2) {
+            throw new Error(
+                `getScripts: server returned a non-empty response but no scripts could be parsed.\n` +
+                `Raw response: ${rawSnippet}\n` +
+                `Please report this snippet so the parser can be extended.`
+            );
+        }
+
+        tl.debug('getScripts: empty scripts list from server');
+        return [];
+    }
+
+    /**
+     * Extracts a LreScript[] from a JSON payload returned by GET /Scripts.
+     *
+     * Returns null  — format completely unrecognised (caller will throw with raw snippet).
+     * Returns []    — format recognised, but the project has no scripts.
+     * Returns [...] — scripts found.
+     *
+     * The null/empty-array distinction lets the caller tell apart "empty project"
+     * from "we don't understand the response" without masking genuine format errors.
+     */
+    private extractScriptsFromJson(data: unknown): LreScript[] | null {
+        if (!data) return null;
+
+        // axios parses JSON responses automatically; handle pre-parsed objects and raw strings
+        const obj = typeof data === 'string' ? (() => {
+            try { return JSON.parse(data); } catch { return null; }
+        })() : data;
+
+        if (!obj || typeof obj !== 'object') return null;
+
+        const record = obj as Record<string, unknown>;
+
+        // Shape: { ScriptList: [ {ID, Name, TestFolderPath}, ... ] }  (most common)
+        const asList = record['ScriptList'];
+        if (Array.isArray(asList)) {
+            return asList as LreScript[];   // empty array = 0 scripts (valid)
+        }
+
+        // Shape: { ScriptList: { Script: [{...}] | {...} } }   or
+        //        { ScriptList: { ID:..., Name:..., TestFolderPath:... } }  (single-script object,
+        //        Java serialises a 1-element list as a plain object)
+        if (asList && typeof asList === 'object') {
+            const sl = asList as Record<string, unknown>;
+
+            if (Array.isArray(sl['Script']))                              return sl['Script'] as LreScript[];
+            if (sl['Script'] && typeof sl['Script'] === 'object')        return [sl['Script'] as LreScript];
+            if (sl['ID'] !== undefined || sl['Name'] !== undefined)      return [sl as unknown as LreScript];
+        }
+
+        // Shape: root array  [ {ID, Name, TestFolderPath}, ... ]
+        if (Array.isArray(obj)) return obj as LreScript[];
+
+        // Shape: { Script: [{...}] | {...} }
+        const directScript = record['Script'];
+        if (Array.isArray(directScript))                                  return directScript as LreScript[];
+        if (directScript && typeof directScript === 'object')             return [directScript as LreScript];
+
+        // None of the known shapes matched
+        return null;
+    }
+
+    /**
+     * Creates a new LRE test by posting the full <Test> XML.
+     *
+     * Returns `{ testId, existed: false }` when the server creates a new test (201).
+     * Returns `{ testId, existed: true }`  when the server reports a conflict (409)
+     * and the ID of the existing test is extracted from the error message.
+     *
+     * Throws for any other HTTP error.
+     */
+    /**
+     * Looks up an LRE test by name and folder path.
+     * Uses GET /tests with ALM query syntax: {Name['x'];TestFolderPath['y']}
+     * Returns the test ID if found, or null if not found or on error.
+     */
+    async findTestByNameAndFolder(testName: string, folderPath: string): Promise<number | null> {
+        try {
+            const query = `{Name['${testName}'];TestFolderPath['${folderPath}']}`;
+            const url = `${this.resourceBaseUrl}/tests?query=${encodeURIComponent(query)}`;
+            tl.debug(`findTestByNameAndFolder: GET ${url}`);
+            const response = await this.httpClient.get(url);
+
+            if (!this.isSuccessResponse(response)) {
+                tl.debug(`findTestByNameAndFolder: HTTP ${response.status} — test not found`);
+                return null;
+            }
+
+            const raw = this.parseXmlResponse<{ Test?: LreTest | LreTest[] }>(response.data);
+            if (!raw?.Test) return null;
+
+            const tests = Array.isArray(raw.Test) ? raw.Test : [raw.Test];
+            if (tests.length === 0) return null;
+
+            const id = Number(tests[0].ID);
+            tl.debug(`findTestByNameAndFolder: found test ID ${id}`);
+            return isNaN(id) ? null : id;
+        } catch (error) {
+            tl.debug(`findTestByNameAndFolder: error — ${this.getErrorMessage(error)}`);
+            return null;
+        }
+    }
+
+    async createTest(testXml: string): Promise<{ testId: number; existed: boolean }> {
+        tl.debug('createTest: POST /tests');
+        const response = await this.httpClient.post(
+            `${this.resourceBaseUrl}/tests`,
+            testXml
+        );
+
+        if (!this.isSuccessResponse(response)) {
+            const err = this.parseXmlResponse<LreErrorResponse>(response.data);
+            const message = String(err?.ExceptionMessage ?? response.data ?? '');
+
+            // Both 409 and 400 can signal "test already exists" depending on LRE version
+            if (response.status === 409 || /already\s+exists/i.test(message)) {
+                tl.debug(`createTest: conflict (HTTP ${response.status}) — ${message}`);
+                const testId = LreClient.extractTestIdFromConflictMessage(message);
+                if (!testId) {
+                    throw new Error(
+                        `Test already exists but could not extract test ID from conflict message: "${message}"`
+                    );
+                }
+                tl.debug(`createTest: resolved existing test ID = ${testId}`);
+                return { testId, existed: true };
+            }
+
+            throw new Error(
+                `createTest failed (HTTP ${response.status}): ${message}`
+            );
+        }
+
+        const created = this.parseXmlResponse<LreTestCreateResponse>(response.data);
+        if (!created?.ID) {
+            throw new Error('createTest: server returned 201 but response body has no ID');
+        }
+        tl.debug(`createTest: new test created with ID = ${created.ID}`);
+        return { testId: created.ID, existed: false };
+    }
+
+    /**
+     * Updates the content of an existing LRE test by PUTting a <Content> XML body.
+     * Used after a 409 conflict from createTest() to overwrite the existing test's topology.
+     */
+    async updateTest(testId: number, contentXml: string): Promise<boolean> {
+        tl.debug(`updateTest: PUT /tests/${testId}`);
+        const response = await this.httpClient.put(
+            `${this.resourceBaseUrl}/tests/${testId}`,
+            contentXml
+        );
+
+        if (!this.isSuccessResponse(response)) {
+            const err = this.parseXmlResponse<LreErrorResponse>(response.data);
+            tl.error(
+                `updateTest failed (HTTP ${response.status}) for test ${testId}: ` +
+                `${err?.ExceptionMessage ?? response.data}`
+            );
+            return false;
+        }
+
+        tl.debug(`updateTest: test ${testId} updated successfully`);
+        return true;
+    }
+
+    /**
+     * Ensures every folder segment in `folderPathWithSubject` exists in the LRE test plan.
+     * Creates missing folders one level at a time (LRE does not support recursive creation).
+     *
+     * Example: "Subject\\ci-tests\\api"
+     *   → tries to create "ci-tests" under "Subject"
+     *   → tries to create "api" under "Subject\\ci-tests"
+     *   409 responses (folder already exists) are silently ignored.
+     *
+     * @param folderPathWithSubject Full path including the "Subject" root,
+     *                              backslash-separated, e.g. "Subject\\ci-tests\\api".
+     */
+    async ensureTestPlanFolderExists(folderPathWithSubject: string): Promise<void> {
+        const segments = folderPathWithSubject.split(/[/\\]/).filter(Boolean);
+        // segments[0] is always "Subject" (the LRE test-plan root) — no need to create it
+        for (let i = 1; i < segments.length; i++) {
+            const parentPath = segments.slice(0, i).join('\\');
+            const leafName   = segments[i]!;
+            tl.debug(`ensureTestPlanFolderExists: creating "${parentPath}\\${leafName}"`);
+            await this.createTestPlanFolder(parentPath, leafName);
+        }
+    }
+
+    /**
+     * Calls POST /testplan to create a single folder under `parentPath`.
+     *
+     * "Already exists" is silently swallowed. The LRE server can signal this in
+     * two different ways depending on the server version:
+     *   • HTTP 409  (documented conflict response)
+     *   • HTTP 400  with an ExceptionMessage that contains "already exists"
+     *               (observed on some LRE builds)
+     *
+     * Any other non-success response throws.
+     */
+    private async createTestPlanFolder(parentPath: string, leafName: string): Promise<void> {
+        const requestXml = new LreTestPlanFolderRequestXml(parentPath, leafName);
+        const response = await this.httpClient.post(
+            `${this.resourceBaseUrl}/testplan`,
+            requestXml.toXml()
+        );
+
+        if (response.status === 409) {
+            tl.debug(`createTestPlanFolder: "${parentPath}\\${leafName}" already exists (409) — skipping`);
+            return;
+        }
+
+        if (!this.isSuccessResponse(response)) {
+            const err = this.parseXmlResponse<LreErrorResponse>(response.data);
+            const message = err?.ExceptionMessage ?? (typeof response.data === 'string' ? response.data : JSON.stringify(response.data));
+
+            // Some LRE versions return 400 instead of 409 for a duplicate folder
+            if (/already exists/i.test(message)) {
+                tl.debug(`createTestPlanFolder: "${parentPath}\\${leafName}" already exists (${response.status}) — skipping`);
+                return;
+            }
+
+            throw new Error(
+                `createTestPlanFolder failed (HTTP ${response.status}) for ` +
+                `"${parentPath}\\${leafName}": ${message}`
+            );
+        }
+    }
+
+    /**
+     * Extracts a numeric test ID from the LRE 409 conflict error message.
+     *
+     * Tries progressively broader patterns:
+     *   1. "ID: 123" or "ID=123" (case-insensitive)
+     *   2. "test id: 123"
+     *   3. "(123)" — parenthesised number
+     *   4. Last number found anywhere in the message (last-resort fallback)
+     */
+    private static extractTestIdFromConflictMessage(message: string): number | null {
+        const patterns = [
+            /\(ID:\s*'(\d+)'\)/i,           // (ID:'3814') — LRE 400/409 format
+            /\bID\s*[=:]\s*'?(\d+)'?/i,     // ID:'3814' or ID=3814 or ID: 3814
+            /\btest\s+id\s*[=:]\s*(\d+)/i,  // test id: 3814
+            /\((\d+)\)/,                     // (3814)
+        ];
+
+        for (const pattern of patterns) {
+            const match = message.match(pattern);
+            if (match?.[1]) return Number(match[1]);
+        }
+
+        // Last-resort: take the largest number in the message (avoids picking up
+        // short numbers like years, port numbers, or digits embedded in script names)
+        const all = message.match(/\d+/g);
+        if (!all?.length) return null;
+        return Math.max(...all.map(Number));
     }
 
     // ========================================================================

@@ -8,8 +8,10 @@
  */
 
 import * as tl from 'azure-pipelines-task-lib/task';
+import * as path from 'path';
 import { LreClient } from '../src/ci/lre/LreClient';
 import { LreTestRunner } from '../src/ci/lre/LreTestRunner';
+import { LreTestCreator } from '../src/ci/lre/LreTestCreator';
 import { LreReportDownloader } from '../src/ci/lre/LreReportDownloader';
 import { ArtifactManager } from '../src/ci/utils/ArtifactManager';
 import { Logger } from '../src/shared/utils/Logger';
@@ -104,6 +106,7 @@ export async function main(): Promise<void> {
         const varDomain                    = tl.getInput('varDomain',                    true)  ?? '';
         const varProject                   = tl.getInput('varProject',                   true)  ?? '';
         const varTestID                    = tl.getInput('varTestID',                    true)  ?? '';
+        const varWorkspaceDir              = tl.getInput('varWorkspaceDir',              false) ?? '';
         const varAutoTestInstance          = tl.getInput('varAutoTestInstance',           false) ?? 'true';
         const varTestInstID                = tl.getInput('varTestInstID',                 false) ?? '';
         const varPostRunAction             = tl.getInput('varPostRunAction',              false) ?? 'CollateAndAnalyze';
@@ -127,9 +130,18 @@ export async function main(): Promise<void> {
         if (varPassWord)      tl.setSecret(varPassWord);
         if (varProxyPassword) tl.setSecret(varProxyPassword);
 
-        const testId = parsePositiveInt(varTestID, 0);
-        if (testId <= 0) {
-            throw new Error('Invalid Test ID — must be a positive integer.');
+        // varTestID accepts either:
+        //   • a positive integer  — run an existing test by ID (original behaviour)
+        //   • a .yaml / .yml path — create/update a test from YAML, then run it
+        const isYamlFile = LreTestCreator.isYamlFilePath(varTestID);
+        let testId = 0;
+        if (!isYamlFile) {
+            testId = parsePositiveInt(varTestID, 0);
+            if (testId <= 0) {
+                throw new Error(
+                    'Invalid varTestID — must be a positive integer or a path to a .yaml/.yml file.'
+                );
+            }
         }
 
         const useToken = parseBool(varUseTokenForAuthentication);
@@ -148,7 +160,7 @@ export async function main(): Promise<void> {
         );
         logger.info(`Server  : ${serverUrl}`);
         logger.info(`Project : ${varDomain}/${varProject}`);
-        logger.info(`Test ID : ${testId}`);
+        logger.info(`Test    : ${isYamlFile ? `YAML → ${varTestID}` : `ID ${testId}`}`);
         logger.info(`Auth    : ${useToken ? 'API token' : 'username/password'}`);
 
         // ── 4. Build config objects ───────────────────────────────────────────
@@ -230,6 +242,31 @@ export async function main(): Promise<void> {
         logger.info('Authentication succeeded.');
 
         try {
+            // ── 6b. YAML: resolve / create / update test ──────────────────────
+            // When varTestID is a .yaml/.yml file path, parse it, resolve all
+            // script paths to IDs, ensure the test-plan folder hierarchy exists,
+            // and POST/PUT the test topology.  The returned test ID is then used
+            // exactly as if the user had typed that integer directly.
+            if (isYamlFile) {
+                const creator = new LreTestCreator(client);
+                // Determine workspace root — explicit input wins, then ADO env vars
+                const workspaceRoot =
+                    varWorkspaceDir.trim() ||
+                    process.env['BUILD_SOURCESDIRECTORY'] ||
+                    process.env['SYSTEM_DEFAULTWORKINGDIRECTORY'];
+
+                // Resolve a relative YAML path against the workspace root so that
+                // relative paths work correctly outside the ADO agent (e.g. PluginUI).
+                const resolvedYamlPath = (!path.isAbsolute(varTestID) && workspaceRoot)
+                    ? path.join(workspaceRoot, varTestID)
+                    : varTestID;
+
+                logger.info(`Creating/updating test from YAML file: ${resolvedYamlPath}`);
+                testId = await creator.createOrUpdateFromFile(resolvedYamlPath, workspaceRoot);
+                execConfig.testId = testId;
+                logger.info(`Test ready — ID: ${testId}`);
+            }
+
             // ── 7. Execute run ────────────────────────────────────────────────
             const runResult = await runner.execute(execConfig);
             logger.info(runResult.message);

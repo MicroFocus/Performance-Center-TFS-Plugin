@@ -26,8 +26,14 @@ export class ZipFolderCompressor {
         const zip = new AdmZip();
         this.addFolderContents(zip, scriptFolder.fullPath, '');
 
-        const tempDir = os.tmpdir();
-        const zipPath = path.join(tempDir, `lre_sync_${Date.now()}_${scriptFolder.zipFileName}`);
+        // Use a uniquely-named subdirectory so the zip filename is exactly the
+        // script name (e.g. VsCodeTemplate.zip) and the LRE server names the
+        // script correctly.  Without this, form-data would derive the filename
+        // from the temp file path (lre_sync_<ts>_VsCodeTemplate.zip) and the
+        // server would use that mangled string as the script name.
+        const tempSubDir = path.join(os.tmpdir(), `lre_sync_${Date.now()}`);
+        fs.mkdirSync(tempSubDir, { recursive: true });
+        const zipPath = path.join(tempSubDir, scriptFolder.zipFileName);
         zip.writeZip(zipPath);
 
         const stats = fs.statSync(zipPath);
@@ -57,6 +63,12 @@ export class ZipFolderCompressor {
             if (fs.existsSync(zipPath)) {
                 fs.unlinkSync(zipPath);
                 this.logger.debug(`Deleted temp zip: ${zipPath}`);
+            }
+            // Remove the unique subdirectory created by compressFolder
+            const subDir = path.dirname(zipPath);
+            if (subDir !== os.tmpdir() && fs.existsSync(subDir)) {
+                fs.rmdirSync(subDir);
+                this.logger.debug(`Deleted temp dir: ${subDir}`);
             }
         } catch (e) {
             this.logger.warning(`Failed to delete temp zip ${zipPath}: ${e}`);

@@ -48,6 +48,17 @@ export interface IntegrationTestConfig {
         executeRun: boolean;
         downloadReports: boolean;
         testCleanup: boolean;
+        /** When true, run the YAML test creation integration tests (creates/updates real tests). */
+        createTestFromYaml: boolean;
+    };
+    /** YAML test creation settings — only used when behavior.createTestFromYaml=true. */
+    yaml?: {
+        /** Script path as it appears in LRE, e.g. "scripts\\api\\my_script". */
+        scriptPath: string;
+        /** Target test-plan folder, e.g. "ci-tests\\yaml-integration". */
+        testFolderPath: string;
+        /** Test name written into the YAML fixture. */
+        testName: string;
     };
 }
 
@@ -190,8 +201,14 @@ export class PropertiesLoader {
             behavior: {
                 executeRun: props['integration.test.executeRun'] === 'true',
                 downloadReports: props['integration.test.downloadReports'] === 'true',
-                testCleanup: props['integration.test.testCleanup'] !== 'false' // default true
-            }
+                testCleanup: props['integration.test.testCleanup'] !== 'false', // default true
+                createTestFromYaml: props['integration.test.createTestFromYaml'] === 'true'
+            },
+            yaml: (props['pc.yaml.scriptPath'] && props['pc.yaml.scriptPath'].trim()) ? {
+                scriptPath:     props['pc.yaml.scriptPath'].trim(),
+                testFolderPath: (props['pc.yaml.testFolderPath'] || 'ci-tests\\yaml-integration').trim(),
+                testName:       (props['pc.yaml.testName']       || 'YAML Integration Test').trim()
+            } : undefined
         };
     }
 

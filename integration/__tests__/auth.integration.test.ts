@@ -74,9 +74,9 @@ describe('Enterprise Performance Engineering Authentication Integration Tests', 
             const invalidConfig = { ...lreConfig };
 
             if (config.auth.useToken) {
-                invalidConfig.clientSecret = 'invalid-secret-123';
+                invalidConfig.clientSecret = process.env.TEST_INVALID_SECRET ?? 'invalid-secret-for-testing';
             } else {
-                invalidConfig.password = 'invalid-password-123';
+                invalidConfig.password = process.env.TEST_INVALID_PASSWORD ?? 'invalid-password-for-testing';
             }
 
             const client = new LreClient(invalidConfig);

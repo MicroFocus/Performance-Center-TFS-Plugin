@@ -7,6 +7,10 @@ The **"OpenText Enterprise Performance Engineering CI"** extension allows Azure 
 ### Enterprise Performance Engineering Test
 Run a performance test managed in an Enterprise Performance Engineering project directly from a pipeline. The task authenticates with the Enterprise Performance Engineering server, provisions a test timeslot, monitors the run until completion, and downloads result artifacts — all without leaving Azure DevOps.
 
+**The `varTestID` input accepts:**
+- A **numeric Test ID** — runs an existing test (classic behaviour)
+- A **path to a `.yaml` / `.yml` file** — the task parses the file, resolves script paths, creates or updates the test in the LRE test plan, and then runs it. This enables fully code-driven performance test definitions stored alongside the application in source control
+
 ### Enterprise Performance Engineering Workspace Sync
 Scan a Git repository for Enterprise Performance Engineering performance test script folders, compress each into a ZIP, and upload them to the configured Enterprise Performance Engineering project. Keeps the Enterprise Performance Engineering test plan in sync with the source repository automatically on every build.
 

@@ -91,8 +91,9 @@ export class Logger {
                            : line;
             try {
                 fs.appendFileSync(this.logFilePath, fileLine + '\n', { encoding: 'utf8' });
-            } catch {
-                // Never let a logging failure crash the task.
+            } catch (e) {
+                // Never let a logging failure crash the task, but surface it on stderr.
+                console.error(`Logger: failed to write to "${this.logFilePath}": ${e instanceof Error ? e.message : String(e)}`);
             }
         }
     }

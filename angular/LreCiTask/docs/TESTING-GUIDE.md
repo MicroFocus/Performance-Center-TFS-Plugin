@@ -30,8 +30,8 @@ async function testLreClient() {
 		domain: 'DEFAULT',
 		project: 'YourProject',
 		useToken: false,
-		username: 'your-username',
-		password: 'your-password',
+		username: process.env.LRE_USERNAME ?? 'your-username',
+		password: process.env.LRE_PASSWORD,   // set LRE_PASSWORD env var — never hardcode
 		// tenant: 'your-tenant-guid',
 		// proxyUrl: 'http://proxy:8080'
 	};

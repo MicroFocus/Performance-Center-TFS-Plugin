@@ -56,6 +56,21 @@ integration.test.executeRun=false
 integration.test.downloadReports=false
 integration.test.testCleanup=true
 
+# ── YAML test creation (new feature) ─────────────────────────────────────────
+# Set createTestFromYaml=true to run the YAML test creation integration tests.
+# These tests CREATE and UPDATE a real test on the server — use with care.
+integration.test.createTestFromYaml=false
+
+# Script path as it appears in LRE (Subject-relative, e.g. "scripts\api\my_script").
+# The script must already exist in the project before running these tests.
+pc.yaml.scriptPath=YOUR_SCRIPT_PATH
+
+# Target test-plan folder (Subject-relative, will be created if it doesn't exist).
+pc.yaml.testFolderPath=ci-tests\\yaml-integration
+
+# Test name used by the YAML fixture.
+pc.yaml.testName=YAML Integration Test
+
 # ── Legacy script paths (used by older test scaffolding) ─────────────────────
 pc.test.folderPath=Subject\\your-folder
 pc.test.scriptPath=src/test/resources/your-script.zip

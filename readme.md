@@ -8,7 +8,7 @@ The extension ships **two independent tasks**:
 
 | Task | Purpose |
 |---|---|
-| **Enterprise Performance Engineering Test** (`LreCiTask`) | Run a performance test from a pipeline and collect results |
+| **Enterprise Performance Engineering Test** (`LreCiTask`) | Run a performance test from a pipeline and collect results. Accepts a numeric **Test ID** *or* a **path to a `.yaml` file** that defines the test topology — the task creates or updates the test in LRE automatically before running it |
 | **Enterprise Performance Engineering Workspace Sync** (`LreWorkspaceSyncTask`) | Scan a repository for script folders, zip them, and upload to an Enterprise Performance Engineering project |
 
 ## Active Codebase
@@ -19,8 +19,13 @@ Both tasks are implemented in **TypeScript / Node.js** and live under `angular/`
 angular/
   vss-extension.json                # Extension manifest (publisher, version, files)
   package.json                      # Single project root — all deps + all scripts
+  jest.config.js                    # Unit test configuration (ts-jest)
+  tsconfig.test.json                # TypeScript config for unit tests
   src/
     ci/                             # Enterprise Performance Engineering REST API client, runner, downloader
+      lre/                          # LreClient, LreTestRunner, LreTestCreator, LreReportDownloader
+      models/                       # Shared TypeScript interfaces and XML helpers
+      yaml/                         # YAML test definition parser, XML builder, simplified models
     sync/                           # Script uploader, sync runner, zip compressor, scanner
     shared/                         # Shared Logger and server URL parser (used by both tasks)
   LreCiTask/
@@ -55,8 +60,11 @@ The legacy C#/.NET projects (`PC.Plugins.*`, `PC.TFS.BuildTask/`) remain in the 
 ## Task 1 — Running a Performance Test
 
 1. Open your build pipeline definition and add the **"Enterprise Performance Engineering Test"** task.
-2. Fill in the required inputs (server URL, credentials, domain, project, test ID).
-3. Run the pipeline — the task authenticates, creates or resolves a timeslot, monitors the run, and downloads the result artifacts automatically.
+2. Fill in the required inputs (server URL, credentials, domain, project).
+3. For the **"Test ID or YAML file"** input, provide either:
+   - A **numeric Test ID** — runs an existing test (classic behaviour)
+   - A **path to a `.yaml` / `.yml` file** stored in your repository — the task automatically parses the file, creates or updates the LRE test topology (resolving script paths, creating missing test-plan folders), then runs it
+4. Run the pipeline — the task authenticates, creates or resolves a timeslot, monitors the run, and downloads result artifacts automatically.
 
 For full configuration details see the [documentation](https://admhelp.microfocus.com/lr/en/latest/help/WebHelp/Content/Controller/Azure_DevOps.htm).
 
@@ -190,6 +198,141 @@ steps:
     publishLocation: 'Container'
 ```
 
+## YAML Test Definition Reference
+
+When `varTestID` points to a `.yaml` / `.yml` file the task creates or updates an LRE test before running it.  
+Two YAML shapes are supported:
+
+### Shape 1 — Full-test (name + folder + content)
+
+```yaml
+##################################################
+test_name: "My Performance Test"
+test_folder_path: "ci-tests/api"          # relative to Subject\ in LRE test plan
+test_content:
+  controller: "Controller01"              # optional — specific controller host
+  lg_amount: 2                            # ignored when each group specifies lg_name[]
+  group:
+    - group_name: "API Load"
+      vusers: 50
+      script_path: "scripts\\api\\my_script"   # resolved to script ID automatically
+      lg_name:                            # when all groups have lg_name → manual LG distribution
+        - LG1
+        - LG2
+      command_line: "-param value"        # optional runtime CLI args
+      rts:
+        pacing:
+          number_of_iterations: 0         # 0 = infinite
+          type: "random interval"         # immediately | fixed interval | fixed delay | random interval | random delay
+          delay: 60                       # seconds (used by fixed/random types)
+          delay_random_range: 10          # added to delay for "random" types → range = [delay, delay+range]
+        thinktime:
+          type: "random"                  # ignore | replay | modify | random
+          min_percentage: 50
+          max_percentage: 150
+          limit_seconds: 20
+        java_vm:                          # optional — Java protocol scripts only
+          jdk_home: "C:\\Java\\jdk-17"
+          java_vm_parameters: "-Xms64m -Xmx512m"
+          java_env_class_paths:
+            - "C:\\mylib\\mylib.jar"
+        jmeter:                           # optional — JMeter scripts only
+          jmeter_home_path: "C:\\jmeter"
+          start_measurements: true
+        selenium:                         # optional — Selenium scripts only
+          jre_path: "C:\\Java\\jre"
+          class_path: "C:\\selenium\\selenium.jar"
+          test_ng_files: "testng.xml"
+  scheduler:
+    rampup: 120                           # seconds — 0 = start all simultaneously
+    duration: 600                         # seconds — 0 = run until completion
+  automatic_trending:                     # optional — attach to a trend report
+    report_id: 5
+    max_runs_in_report: 10
+  lg_elastic_configuration:              # optional — elastic load generators
+    image_id: 1
+    memory_limit: 2048
+    cpu_limit: 2
+  controller_elastic_configuration:      # optional — elastic controller
+    image_id: 2
+##################################################
+```
+
+### Shape 2 — Content-only (name from filename, folder from directory)
+
+```yaml
+##################################################
+group:
+  - group_name: "Smoke"
+    vusers: 10
+    script_path: "scripts\\smoke\\login_flow"
+    lg_name:
+      - LG1
+scheduler:
+  rampup: 0
+  duration: 300
+##################################################
+```
+
+> Lines wrapped in `##...##` (sentinel comments used in the GitHub Action format) are stripped automatically.  
+> Name is derived from the YAML filename; test-plan folder from the file's path relative to the workspace root.
+
+### YAML field reference
+
+#### `group[]`
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `group_name` | string | `Group_N` | |
+| `vusers` | number or string | `1` | |
+| `script_id` | number | — | Provide `script_id` **or** `script_path` |
+| `script_path` | string | — | `folder\\scriptName` as it appears in LRE Scripts; matched case-insensitively |
+| `lg_name` | string[] | — | When **all** groups supply `lg_name` → manual LG distribution. `LG\d+` → automatch, `DOCKER\d+` → dynamic, else specific |
+| `command_line` | string | — | Passed as global command-line override for the group |
+| `rts.pacing.number_of_iterations` | number | `1` | `0` = infinite |
+| `rts.pacing.type` | string | `immediately` | `immediately` \| `fixed interval` \| `fixed delay` \| `random interval` \| `random delay` |
+| `rts.pacing.delay` | number (sec) | `0` | Used by fixed/random types |
+| `rts.pacing.delay_random_range` | number (sec) | `0` | For random types: upper bound = `delay + delay_random_range` |
+| `rts.thinktime.type` | string | — | `ignore` \| `replay` \| `modify` \| `random` |
+| `rts.thinktime.limit_seconds` | number | — | Max think time (replay/random) |
+| `rts.thinktime.min_percentage` | number | — | For `random` type |
+| `rts.thinktime.max_percentage` | number | — | For `random` type |
+| `rts.thinktime.multiply_factor` | number | — | For `modify` type |
+| `rts.java_vm.jdk_home` | string | — | Path to JDK (Java protocol only) |
+| `rts.java_vm.java_vm_parameters` | string | — | JVM args, e.g. `-Xms64m -Xmx512m` |
+| `rts.java_vm.java_env_class_paths` | string[] | — | Additional classpath entries |
+| `rts.jmeter.jmeter_home_path` | string | — | JMeter installation directory |
+| `rts.jmeter.start_measurements` | boolean | `false` | |
+| `rts.jmeter.jmeter_min_port` | number | — | Custom port range |
+| `rts.jmeter.jmeter_max_port` | number | — | Custom port range |
+| `rts.selenium.jre_path` | string | — | |
+| `rts.selenium.class_path` | string | — | |
+| `rts.selenium.test_ng_files` | string | — | |
+
+#### `scheduler`
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `rampup` | number (sec) | `0` | `0` or `1` → simultaneous start. `2–30` → two-batch gradual. `>30` → calculated per-vuser interval (min 15 s). |
+| `duration` | number (sec) | `0` | `0` = run until completion |
+
+#### `automatic_trending` (optional)
+
+| Field | Type | Notes |
+|---|---|---|
+| `report_id` | number | ID of the LRE trend report to attach |
+| `max_runs_in_report` | number | Default `10` |
+
+#### `lg_elastic_configuration` / `controller_elastic_configuration` (optional)
+
+| Field | Type |
+|---|---|
+| `image_id` | number |
+| `memory_limit` | number (MB) |
+| `cpu_limit` | number |
+
+---
+
 ## Developer Quick Start
 
 ```powershell
@@ -198,7 +341,13 @@ cd angular
 npm install            # one npm install covers the whole project
 
 # Type-check both tasks
-npm test
+npm run typecheck
+
+# Run unit tests (149 tests across 4 suites)
+npm run test:unit
+
+# Run unit tests with coverage
+npm run test:unit:coverage
 
 # Build both tasks to dist/
 npm run build          # or: npm run build:ci / npm run build:sync
@@ -215,6 +364,74 @@ See [`angular/LOCAL-TESTING-GUIDE.md`](./angular/LOCAL-TESTING-GUIDE.md) for loc
 2. Commit and push to `master` — the `release.yml` workflow updates all version files (both tasks + extension manifest), builds the VSIX, creates a GitHub Release, then resets `enabled=false`
 
 ## What's New
+
+### Version 3.3.0 — July 2026 *(testing as `3.300.x`)*
+
+#### 🆕 YAML-based test creation (`varTestID` accepts a YAML file path)
+
+The **Enterprise Performance Engineering Test** task can now create or update an LRE test from a YAML definition file stored in your repository, then immediately run it.
+
+**How it works:**
+
+```yaml
+# perf-tests/api-load.yaml — stored in your repo alongside the application code
+test_name: "API Load Test"
+test_folder_path: "ci-tests/api"
+test_content:
+  lg_amount: 1
+  group:
+    - group_name: "API Group"
+      vusers: 50
+      script_path: "scripts\\api\\my_script"   # resolved to script ID automatically
+      rts:
+        pacing:
+          type: "immediately"
+  scheduler:
+    rampup: 120
+    duration: 600
+```
+
+Pipeline usage:
+
+```yaml
+- task: LoadRunnerEnterpriseTesting@3
+  inputs:
+    varPCServer: '...'
+    varDomain: 'MY_DOMAIN'
+    varProject: 'my_project'
+    varTestID: '$(Build.SourcesDirectory)/perf-tests/api-load.yaml'   # ← YAML path
+```
+
+**What the task does automatically:**
+- Parses the YAML file (supports full-test or content-only format)
+- Resolves every `script_path` to a numeric script ID via the LRE Scripts API
+- Ensures the target test-plan folder hierarchy exists (creates missing folders)
+- `POST /tests` — creates a new test (or `PUT /tests/{id}` on conflict, for idempotent runs)
+- Runs the test and downloads results as usual
+
+**Supported YAML shapes:**
+
+| Shape | When to use |
+|---|---|
+| Full-test (with `test_name` + `test_folder_path` + `test_content`) | Complete definition including name and folder |
+| Content-only (with `group[]` at root) | Name derived from filename, folder from directory path relative to workspace root |
+
+For the complete YAML schema reference see the [YAML Test Definition Reference](#yaml-test-definition-reference) section above.
+
+#### 🔧 Bug fixes in testing series
+
+| Version | Fix |
+|---|---|
+| `3.300.1` | `getScripts()` always returned empty list — LRE returns XML not JSON; `<ScriptList>` wrapper absent in real responses |
+| `3.300.1` | `ensureTestPlanFolderExists()` threw on HTTP 400 "already exists" — now treated as no-op (same as 409) |
+| `3.300.1` | New `varWorkspaceDir` task input — allows PluginUI to pass an absolute workspace root while using a relative YAML path |
+| `3.300.2` | `GlobalCommandLine` XML used wrong field names (`<GroupName>/<CommandLine>`) — corrected to `<Name>/<Value>` per Java `CommandLine` class |
+
+#### 🔧 PluginUI — "Test ID or YAML" field
+
+The PluginsUI now shows a **Browse…** button next to the Test ID field, making it easy to navigate to a `.yaml` / `.yml` file for local testing.
+
+---
 
 ### Version 3.2.0 — July 2026
 

@@ -16,8 +16,10 @@ The extension ships **two tasks**:
 ### Enterprise Performance Engineering Test task
 
 - Run an OpenText Enterprise Performance Engineering test directly from an Azure DevOps pipeline
+- **`varTestID` accepts a numeric Test ID *or* a path to a `.yaml`/`.yml` test-definition file** — when a YAML file is supplied the task creates or updates the LRE test automatically before running it
 - Authenticate with **username/password** or **API token** (required for SSO-configured servers)
 - **Auto-provision test infrastructure** — if no test set or test instance exists in the project, the task automatically creates a test set folder, a test set, and a test instance so the pipeline never blocks on missing setup
+- **YAML-based test creation** — define the full test topology (groups, scripts, scheduler, RTS, elastic configuration) in a YAML file committed to your repository. Script paths are resolved to IDs automatically, and test-plan folders are created on demand
 - Configure post-run actions: *Collate Results*, *Collate and Analyze*, or *Do Not Collate*
 - Optional **SLA-based build status** — fail the build step when a configured Service Level Agreement is breached
 - Trend report integration — attach results to an existing trend report or the test's auto-trend report
@@ -47,6 +49,224 @@ The extension ships **two tasks**:
 ## Supported Product Versions
 
 This extension supports the **3 latest versions** of OpenText Enterprise Performance Engineering.
+
+---
+
+## What's New in Version 3.3.0 *(testing as `3.300.x`)*
+
+> **July 2026**
+
+### 🆕 YAML-based test creation (`varTestID` accepts `.yaml` / `.yml`)
+
+The `varTestID` input of the **Enterprise Performance Engineering Test** task now accepts either a numeric test ID (existing behaviour) or a path to a YAML file that describes the test topology.
+
+```yaml
+# perf-tests/api-load.yaml
+test_name: "API Load Test"
+test_folder_path: "ci-tests/api"
+test_content:
+  lg_amount: 1
+  group:
+    - group_name: "API Group"
+      vusers: 50
+      script_path: "scripts\\api\\my_script"
+  scheduler:
+    rampup: 120
+    duration: 600
+```
+
+When a YAML path is provided the task:
+1. Parses the file (full-test or content-only format)
+2. Resolves `script_path` entries to numeric script IDs via `GET /Scripts`
+3. Creates any missing test-plan folders via `POST /testplan`
+4. `POST /tests` to create the test, or `PUT /tests/{id}` if a test with that name already exists (idempotent)
+5. Runs the test as usual and downloads result artifacts
+
+See [`YAML-TEST-CREATION-FEATURE.md`](../YAML-TEST-CREATION-FEATURE.md) for the complete schema reference and implementation notes.
+
+### 🔧 Bug fixes in `3.300.x` testing series
+
+| Version | Fix |
+|---|---|
+| `3.300.1` | `getScripts()` always returned empty list — LRE returns XML not JSON; no `<ScriptList>` wrapper in real responses |
+| `3.300.1` | `ensureTestPlanFolderExists()` threw on HTTP 400 "already exists" — now treated as a no-op (same as 409) |
+| `3.300.1` | New `varWorkspaceDir` task input — allows PluginUI to pass an absolute workspace root while using a relative YAML path |
+| `3.300.2` | `GlobalCommandLine` XML used wrong field names (`<GroupName>`/`<CommandLine>`) — corrected to `<Name>`/`<Value>` per the LRE API spec |
+
+### 🔧 PluginUI — "Browse…" button for YAML files
+
+The **Test ID** field in PluginsUI has been renamed to **"Test ID or YAML"** and now includes a **Browse…** button to navigate to a `.yaml` / `.yml` file. The validation accepts either a positive integer or a file path ending in `.yaml`/`.yml`.
+
+---
+
+## YAML Test Definition Reference
+
+When `varTestID` is a path to a `.yaml` or `.yml` file, the task parses the file and creates or updates an LRE test before running it.
+
+Two shapes are supported:
+
+### Shape 1 — Full-test (name + folder + content)
+
+```yaml
+##################################################
+test_name: "My Performance Test"
+test_folder_path: "ci-tests/api"          # relative to Subject\ in LRE test plan
+test_content:
+  controller: "Controller01"              # optional — pin to a specific controller host
+  lg_amount: 2                            # number of LGs; ignored when every group lists lg_name[]
+  group:
+    - group_name: "API Load"
+      vusers: 50
+      script_path: "scripts\\api\\my_script"   # resolved to script ID automatically
+      lg_name:                            # when ALL groups have lg_name → manual LG distribution
+        - LG1
+        - LG2
+      command_line: "-param value"        # optional — runtime CLI args passed to the script
+      rts:
+        pacing:
+          number_of_iterations: 0         # 0 = infinite
+          type: "random interval"         # see pacing types below
+          delay: 60                       # seconds
+          delay_random_range: 10          # upper-bound offset for "random" types
+        thinktime:
+          type: "random"                  # ignore | replay | modify | random
+          min_percentage: 50
+          max_percentage: 150
+          limit_seconds: 20
+        java_vm:                          # Java protocol scripts only
+          jdk_home: "C:\\Java\\jdk-17"
+          java_vm_parameters: "-Xms64m -Xmx512m"
+          java_env_class_paths:
+            - "C:\\mylib\\mylib.jar"
+        jmeter:                           # JMeter scripts only
+          jmeter_home_path: "C:\\jmeter"
+          start_measurements: true
+          jmeter_min_port: 10000          # optional custom port range
+          jmeter_max_port: 10099
+          jmeter_additional_properties: "prop=val"
+        selenium:                         # Selenium scripts only
+          jre_path: "C:\\Java\\jre"
+          class_path: "C:\\selenium\\selenium.jar"
+          test_ng_files: "testng.xml"
+  scheduler:
+    rampup: 120                           # seconds; 0 = start all simultaneously
+    duration: 600                         # seconds; 0 = run until completion
+  automatic_trending:                     # optional — attach results to a trend report
+    report_id: 5
+    max_runs_in_report: 10
+  lg_elastic_configuration:              # optional — elastic load generators
+    image_id: 1
+    memory_limit: 2048
+    cpu_limit: 2
+  controller_elastic_configuration:      # optional — elastic controller
+    image_id: 2
+    memory_limit: 4096
+    cpu_limit: 4
+##################################################
+```
+
+### Shape 2 — Content-only (name from filename, folder from path)
+
+```yaml
+##################################################
+group:
+  - group_name: "Smoke"
+    vusers: 10
+    script_path: "scripts\\smoke\\login_flow"
+    lg_name:
+      - LG1
+scheduler:
+  rampup: 0
+  duration: 300
+##################################################
+```
+
+> Lines wrapped in `##...##` (sentinel markers used in the GitHub Action format) are stripped automatically.  
+> The test name is derived from the YAML **filename** and the test-plan folder from the file's **directory path** relative to the workspace root.
+
+---
+
+### Field reference
+
+#### `group[]`
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `group_name` | string | `Group_N` | |
+| `vusers` | number or string | `1` | |
+| `script_id` | number | — | Provide `script_id` **or** `script_path` |
+| `script_path` | string | — | `folder\\scriptName` as seen in LRE Scripts; matched case-insensitively |
+| `lg_name` | string[] | — | When **all** groups have `lg_name` → manual LG distribution. `LG\d+` → automatch · `DOCKER\d+` → dynamic · anything else → specific |
+| `command_line` | string | — | Global command-line override passed to the LRE controller for this group |
+
+#### `rts.pacing`
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `number_of_iterations` | number | `1` | `0` = infinite |
+| `type` | string | `immediately` | `immediately` · `fixed interval` · `fixed delay` · `random interval` · `random delay` |
+| `delay` | number (sec) | `0` | Delay for fixed/random types |
+| `delay_random_range` | number (sec) | `0` | For random types: range = `[delay, delay + delay_random_range]` |
+
+#### `rts.thinktime`
+
+| Field | Type | Notes |
+|---|---|---|
+| `type` | string | `ignore` · `replay` · `modify` · `random` |
+| `limit_seconds` | number | Max think time cap (replay / random) |
+| `min_percentage` | number | For `random` type |
+| `max_percentage` | number | For `random` type |
+| `multiply_factor` | number | For `modify` type |
+
+#### `rts.java_vm`
+
+| Field | Type | Notes |
+|---|---|---|
+| `jdk_home` | string | Path to JDK root; when set, `UserSpecifiedJdk = true` |
+| `java_vm_parameters` | string | JVM args, e.g. `-Xms64m -Xmx512m` |
+| `java_env_class_paths` | string[] | Additional classpath entries |
+| `use_xboot` | boolean | Default `false` |
+| `enable_classloader_per_vuser` | boolean | Default `false` |
+
+#### `rts.jmeter`
+
+| Field | Type | Notes |
+|---|---|---|
+| `jmeter_home_path` | string | JMeter installation directory |
+| `start_measurements` | boolean | Default `false` |
+| `jmeter_min_port` | number | Custom port range start |
+| `jmeter_max_port` | number | Custom port range end |
+| `jmeter_additional_properties` | string | Extra JMeter properties string |
+
+#### `rts.selenium`
+
+| Field | Type |
+|---|---|
+| `jre_path` | string |
+| `class_path` | string |
+| `test_ng_files` | string |
+
+#### `scheduler`
+
+| Field | Type | Default | Ramp-up behaviour |
+|---|---|---|---|
+| `rampup` | number (sec) | `0` | `0`–`1` → all simultaneously · `2`–`30` → two batches · `>30` → one-vuser-at-a-time (min interval 15 s) |
+| `duration` | number (sec) | `0` | `0` = run until completion |
+
+#### `automatic_trending`
+
+| Field | Type | Notes |
+|---|---|---|
+| `report_id` | number | Required |
+| `max_runs_in_report` | number | Default `10` |
+
+#### `lg_elastic_configuration` / `controller_elastic_configuration`
+
+| Field | Type |
+|---|---|
+| `image_id` | number |
+| `memory_limit` | number (MB) |
+| `cpu_limit` | number |
 
 ---
 

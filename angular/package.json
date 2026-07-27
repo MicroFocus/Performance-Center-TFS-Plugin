@@ -1,6 +1,6 @@
 {
   "name": "lre-extension",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "private": true,
   "description": "Azure DevOps extension for OpenText Enterprise Performance Engineering (LreCiTask + LreWorkspaceSyncTask)",
   "type": "commonjs",
@@ -16,7 +16,9 @@
     "typecheck": "npm run typecheck:ci && npm run typecheck:sync",
     "typecheck:ci": "tsc -p LreCiTask/tsconfig.json --noEmit",
     "typecheck:sync": "tsc -p LreWorkspaceSyncTask/tsconfig.json --noEmit",
-    "test": "npm run typecheck",
+    "test": "npm run typecheck && npm run test:unit",
+    "test:unit": "jest",
+    "test:unit:coverage": "jest --coverage",
     "lint": "eslint src/**/*.ts",
     "security:audit": "npm audit --audit-level=moderate",
     "package:vsix": "node scripts/package-vsix.js",
@@ -30,12 +32,14 @@
     "azure-pipelines-task-lib": "^5.278.0",
     "fast-xml-parser": "^5.9.3",
     "form-data": "^4.0.4",
+    "js-yaml": "^5.2.2",
     "tough-cookie": "^4.1.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@types/adm-zip": "^0.5.5",
-    "@types/form-data": "^2.5.2",
+    "@types/jest": "^30.0.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.0.1",
     "@types/q": "^1.5.8",
     "@types/tough-cookie": "^4.0.5",
@@ -44,10 +48,14 @@
     "cross-env": "^7.0.3",
     "eslint": "^9.39.4",
     "globals": "^17.7.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.12",
     "tsx": "^4.22.4",
     "typescript": "^5.9.3"
   },
   "overrides": {
-    "brace-expansion": "1.1.16"
+    "brace-expansion": "5.0.8",
+    "test-exclude": "^7.0.2",
+    "glob": "^13.0.6"
   }
 }

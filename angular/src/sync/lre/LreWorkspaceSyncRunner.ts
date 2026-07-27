@@ -276,6 +276,7 @@ export class LreWorkspaceSyncRunner {
                 zipPath,
                 folder.subjectPath,
                 this.config.runtimeOnly,
+                folder.zipFileName,   // exact name the server will use for the script
                 buf   // ← all per-attempt retry messages are captured in the buffer
                       //   and flushed atomically below, keeping them in context
             );

@@ -19,6 +19,12 @@ public class LreConfiguration
 
     // ── Test ──────────────────────────────────────────────────────
     public string TestId                  { get; set; } = "";
+    /// <summary>
+    /// Workspace root used to resolve relative YAML file paths in TestId
+    /// and to derive the LRE test-plan folder for content-only YAML files.
+    /// Maps to BUILD_SOURCESDIRECTORY when the task runs inside Azure DevOps.
+    /// </summary>
+    public string WorkspaceDir            { get; set; } = "";
     public bool   AutoTestInstance        { get; set; } = true;
     public string TestInstanceId          { get; set; } = "";
 

@@ -50,9 +50,10 @@ npm install           # once — covers both tasks
 npm run build:ci      # build CI task only
 
 # Set environment variables
-$env:INPUT_VARPCSERVER     = "http://your-server:80"
+# ⚠️  Never hardcode real credentials — set these in your shell session only
+$env:INPUT_VARPCSERVER     = "https://your-server:443"
 $env:INPUT_VARUSERNAME     = "admin"
-$env:INPUT_VARPASSWORD     = "password"
+$env:INPUT_VARPASSWORD     = $env:MY_LRE_PASSWORD   # read from a pre-set env var or secrets vault
 $env:INPUT_VARDOMAIN       = "DEFAULT"
 $env:INPUT_VARPROJECT      = "MyProject"
 $env:INPUT_VARTESTID       = "1"
@@ -104,7 +105,7 @@ npm run build:sync    # build Workspace Sync task only
 # Set required environment variables
 $env:INPUT_VARPCSERVER         = "https://your-server:443"
 $env:INPUT_VARUSERNAME         = "admin"
-$env:INPUT_VARPASSWORD         = "password"
+$env:INPUT_VARPASSWORD         = $env:MY_LRE_PASSWORD   # read from a pre-set env var or secrets vault
 $env:INPUT_VARDOMAIN           = "DEFAULT"
 $env:INPUT_VARPROJECT          = "MyProject"
 $env:INPUT_VARWORKSPACEDIR     = "C:\path\to\your\workspace"

@@ -18,12 +18,16 @@ process.env.BUILD_BUILDID = 'test-build-789';
 process.env.BUILD_ARTIFACTSTAGINGDIRECTORY = path.join(__dirname, 'test-artifacts');
 
 // Set input variables - customize these for your test
+// ⚠️  Never commit real credentials. Use environment variables:
+//   $env:TEST_LRE_SERVER   = "https://your-server:443"
+//   $env:TEST_LRE_USERNAME = "admin"
+//   $env:TEST_LRE_PASSWORD = "your-password"
 const inputs = {
   descriptionString: 'Local Test Run',
-  varPCServer: 'http://MyServer:80',
+  varPCServer: process.env.TEST_LRE_SERVER || 'https://MyServer:443',
   varUseTokenForAuthentication: 'false',
-  varUserName: 'admin',
-  varPassWord: 'password',
+  varUserName: process.env.TEST_LRE_USERNAME || 'admin',
+  varPassWord: process.env.TEST_LRE_PASSWORD || (() => { throw new Error('Set TEST_LRE_PASSWORD env var before running test-local.js'); })(),
   varDomain: 'DEFAULT',
   varProject: 'MyProject',
   varTestID: '1',

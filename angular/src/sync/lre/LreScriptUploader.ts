@@ -361,6 +361,7 @@ export class LreScriptUploader {
         zipPath: string,
         subjectPath: string,
         runtimeOnly: boolean,
+        scriptFileName: string,
         sink?: ILogSink
     ): Promise<number> {
         const MAX_RETRIES = 3;
@@ -370,7 +371,7 @@ export class LreScriptUploader {
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 const result = await this.tryUploadScript(
-                    zipPath, subjectPath, runtimeOnly, attempt, MAX_RETRIES, effectiveSink
+                    zipPath, subjectPath, runtimeOnly, scriptFileName, attempt, MAX_RETRIES, effectiveSink
                 );
 
                 if (result.scriptId > 0) return result.scriptId;
@@ -418,6 +419,7 @@ export class LreScriptUploader {
         zipPath: string,
         subjectPath: string,
         runtimeOnly: boolean,
+        scriptFileName: string,
         attempt: number,
         maxRetries: number,
         sink: ILogSink
@@ -427,7 +429,7 @@ export class LreScriptUploader {
         const metaXml = buildScriptCreateXml(subjectPath, true, runtimeOnly, false);
         const form = new FormData();
         form.append('filename', fs.createReadStream(zipPath), {
-            filename: path.basename(zipPath),
+            filename: scriptFileName,   // Use the folder name (e.g. AdvantageOnlineShopping.zip)
             contentType: 'application/octet-stream'
         });
         form.append('file', metaXml, { contentType: 'text/plain' });

@@ -14,7 +14,7 @@
   "minimumAgentVersion": "2.144.0",
   "version": {
     "Major": 3,
-    "Minor": 2,
+    "Minor": 3,
     "Patch": 0
   },
   "inputs": [
@@ -77,10 +77,18 @@
     {
       "name": "varTestID",
       "type": "string",
-      "label": "Test ID",
+      "label": "Test ID or YAML file",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "Enter the Test ID. You can get the ID from the application > <b>Test Management</b> > <b>Test Plan</b> > Select your test and find the ID in the General Details: <b>Test Name (Id)</b>."
+      "helpMarkDown": "Enter either: <ul><li><b>A numeric Test ID</b> — runs an existing test (available from the application > <b>Test Management</b> > <b>Test Plan</b> > <b>Test Name (Id)</b>).</li><li><b>A path to a <code>.yaml</code> or <code>.yml</code> file</b> — the task will create or update the LRE test from the YAML definition and then run it. The path can be absolute or relative to <b>varWorkspaceDir</b> (or the pipeline workspace when running in Azure DevOps).</li></ul>"
+    },
+    {
+      "name": "varWorkspaceDir",
+      "type": "string",
+      "label": "Workspace directory",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Root directory used to resolve a relative <b>Test ID or YAML file</b> path and to derive the LRE test-plan folder when a content-only YAML is used. In Azure DevOps pipelines this is set automatically from <code>$(Build.SourcesDirectory)</code> — only needed when running outside a pipeline (e.g. PluginUI)."
     },
     {
       "name": "varAutoTestInstance",

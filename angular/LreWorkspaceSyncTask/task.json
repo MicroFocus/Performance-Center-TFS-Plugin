@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
   "id": "C2F4E8A3-7B91-4D56-A2C8-F0D3E5B6C912",
   "name": "LoadRunnerEnterpriseSync",
-  "friendlyName": "Enterprise Performance Engineering Workspace Sync",
+  "friendlyName": "Enterprise Performance Engineering Sync",
   "description": "Scan a git repository for performance test script folders, compress each into a zip, and upload them to an OpenText Enterprise Performance Engineering server.",
   "iconUrl": "icon.png",
   "category": "Test",
