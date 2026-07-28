@@ -18,3 +18,4 @@ integration/*.log
 **/staging/
 **/stagingSigned/
 **/stagingNotSigned/
+PluginUI/PluginsInstaller/Files.wxs
