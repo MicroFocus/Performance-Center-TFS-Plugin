@@ -1,0 +1,151 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
+  "id": "A7F3C9D2-8E14-4B67-B3A5-D0E2F4C7A831",
+  "name": "LoadRunnerEnterpriseDownloadScripts",
+  "friendlyName": "Enterprise Performance Engineering Download Scripts",
+  "description": "Connect to an OpenText Enterprise Performance Engineering server and download all scripts from a given domain and project to a local workspace directory. Each script is saved as a .usz file (zip) in a folder hierarchy that mirrors the server-side test-plan structure (without the root Subject folder).",
+  "iconUrl": "icon.png",
+  "category": "Test",
+  "visibility": [
+    "Build",
+    "Release"
+  ],
+  "author": "OpenText",
+  "minimumAgentVersion": "2.144.0",
+  "version": {
+    "Major": 1,
+    "Minor": 0,
+    "Patch": 0
+  },
+  "inputs": [
+    {
+      "name": "descriptionString",
+      "type": "string",
+      "label": "Description",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Optional description for this task step."
+    },
+    {
+      "name": "varPCServer",
+      "type": "string",
+      "label": "Server and port",
+      "defaultValue": "https://MyServer:443",
+      "required": true,
+      "helpMarkDown": "Enter the hostname or IP address and port of the Enterprise Performance Engineering server in the format: http(s)://(Server):(port#). If you are required to use a tenant, use the following format: http(s)://(Server):(port#)/?tenant=(guid#). For example: https://MyServer.MyCompanyDomain.com:444/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3"
+    },
+    {
+      "name": "varUseTokenForAuthentication",
+      "type": "boolean",
+      "label": "Authenticate with token",
+      "defaultValue": "false",
+      "required": false,
+      "helpMarkDown": "Turn on this option to use a token for authentication. This option is the only way of authentication for Enterprise Performance Engineering servers configured with SSO."
+    },
+    {
+      "name": "varUserName",
+      "type": "string",
+      "label": "User name \\ Id key",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "Enter the user name or the Id key of your token to connect to the server."
+    },
+    {
+      "name": "varPassWord",
+      "type": "string",
+      "label": "Password \\ Secret key",
+      "defaultValue": "$(PCPassword)",
+      "required": true,
+      "helpMarkDown": "<p>Enter the password or Secret key of your token to connect to the server.</p><p><b><u>Note:</u></b> You can create a variable of type secret in the CI build to store the password, and specify the variable to avoid exposing a password in the build configuration. For example, '$(PCPassword)').</p>"
+    },
+    {
+      "name": "varDomain",
+      "type": "string",
+      "label": "Domain",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "Enter the domain in which the project is stored."
+    },
+    {
+      "name": "varProject",
+      "type": "string",
+      "label": "Project",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "Enter the name of the project from which scripts are downloaded."
+    },
+    {
+      "name": "varWorkspaceDir",
+      "type": "filePath",
+      "label": "Download directory",
+      "defaultValue": "$(Build.SourcesDirectory)",
+      "required": true,
+      "helpMarkDown": "Local directory where downloaded scripts are written. Each script is placed in a sub-folder that mirrors its server-side path (without the root Subject segment). Defaults to the pipeline's source directory."
+    },
+    {
+      "name": "varParallelDownloads",
+      "type": "string",
+      "label": "Parallel downloads",
+      "defaultValue": "1",
+      "required": false,
+      "helpMarkDown": "Number of scripts to download simultaneously (1–20). Default: 1 (sequential). Increase to speed up downloads when network and server capacity allow."
+    },
+    {
+      "name": "varSuccessThreshold",
+      "type": "string",
+      "label": "Success threshold (%)",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Minimum percentage of scripts that must download successfully for the task to pass (0–100). Leave empty to use the default (50%). Note: 5 consecutive download failures always abort the task regardless of this setting."
+    },
+    {
+      "name": "varProxyUrl",
+      "type": "string",
+      "label": "Proxy URL",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Add your local proxy in the format http(s)://(host):(port#) or leave empty if not using a local proxy."
+    },
+    {
+      "name": "varProxyUser",
+      "type": "string",
+      "label": "Proxy user",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "If you use a proxy requiring credentials, enter the user name."
+    },
+    {
+      "name": "varProxyPassword",
+      "type": "string",
+      "label": "Proxy password",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "<p>If you use a proxy requiring credentials, enter the password.</p><p><b><u>Note:</u></b> You can create a variable of type secret in the CI build to store the password.</p>"
+    },
+    {
+      "name": "varArtifactsDir",
+      "aliases": [ "artifactsDirectory" ],
+      "type": "filePath",
+      "label": "Artifacts directory",
+      "defaultValue": "$(Build.ArtifactStagingDirectory)/LREDownload",
+      "required": false,
+      "helpMarkDown": "Path to the directory where download log files are stored."
+    }
+  ],
+  "instanceNameFormat": "Enterprise Performance Engineering Download Scripts $(descriptionString)",
+  "execution": {
+    "Node20_1": {
+      "target": "index.js"
+    },
+    "Node20": {
+      "target": "index.js"
+    },
+    "Node16": {
+      "target": "index.js"
+    },
+    "Node": {
+      "target": "index.js"
+    }
+  }
+}
+

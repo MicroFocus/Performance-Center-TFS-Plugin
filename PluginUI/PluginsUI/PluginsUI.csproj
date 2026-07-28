@@ -31,7 +31,13 @@
     <Content Include="Scripts\run-workspace-sync.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Scripts\run-download-scripts.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Scripts\test-connection.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="UserGuide.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -48,6 +54,9 @@
           index.js                  ← bootstrap (polyfills + loads dist)
           dist/                     ← compiled TypeScript
         LreWorkspaceSyncTask/
+          index.js
+          dist/
+        LreDownloadScriptsTask/
           index.js
           dist/
 
@@ -88,6 +97,20 @@
     </ItemGroup>
     <Copy SourceFiles="@(_SyncDistFiles)"
           DestinationFiles="@(_SyncDistFiles->'$(OutputPath)LreWorkspaceSyncTask\dist\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+
+    <!-- ── LreDownloadScriptsTask bootstrap ── -->
+    <Copy SourceFiles="$(AngularRoot)LreDownloadScriptsTask\index.js"
+          DestinationFolder="$(OutputPath)LreDownloadScriptsTask"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(AngularRoot)LreDownloadScriptsTask\index.js')" />
+
+    <!-- ── LreDownloadScriptsTask dist ── -->
+    <ItemGroup>
+      <_DownloadDistFiles Include="$(AngularRoot)LreDownloadScriptsTask\dist\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_DownloadDistFiles)"
+          DestinationFiles="@(_DownloadDistFiles->'$(OutputPath)LreDownloadScriptsTask\dist\%(RecursiveDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />
 
     <!-- ── Shared node_modules (single copy; robocopy mirrors incrementally) ── -->

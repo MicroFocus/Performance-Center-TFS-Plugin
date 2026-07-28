@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "commonjs",
+    "lib": ["ES2019"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "outDir": "./dist",
+    // rootDir intentionally omitted — TypeScript infers the common ancestor (angular/)
+    // so compiled output lands at dist/LreDownloadScriptsTask/… and dist/shared/…
+    "declaration": false,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "sourceMap": true
+  },
+  "include": [
+    "index.ts",
+    "../src/download/**/*.ts",
+    "../src/shared/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "../src/**/__tests__"
+  ]
+}
+

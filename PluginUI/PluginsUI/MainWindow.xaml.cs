@@ -5,10 +5,12 @@
  * MainWindow.xaml.cs — code-behind for PluginsUI
  *
  * Key design choices:
- *  • TabControl — Tab 0 "CI Test Run" (LreCiTask), Tab 1 "Workspace Sync" (LreWorkspaceSyncTask).
+ *  • TabControl — Tab 0 "CI Test Run" (LreCiTask), Tab 1 "Workspace Sync" (LreWorkspaceSyncTask),
+ *                 Tab 2 "Download Scripts" (LreDownloadScriptsTask).
  *  • Connection and Proxy sections are shared above the tab control.
  *  • Run/Stop buttons at the bottom work for whichever tab is active.
- *  • Two separate auto-save paths: last-session.json (CI) and last-session-sync.json (Sync).
+ *  • Three separate auto-save paths: last-session.json (CI), last-session-sync.json (Sync),
+ *    last-session-download.json (Download).
  *  • Save Config / Load Config operates on the currently active tab's config only.
  *  • No references to PC.Plugins.* assemblies — fully standalone.
  *  • async/await throughout — the UI never blocks.
@@ -41,11 +43,17 @@ public partial class MainWindow : Window
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "PluginsUI", "last-session-sync.json");
 
-    private readonly LreTaskRunner          _runner     = new();
-    private readonly LreWorkspaceSyncRunner _syncRunner = new();
+    private static readonly string _autoSaveDownloadPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "PluginsUI", "last-session-download.json");
+
+    private readonly LreTaskRunner          _runner         = new();
+    private readonly LreWorkspaceSyncRunner _syncRunner     = new();
+    private readonly LreDownloadRunner      _downloadRunner = new();
     private CancellationTokenSource?        _cts;
 
-    private bool IsSyncTab => TaskTabControl.SelectedIndex == 1;
+    private bool IsSyncTab     => TaskTabControl.SelectedIndex == 1;
+    private bool IsDownloadTab => TaskTabControl.SelectedIndex == 2;
 
     // ─────────────────────────────────────────────────────────────────────────
     // Constructor
@@ -56,6 +64,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         ApplyConfig(ConfigurationService.Load<LreConfiguration>(_autoSavePath));
         ApplySyncConfig(ConfigurationService.Load<LreSyncConfiguration>(_autoSaveSyncPath));
+        ApplyDownloadConfig(ConfigurationService.Load<LreDownloadConfiguration>(_autoSaveDownloadPath));
         SetStatus("Ready.");
     }
 
@@ -108,7 +117,7 @@ public partial class MainWindow : Window
 
     private async void Run_Click(object sender, RoutedEventArgs e)
     {
-        if (_runner.IsRunning || _syncRunner.IsRunning)
+        if (_runner.IsRunning || _syncRunner.IsRunning || _downloadRunner.IsRunning)
         {
             MessageBox.Show("A task is already running. Use Stop to cancel it first.",
                 "PluginsUI", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -124,7 +133,17 @@ public partial class MainWindow : Window
 
         try
         {
-            if (IsSyncTab)
+            if (IsDownloadTab)
+            {
+                var cfg        = BuildDownloadConfig();
+                var password   = PCPassword.Password;
+                var proxyPwd   = ProxyPassword.Password;
+
+                AppendOutput($"[{DateTime.Now:HH:mm:ss}] Starting script download…");
+                var exitCode = await _downloadRunner.RunAsync(cfg, password, proxyPwd, progress, _cts.Token);
+                SetStatus(exitCode == 0 ? "Download completed successfully." : $"Download exited with code {exitCode}.");
+            }
+            else if (IsSyncTab)
             {
                 var cfg        = BuildSyncConfig();
                 var password   = PCPassword.Password;
@@ -160,14 +179,51 @@ public partial class MainWindow : Window
 
     private void Stop_Click(object sender, RoutedEventArgs e)
     {
-        if (!_runner.IsRunning && !_syncRunner.IsRunning) return;
+        if (!_runner.IsRunning && !_syncRunner.IsRunning && !_downloadRunner.IsRunning) return;
         _cts?.Cancel();
         _runner.Stop();
         _syncRunner.Stop();
+        _downloadRunner.Stop();
         SetStatus("Stopping…");
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void Help_Click(object sender, RoutedEventArgs e)
+    {
+        // Look for UserGuide.html next to the exe first, then next to the csproj (dev layout)
+        var candidates = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "UserGuide.html"),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
+                "..", "..", "..", "PluginsUI", "UserGuide.html"))  // dev: bin/Debug/net../
+        };
+
+        var guidePath = candidates.FirstOrDefault(File.Exists);
+        if (guidePath is null)
+        {
+            MessageBox.Show(
+                "UserGuide.html was not found next to PluginsUI.exe.\n\n" +
+                "Ensure the application is installed correctly.",
+                "PluginsUI — Help",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName        = guidePath,
+                UseShellExecute = true   // opens with the default browser
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Could not open the user guide:\n{ex.Message}",
+                "PluginsUI — Help", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
 
     private void ClearOutput_Click(object sender, RoutedEventArgs e)
         => OutputTextBox.Document.Blocks.Clear();
@@ -183,13 +239,17 @@ public partial class MainWindow : Window
             Title      = "Save Configuration",
             Filter     = "JSON configuration (*.json)|*.json|All files (*.*)|*.*",
             DefaultExt = ".json",
-            FileName   = IsSyncTab ? "lre-sync-config.json" : "lre-config.json"
+            FileName   = IsDownloadTab ? "lre-download-config.json"
+                       : IsSyncTab    ? "lre-sync-config.json"
+                       :                "lre-config.json"
         };
         if (dlg.ShowDialog(this) != true) return;
 
         try
         {
-            if (IsSyncTab)
+            if (IsDownloadTab)
+                ConfigurationService.Save(BuildDownloadConfig(), dlg.FileName);
+            else if (IsSyncTab)
                 ConfigurationService.Save(BuildSyncConfig(), dlg.FileName);
             else
                 ConfigurationService.Save(BuildConfig(), dlg.FileName);
@@ -218,7 +278,12 @@ public partial class MainWindow : Window
 
         try
         {
-            if (IsSyncTab)
+            if (IsDownloadTab)
+            {
+                var cfg = ConfigurationService.Load<LreDownloadConfiguration>(dlg.FileName);
+                ApplyDownloadConfig(cfg);
+            }
+            else if (IsSyncTab)
             {
                 var cfg = ConfigurationService.Load<LreSyncConfiguration>(dlg.FileName);
                 ApplySyncConfig(cfg);
@@ -377,6 +442,61 @@ public partial class MainWindow : Window
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Browse buttons — Download Scripts task
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private void BrowseDownloadWorkspace_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFolderDialog { Title = "Select Download Directory" };
+        if (dlg.ShowDialog(this) == true)
+            DownloadWorkspaceDir.Text = dlg.FolderName;
+    }
+
+    private void BrowseDownloadArtifacts_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFolderDialog { Title = "Select Artifacts Directory (Download Task)" };
+        if (dlg.ShowDialog(this) == true)
+            DownloadArtifactsDirectory.Text = dlg.FolderName;
+    }
+
+    private void BrowseDownloadNodeDist_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title  = "Select LreDownloadScriptsTask index.js (bootstrap)",
+            Filter = "JavaScript files (index.js)|index.js|All files (*.*)|*.*"
+        };
+        var guess = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..",
+                "angular", "LreDownloadScriptsTask"));
+        if (Directory.Exists(guess)) dlg.InitialDirectory = guess;
+
+        if (dlg.ShowDialog(this) == true)
+            DownloadNodeDistPath.Text = dlg.FileName;
+    }
+
+    private void DetectDownloadNodeDist_Click(object sender, RoutedEventArgs e)
+    {
+        var resolved = LreDownloadRunner.ResolveDistPath(null);
+        if (resolved is not null)
+        {
+            DownloadNodeDistPath.Text = resolved;
+            SetStatus($"Auto-detected: {resolved}");
+        }
+        else
+        {
+            SetStatus("LreDownloadScriptsTask index.js not found automatically.");
+            MessageBox.Show(
+                "Could not locate LreDownloadScriptsTask index.js automatically.\n\n" +
+                "Build the angular download task first:\n" +
+                "  cd angular && npm install && npm run build:download\n\n" +
+                "Then use Browse… to select the file manually.",
+                "PluginsUI — Detect",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Form interaction handlers
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -441,9 +561,9 @@ public partial class MainWindow : Window
     {
         // Update Run button tooltip to reflect the active task
         if (RunButton is null) return;
-        RunButton.ToolTip = IsSyncTab
-                ? "Sync workspace scripts to Enterprise Performance Engineering"
-            : "Run the performance test";
+        RunButton.ToolTip = IsDownloadTab ? "Download scripts from Enterprise Performance Engineering"
+                          : IsSyncTab     ? "Sync workspace scripts to Enterprise Performance Engineering"
+                          :                 "Run the performance test";
         SetStatus("Ready.");
     }
 
@@ -453,7 +573,7 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object sender, CancelEventArgs e)
     {
-        if (_runner.IsRunning || _syncRunner.IsRunning)
+        if (_runner.IsRunning || _syncRunner.IsRunning || _downloadRunner.IsRunning)
         {
             var result = MessageBox.Show(
                 "A task is still running. Stop it and close?",
@@ -461,9 +581,11 @@ public partial class MainWindow : Window
             if (result == MessageBoxResult.No) { e.Cancel = true; return; }
             _runner.Stop();
             _syncRunner.Stop();
+            _downloadRunner.Stop();
         }
         _runner.Dispose();
         _syncRunner.Dispose();
+        _downloadRunner.Dispose();
 
         try
         {
@@ -596,6 +718,50 @@ public partial class MainWindow : Window
         SyncDescriptionText.Text    = cfg.Description;
     }
 
+    /// <summary>Read form fields into a new <see cref="LreDownloadConfiguration"/> (Download Scripts task).</summary>
+    private LreDownloadConfiguration BuildDownloadConfig() => new()
+    {
+        ServerUrl                 = PCServerURL.Text.Trim(),
+        UseTokenForAuthentication = UseTokenForAuthentication.IsChecked == true,
+        UserName                  = PCUserName.Text.Trim(),
+        Domain                    = Domain.Text.Trim(),
+        Project                   = Project.Text.Trim(),
+        ProxyUrl                  = ProxyURL.Text.Trim(),
+        ProxyUserName             = ProxyUserName.Text.Trim(),
+        WorkspaceDir              = DownloadWorkspaceDir.Text.Trim(),
+        ParallelDownloads         = ValidateParallelDownloads(),
+        SuccessThreshold          = ValidateDownloadSuccessThreshold(),
+        ArtifactsDirectory        = DownloadArtifactsDirectory.Text.Trim(),
+        NodeDistPath              = DownloadNodeDistPath.Text.Trim(),
+        Description               = DownloadDescriptionText.Text.Trim()
+    };
+
+    /// <summary>Populate the Download form from a loaded <see cref="LreDownloadConfiguration"/>.</summary>
+    private void ApplyDownloadConfig(LreDownloadConfiguration cfg)
+    {
+        // Connection fields: only overwrite if not already set by CI/Sync tab
+        if (string.IsNullOrWhiteSpace(PCServerURL.Text) || PCServerURL.Text == "https://MyServer:443")
+        {
+            PCServerURL.Text = cfg.ServerUrl;
+            UseTokenForAuthentication.IsChecked = cfg.UseTokenForAuthentication;
+            PCUserName.Text  = cfg.UserName;
+            Domain.Text      = cfg.Domain;
+            Project.Text     = cfg.Project;
+        }
+        if (string.IsNullOrWhiteSpace(ProxyURL.Text))
+        {
+            ProxyURL.Text      = cfg.ProxyUrl;
+            ProxyUserName.Text = cfg.ProxyUserName;
+        }
+
+        DownloadWorkspaceDir.Text      = cfg.WorkspaceDir;
+        DownloadParallelDownloads.Text  = cfg.ParallelDownloads.ToString();
+        DownloadSuccessThreshold.Text   = cfg.SuccessThreshold;
+        DownloadArtifactsDirectory.Text = cfg.ArtifactsDirectory;
+        DownloadNodeDistPath.Text       = cfg.NodeDistPath;
+        DownloadDescriptionText.Text    = cfg.Description;
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Validation
     // ─────────────────────────────────────────────────────────────────────────
@@ -608,7 +774,16 @@ public partial class MainWindow : Window
         if (string.IsNullOrWhiteSpace(Domain.Text))       errors.Add("Domain is required.");
         if (string.IsNullOrWhiteSpace(Project.Text))      errors.Add("Project is required.");
 
-        if (!IsSyncTab)
+        if (IsDownloadTab)
+        {
+            // Download directory is created automatically if missing — no extra validation needed
+        }
+        else if (IsSyncTab)
+        {
+            if (string.IsNullOrWhiteSpace(SyncWorkspaceDir.Text))
+                errors.Add("Workspace directory is required.");
+        }
+        else
         {
             var testIdValue = TestID.Text.Trim();
             if (string.IsNullOrWhiteSpace(testIdValue))
@@ -617,18 +792,11 @@ public partial class MainWindow : Window
             }
             else
             {
-                // Accept either a positive integer OR a path to a .yaml / .yml file
                 bool isYaml = testIdValue.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase)
                            || testIdValue.EndsWith(".yml",  StringComparison.OrdinalIgnoreCase);
-
                 if (!isYaml && (!int.TryParse(testIdValue, out int parsedId) || parsedId <= 0))
                     errors.Add("Test ID must be a positive integer, or specify a path to a .yaml/.yml file.");
             }
-        }
-        else
-        {
-            if (string.IsNullOrWhiteSpace(SyncWorkspaceDir.Text))
-                errors.Add("Workspace directory is required.");
         }
 
         if (errors.Count == 0) return true;
@@ -684,6 +852,32 @@ public partial class MainWindow : Window
         return "";
     }
 
+    private int ValidateParallelDownloads()
+    {
+        if (int.TryParse(DownloadParallelDownloads.Text, out int n))
+        {
+            n = Math.Clamp(n, 1, 20);
+            DownloadParallelDownloads.Text = n.ToString();
+            return n;
+        }
+        DownloadParallelDownloads.Text = "1";
+        return 1;
+    }
+
+    private string ValidateDownloadSuccessThreshold()
+    {
+        var raw = DownloadSuccessThreshold.Text.Trim();
+        if (string.IsNullOrEmpty(raw)) return "";
+        if (int.TryParse(raw, out int n))
+        {
+            if (n >= 0 && n <= 100) return n.ToString();
+            DownloadSuccessThreshold.Text = "";
+            return "";
+        }
+        DownloadSuccessThreshold.Text = "";
+        return "";
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Output colour palette (dark terminal theme)
     // ─────────────────────────────────────────────────────────────────────────
@@ -735,7 +929,7 @@ public partial class MainWindow : Window
         LoadConfigButton.IsEnabled     = !running;
         TaskTabControl.IsEnabled       = !running;   // prevent tab switching during run
         SetStatus(running
-            ? (IsSyncTab ? "Syncing workspace…" : "Running test…")
+            ? (IsDownloadTab ? "Downloading scripts…" : IsSyncTab ? "Syncing workspace…" : "Running test…")
             : StatusText.Text);
     }
 }

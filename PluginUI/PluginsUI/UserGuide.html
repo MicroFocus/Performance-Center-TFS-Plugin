@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OpenText Enterprise Performance Engineering Plugin — User Guide</title>
+<style>
+  :root {
+    --accent:  #0078d4;
+    --accent2: #005a9e;
+    --bg:      #ffffff;
+    --bg2:     #f4f6f8;
+    --bg3:     #eaf2fb;
+    --border:  #d0d7de;
+    --text:    #1a1a1a;
+    --muted:   #57606a;
+    --green:   #1a7f37;
+    --red:     #cf222e;
+    --gold:    #9a6700;
+    --code-bg: #f0f2f4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 28px 64px;
+  }
+
+  /* ── Header ── */
+  .app-header {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    color: #fff;
+    border-radius: 8px;
+    padding: 28px 32px;
+    margin-bottom: 36px;
+  }
+  .app-header h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .app-header p  { font-size: 13px; opacity: .85; }
+
+  /* ── Nav ── */
+  nav {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 36px;
+  }
+  nav h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 10px; }
+  nav ol { padding-left: 20px; }
+  nav li { margin: 3px 0; }
+  nav a  { color: var(--accent); text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+
+  /* ── Sections ── */
+  section { margin-bottom: 44px; }
+  h2 {
+    font-size: 18px; font-weight: 600;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 6px; margin-bottom: 16px;
+    color: var(--accent2);
+  }
+  h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; color: var(--text); }
+  p  { margin-bottom: 10px; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 13px; }
+  th {
+    background: var(--accent);
+    color: #fff;
+    text-align: left;
+    padding: 8px 12px;
+    font-weight: 600;
+  }
+  td { padding: 7px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--bg2); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; font-weight: 500; }
+
+  /* ── Callouts ── */
+  .note, .tip, .warning {
+    border-left: 4px solid;
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 13px;
+  }
+  .note    { border-color: var(--accent);  background: var(--bg3); }
+  .tip     { border-color: var(--green);   background: #eafbee; }
+  .warning { border-color: var(--gold);    background: #fff8e1; }
+  .note::before    { content: "ℹ️  Note: ";    font-weight: 600; color: var(--accent2); }
+  .tip::before     { content: "✅  Tip: ";     font-weight: 600; color: var(--green);  }
+  .warning::before { content: "⚠️  Warning: "; font-weight: 600; color: var(--gold);   }
+
+  /* ── Code / kbd ── */
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-family: Consolas, "Courier New", monospace; font-size: 12.5px; }
+  pre  { background: #1e1e1e; color: #d4d4d4; padding: 14px 16px; border-radius: 6px; overflow-x: auto; font-size: 12.5px; margin: 10px 0 14px; }
+  kbd  { background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 12px; font-family: "Segoe UI", sans-serif; }
+
+  /* ── Path example ── */
+  .path-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-family: Consolas, monospace;
+    font-size: 12.5px;
+    margin: 10px 0;
+    line-height: 1.8;
+  }
+
+  /* ── Tab pill ── */
+  .tab-label {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 12px;
+    padding: 1px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+
+  /* ── Footer ── */
+  footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>OpenText Enterprise Performance Engineering Plugin</h1>
+  <p>PluginsUI — User Guide &nbsp;·&nbsp; Version 3.x &nbsp;·&nbsp; © 2026 OpenText</p>
+</div>
+
+<!-- ── Table of Contents ── -->
+<nav>
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#first-launch">First Launch</a></li>
+    <li><a href="#connection">Connection &amp; Authentication</a></li>
+    <li><a href="#proxy">Proxy Settings</a></li>
+    <li><a href="#tab-ci">CI Test Run tab</a></li>
+    <li><a href="#tab-sync">Workspace Sync tab</a></li>
+    <li><a href="#tab-download">Download Scripts tab</a></li>
+    <li><a href="#buttons">Button Bar</a></li>
+    <li><a href="#output">Output Panel</a></li>
+    <li><a href="#config">Saving &amp; Loading Configuration</a></li>
+    <li><a href="#session">Auto Session Restore</a></li>
+    <li><a href="#cli">Command-Line Usage (no GUI)</a></li>
+  </ol>
+</nav>
+
+<!-- ═══════════════════════════════════════════ 1. Overview -->
+<section id="overview">
+  <h2>1 · Overview</h2>
+  <p>
+    <strong>PluginsUI</strong> is a standalone desktop application that lets you run
+    OpenText Enterprise Performance Engineering tasks directly from your workstation —
+    without needing Azure DevOps or a build agent.
+  </p>
+  <table>
+    <tr><th>Tab</th><th>What it does</th></tr>
+    <tr>
+      <td><span class="tab-label">CI Test Run</span></td>
+      <td>Authenticate, reserve a timeslot, start and monitor a performance test run, and download result artifacts.</td>
+    </tr>
+    <tr>
+      <td><span class="tab-label">Workspace Sync</span></td>
+      <td>Scan a local repository for performance test scripts (.usr, .jmx, .scala, DevWeb) and upload them to a project's test plan on the server.</td>
+    </tr>
+    <tr>
+      <td><span class="tab-label">Download Scripts</span></td>
+      <td>Download all test scripts from a domain/project on the server and extract them into a local folder, mirroring the server-side folder structure.</td>
+    </tr>
+  </table>
+  <p>
+    All three tasks use the same connection credentials. Switch between tabs at any time —
+    settings are remembered separately per tab.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════ 2. First Launch -->
+<section id="first-launch">
+  <h2>2 · First Launch</h2>
+  <p>
+    On first launch the application opens with default placeholder values.
+    Start by filling in the <strong>Connection</strong> section at the top — this is
+    shared by all three tabs.
+  </p>
+  <div class="tip">
+    Node.js 20 or later must be installed on your machine. Without it the tasks cannot
+    run. Download from <code>https://nodejs.org</code>.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ 3. Connection -->
+<section id="connection">
+  <h2>3 · Connection &amp; Authentication</h2>
+  <p>The <strong>Connection</strong> section is at the top of the window and is shared by all tabs.</p>
+
+  <h3>Server URL</h3>
+  <p>Enter the full URL of your Enterprise Performance Engineering server:</p>
+  <div class="path-box">
+    https://epe.mycompany.com:444<br>
+    https://epe.mycompany.com:444/?tenant=fa128c06-5436-413d-9cfa-9f04bb738df3
+  </div>
+  <p>Include the <code>/?tenant=&lt;guid&gt;</code> suffix if your server uses multi-tenancy.</p>
+
+  <h3>Username / Password authentication</h3>
+  <p>
+    Enter your LRE username and password. Use the <kbd>Show</kbd> / <kbd>Hide</kbd>
+    toggle next to the password field to reveal what you typed.
+  </p>
+
+  <h3>Token authentication (SSO servers)</h3>
+  <p>
+    If your server is configured with Single Sign-On (SSO), username/password login is
+    disabled. You must use an API token instead:
+  </p>
+  <ol style="padding-left:20px; margin:8px 0 12px;">
+    <li>Check <strong>Authenticate with token</strong>.</li>
+    <li>Enter your <strong>Client Id key</strong> in the <em>User name / Id key</em> field.</li>
+    <li>Enter your <strong>Client Secret key</strong> in the <em>Password / Secret key</em> field.</li>
+  </ol>
+  <div class="note">
+    Token keys look like <code>I_KEY_…</code> (Id) and <code>S_KEY_…</code> (Secret).
+    Obtain them from your LRE administrator.
+  </div>
+
+  <h3>Domain &amp; Project</h3>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>Domain</td><td>The LRE domain that contains your project (e.g. <code>DEFAULT</code>).</td></tr>
+    <tr><td>Project</td><td>The name of the LRE project you want to work with.</td></tr>
+  </table>
+
+  <h3>Test Connection</h3>
+  <p>
+    Click <kbd>Test Connection</kbd> to verify your server URL and credentials before
+    running a full task. A dialog reports success or failure with a clear error message.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════ 4. Proxy -->
+<section id="proxy">
+  <h2>4 · Proxy Settings</h2>
+  <p>
+    If your network requires a proxy to reach the LRE server, expand the
+    <strong>Proxy (optional)</strong> section and fill in:
+  </p>
+  <table>
+    <tr><th>Field</th><th>Example</th></tr>
+    <tr><td>Proxy URL</td><td><code>http://proxy.mycompany.com:8080</code></td></tr>
+    <tr><td>Proxy user name</td><td><code>domain\username</code> (leave blank if not needed)</td></tr>
+    <tr><td>Proxy password</td><td>Leave blank if the proxy is unauthenticated.</td></tr>
+  </table>
+  <p>Leave the Proxy URL empty if you connect directly to the server.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════ 5. CI Test Run -->
+<section id="tab-ci">
+  <h2>5 · CI Test Run tab</h2>
+  <p>Use this tab to start and monitor a performance test run on the LRE server.</p>
+
+  <h3>Test section</h3>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr>
+      <td>Test ID or YAML</td>
+      <td>
+        Enter a numeric Test ID (visible in LRE under Test Management → Test Plan)
+        <em>or</em> browse to a <code>.yaml</code> / <code>.yml</code> test-definition file.
+        Use <kbd>Browse…</kbd> to pick a YAML file.
+      </td>
+    </tr>
+    <tr>
+      <td>Workspace dir</td>
+      <td>
+        Root folder of your local repository. Used to resolve relative YAML paths.
+        Leave empty when using an absolute YAML path or a plain numeric Test ID.
+      </td>
+    </tr>
+    <tr>
+      <td>Test Instance ID</td>
+      <td>
+        <em>Automatically select…</em> — the task reuses an existing test instance or
+        creates one if none exists (recommended).<br>
+        <em>Manual selection</em> — pin to a specific Test Instance ID from
+        LRE → Test Lab.
+      </td>
+    </tr>
+  </table>
+
+  <h3>Run Options section</h3>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>Post run action</td><td><em>Collate Results</em>, <em>Collate and Analyze</em> (default), or <em>Do Not Collate</em>.</td></tr>
+    <tr><td>Trending</td><td>Do not trend / use associated trend report / specify a trend report ID.</td></tr>
+    <tr><td>Timeslot duration</td><td>Minutes to reserve (minimum 30). The test is stopped if the timeslot expires.</td></tr>
+    <tr><td>Use VUDs</td><td>Check to consume Virtual User Day licenses instead of hourly ones.</td></tr>
+    <tr><td>Status per SLA</td><td>When checked, the run is marked failed if the configured SLA is not met.</td></tr>
+    <tr><td>On timeslot creation failure</td><td>Retry with a delay and number of attempts, or do not retry.</td></tr>
+  </table>
+
+  <h3>Advanced section</h3>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>Artifacts directory</td><td>Where result files (reports, logs) are saved. Leave blank for a timestamped folder in <code>%TEMP%</code>.</td></tr>
+    <tr><td>Node dist path</td><td>Path to the task bootstrap file. Leave blank — the application finds it automatically. Use <kbd>Detect</kbd> or <kbd>Browse…</kbd> only if auto-detection fails.</td></tr>
+    <tr><td>Description</td><td>Optional free-text label shown in the output panel header.</td></tr>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════ 6. Workspace Sync -->
+<section id="tab-sync">
+  <h2>6 · Workspace Sync tab</h2>
+  <p>
+    Scans a local directory for performance test script folders and uploads them to the
+    LRE server's test plan, preserving the folder hierarchy.
+  </p>
+  <div class="note">
+    A folder is recognized as a script if it contains a <code>.usr</code>, <code>.jmx</code>,
+    <code>.scala</code>, or <code>.java</code> file, or both <code>main.js</code> and
+    <code>rts.yml</code> (DevWeb scripts).
+  </div>
+
+  <h3>Workspace section</h3>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>Workspace directory</td><td>Root of the local folder tree to scan. Use <kbd>Browse…</kbd> to pick a folder.</td></tr>
+    <tr><td>Runtime only</td><td>Upload only scripts that have a runtime component (DevWeb / JMeter / Gatling). Leave unchecked to upload all detected types including <code>.usr</code>.</td></tr>
+    <tr><td>Parallel uploads</td><td>Number of scripts to upload at the same time (1–20). Default: 1. Increase for large repositories if the server supports concurrent uploads.</td></tr>
+    <tr><td>Success threshold (%)</td><td>Minimum percentage of scripts that must upload successfully for the task to pass. Leave empty for the default (50%). Set to 100 to fail if even one script fails.</td></tr>
+    <tr><td>Base commit SHA</td><td><em>Optional.</em> Git commit SHA to use for differential sync — only scripts changed since this commit are uploaded. Leave empty for a full sync (all scripts).</td></tr>
+  </table>
+
+  <h3>Advanced section</h3>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>Artifacts directory</td><td>Where upload logs are saved. Leave blank for a timestamped folder in <code>%TEMP%</code>.</td></tr>
+    <tr><td>Node dist path</td><td>Leave blank — auto-detected. Use <kbd>Detect</kbd> or <kbd>Browse…</kbd> only if needed.</td></tr>
+    <tr><td>Description</td><td>Optional label shown in the output panel header.</td></tr>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════ 7. Download Scripts -->
+<section id="tab-download">
+  <h2>7 · Download Scripts tab</h2>
+  <p>
+    Downloads <strong>all</strong> test scripts from the selected domain/project and
+    extracts each one into a local folder that mirrors the server-side test-plan structure.
+  </p>
+
+  <h3>How the local folder structure is created</h3>
+  <p>
+    Each script on the server has a path like <code>Subject\folder1\SubFolder1</code>
+    and a name like <code>MyScript</code>. The root <code>Subject</code> segment is
+    stripped and the script is extracted into:
+  </p>
+  <div class="path-box">
+    {Download directory}\folder1\SubFolder1\MyScript\<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;├── MyScript.usr<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;└── ...
+  </div>
+  <p>
+    The intermediate <code>.usz</code> archive file (a standard zip) is deleted
+    automatically after extraction — it never appears in the workspace.
+  </p>
+
+  <h3>Download section</h3>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>Download directory</td><td>Local root folder where scripts are extracted. Use <kbd>Browse…</kbd> to pick a folder. The folder is created automatically if it does not exist.</td></tr>
+    <tr><td>Parallel downloads</td><td>Number of scripts to download simultaneously (1–20). Default: 1. Increase to speed up large projects.</td></tr>
+    <tr><td>Success threshold (%)</td><td>Minimum percentage of scripts that must download successfully for the task to pass. Leave empty for the default (50%).</td></tr>
+  </table>
+
+  <h3>Advanced section</h3>
+  <table>
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>Artifacts directory</td><td>Where download logs are saved. Leave blank for a timestamped folder in <code>%TEMP%</code>.</td></tr>
+    <tr><td>Node dist path</td><td>Leave blank — auto-detected. Use <kbd>Detect</kbd> or <kbd>Browse…</kbd> only if needed.</td></tr>
+    <tr><td>Description</td><td>Optional label shown in the output panel header.</td></tr>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════ 8. Button Bar -->
+<section id="buttons">
+  <h2>8 · Button Bar</h2>
+  <table>
+    <tr><th>Button</th><th>Action</th></tr>
+    <tr><td><kbd>Load Config</kbd></td><td>Load a previously saved configuration file (<code>.json</code>) for the active tab. Passwords are never stored in the file and must be re-entered.</td></tr>
+    <tr><td><kbd>Save Config</kbd></td><td>Save the current form values to a <code>.json</code> file. Passwords are intentionally excluded.</td></tr>
+    <tr><td><kbd>Test Connection</kbd></td><td>Verify that the server URL and credentials are correct without starting a full task.</td></tr>
+    <tr><td><kbd>▶ Run</kbd></td><td>Start the task configured in the active tab.</td></tr>
+    <tr><td><kbd>■ Stop</kbd></td><td>Cancel the running task immediately (kills the entire Node.js process tree).</td></tr>
+    <tr><td><kbd>❓ Help</kbd></td><td>Open this user guide in your default browser.</td></tr>
+    <tr><td><kbd>Close</kbd></td><td>Close the application. If a task is running you will be asked to confirm.</td></tr>
+  </table>
+  <div class="note">
+    The <kbd>▶ Run</kbd> button and the tab selector are disabled while a task is running
+    to prevent conflicting operations.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ 9. Output Panel -->
+<section id="output">
+  <h2>9 · Output Panel</h2>
+  <p>
+    The dark panel at the bottom of the window streams live output from the running task.
+    Lines are colour-coded:
+  </p>
+  <table>
+    <tr><th>Colour</th><th>Meaning</th></tr>
+    <tr><td style="color:#d4d4d4;background:#1e1e1e">Light grey</td><td>Normal information messages.</td></tr>
+    <tr><td style="color:#ff6b6b;background:#1e1e1e"><strong>Red</strong></td><td><code>[ERR]</code> — error messages.</td></tr>
+    <tr><td style="color:#ffd700;background:#1e1e1e"><strong>Gold</strong></td><td><code>[WARN]</code> — warnings.</td></tr>
+    <tr><td style="color:#98d982;background:#1e1e1e"><strong>Green</strong></td><td>Success or completion messages.</td></tr>
+    <tr><td style="color:#9cdcfe;background:#1e1e1e"><strong>Light blue</strong></td><td>Path and metadata lines.</td></tr>
+  </table>
+  <p>Click <kbd>Clear</kbd> (next to "Output") to clear the panel at any time.</p>
+  <p>
+    Log files are saved to the <strong>Artifacts directory</strong> so you can review
+    them after the application is closed:
+  </p>
+  <table>
+    <tr><th>Task</th><th>Log file name pattern</th></tr>
+    <tr><td>CI Test Run</td><td><code>LreCiTask.log</code></td></tr>
+    <tr><td>Workspace Sync</td><td><code>lre_workspace_sync_&lt;timestamp&gt;.log</code></td></tr>
+    <tr><td>Download Scripts</td><td><code>lre_download_scripts_&lt;timestamp&gt;.log</code></td></tr>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════ 10. Config -->
+<section id="config">
+  <h2>10 · Saving &amp; Loading Configuration</h2>
+  <p>
+    You can save the settings of the active tab to a <code>.json</code> file and reload
+    them later — useful when working with multiple projects or switching between
+    environments.
+  </p>
+  <ul style="padding-left:20px; margin:8px 0;">
+    <li><strong>Save Config</strong> — prompts you to choose a file location and name.</li>
+    <li><strong>Load Config</strong> — picks up all fields from the file. Re-enter passwords after loading.</li>
+  </ul>
+  <div class="warning">
+    Passwords are <strong>never</strong> written to configuration files. You must always
+    re-enter them after loading a saved configuration.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ 11. Session -->
+<section id="session">
+  <h2>11 · Auto Session Restore</h2>
+  <p>
+    When you close the application, all form values (except passwords) are saved
+    automatically. On the next launch, each tab is restored to its last state — so you
+    only need to re-enter passwords.
+  </p>
+  <p>The session files are stored here (not normally needed directly):</p>
+  <div class="path-box">
+    %LOCALAPPDATA%\PluginsUI\last-session.json          ← CI Test Run<br>
+    %LOCALAPPDATA%\PluginsUI\last-session-sync.json     ← Workspace Sync<br>
+    %LOCALAPPDATA%\PluginsUI\last-session-download.json ← Download Scripts
+  </div>
+  <div class="tip">
+    To reset all settings to defaults, delete the three files above and restart
+    the application.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ 12. CLI -->
+<section id="cli">
+  <h2>12 · Command-Line Usage (no GUI)</h2>
+  <p>
+    Companion PowerShell scripts are included alongside <code>PluginsUI.exe</code>.
+    They perform the same tasks without opening the GUI — useful for scripted or
+    automated workflows.
+  </p>
+
+  <h3>CI Test Run</h3>
+  <pre>.\Scripts\run-lre-task.ps1 `
+    -PCServer  "https://epe.mycompany.com:444/?tenant=&lt;guid&gt;" `
+    -Domain    "DEFAULT"  -Project "MyProject" `
+    -TestID    "42" `
+    -UserName  "admin"    -Password "s3cr3t"</pre>
+
+  <h3>Workspace Sync</h3>
+  <pre>.\Scripts\run-workspace-sync.ps1 `
+    -PCServer      "https://epe.mycompany.com:444" `
+    -Domain        "DEFAULT"  -Project "MyProject" `
+    -WorkspaceDir  "C:\repos\myproject" `
+    -UserName      "admin"    -Password "s3cr3t"</pre>
+
+  <h3>Download Scripts</h3>
+  <pre>.\Scripts\run-download-scripts.ps1 `
+    -PCServer      "https://epe.mycompany.com:444/?tenant=&lt;guid&gt;" `
+    -Domain        "DEFAULT"  -Project "MyProject" `
+    -WorkspaceDir  "C:\downloads\scripts" `
+    -UserName      "admin"    -Password "s3cr3t" `
+    -ParallelDownloads 5</pre>
+
+  <p>
+    Run <code>Get-Help .\Scripts\run-download-scripts.ps1 -Full</code> (or the
+    equivalent for any script) for a complete parameter reference.
+  </p>
+</section>
+
+<footer>
+  OpenText Enterprise Performance Engineering Plugin &nbsp;·&nbsp;
+  © 2026 OpenText or one of its affiliates. All rights reserved. &nbsp;·&nbsp;
+  Apache License 2.0
+</footer>
+
+</body>
+</html>
+

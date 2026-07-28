@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    Prepares a deployment-ready staging folder for PluginsUI + both angular tasks.
+    Prepares a deployment-ready staging folder for PluginsUI + all three angular tasks.
 .DESCRIPTION
     Produces a self-contained folder that the WiX installer (PluginsInstaller) can
     package as-is.
@@ -8,7 +8,7 @@
     -------------
     <staging>\
       PluginsUI.exe / .dll / runtimeconfig.json ...
-      node_modules\          PRODUCTION deps ONLY (~6-10 MB, shared by both tasks)
+      node_modules\          PRODUCTION deps ONLY (~6-10 MB, shared by all tasks)
       LreCiTask\
         index.js               bootstrap (polyfills + loads dist)
         dist\                  compiled TypeScript output
@@ -19,10 +19,16 @@
         dist\
           LreWorkspaceSyncTask\index.js
           src\...
+      LreDownloadScriptsTask\
+        index.js               bootstrap
+        dist\
+          LreDownloadScriptsTask\index.js
+          src\...
       Scripts\
         test-connection.js
         run-lre-task.ps1
         run-workspace-sync.ps1
+        run-download-scripts.ps1
       Assets\
         pc-logo.png  qicon.png  PC.ico  ...
     NOTE: The full dev node_modules (TypeScript, ESLint, ...) is NEVER
@@ -35,8 +41,8 @@
 .PARAMETER SkipAngularBuild
     Skip "npm run build" -- use the existing dist\ from the source tree.
 .PARAMETER FromVsix
-    Extract dist\ + bootstrap index.js for both tasks from a .vsix.
-    Faster when a published .vsix already exists.
+    Extract dist\ + bootstrap index.js for CI and Sync tasks from a .vsix.
+    LreDownloadScriptsTask is always sourced from the source tree (it is not in the vsix).
     node_modules are still installed lean from the angular/ root.
 .PARAMETER VsixPath
     Full path to the .vsix.  Only used with -FromVsix.
@@ -46,7 +52,7 @@
     .\prepare-release.ps1
     # Reuse existing dist\ in the source tree (skip npm run build)
     .\prepare-release.ps1 -SkipAngularBuild
-    # Extract dist\ + bootstrap from the latest published .vsix
+    # Extract CI+Sync dist\ + bootstrap from the latest published .vsix
     .\prepare-release.ps1 -FromVsix
     # Extract dist\ from a specific .vsix
     .\prepare-release.ps1 -FromVsix -VsixPath "C:\builds\Micro-Focus.PCIntegration-3.1.0.vsix"
@@ -62,13 +68,14 @@ param(
 )
 $ErrorActionPreference = "Stop"
 # ---- Resolve paths -----------------------------------------------------------
-$repoRoot        = Split-Path $PSScriptRoot -Parent
-$pluginUiDir     = $PSScriptRoot
-$angularRoot     = Join-Path $repoRoot "angular"                # single npm project root
-$angularCiTask   = Join-Path $angularRoot "LreCiTask"           # task manifest + bootstrap
-$angularSyncTask = Join-Path $angularRoot "LreWorkspaceSyncTask"
-$pluginsUiProj   = Join-Path $pluginUiDir "PluginsUI"
-$extensionDir    = Join-Path $repoRoot "Extension"
+$repoRoot            = Split-Path $PSScriptRoot -Parent
+$pluginUiDir         = $PSScriptRoot
+$angularRoot         = Join-Path $repoRoot "angular"                       # single npm project root
+$angularCiTask       = Join-Path $angularRoot "LreCiTask"                  # task manifest + bootstrap
+$angularSyncTask     = Join-Path $angularRoot "LreWorkspaceSyncTask"
+$angularDownloadTask = Join-Path $angularRoot "LreDownloadScriptsTask"
+$pluginsUiProj       = Join-Path $pluginUiDir "PluginsUI"
+$extensionDir        = Join-Path $repoRoot "Extension"
 if ([string]::IsNullOrWhiteSpace($StagingDir)) {
     $StagingDir = Join-Path $pluginUiDir "staging"
 }
@@ -80,24 +87,26 @@ if ([string]::IsNullOrWhiteSpace($VsixPath) -or -not (Test-Path $VsixPath)) {
     if ($latest) { $VsixPath = $latest.FullName }
 }
 # Sub-task directories inside staging
-$stagingCi   = Join-Path $StagingDir "LreCiTask"
-$stagingSync = Join-Path $StagingDir "LreWorkspaceSyncTask"
+$stagingCi       = Join-Path $StagingDir "LreCiTask"
+$stagingSync     = Join-Path $StagingDir "LreWorkspaceSyncTask"
+$stagingDownload = Join-Path $StagingDir "LreDownloadScriptsTask"
 Write-Host ""
 Write-Host "=== PluginsUI Release Staging ===" -ForegroundColor Cyan
 Write-Host "  Repo root         : $repoRoot"
 Write-Host "  Angular root      : $angularRoot"
 Write-Host "  Staging dir       : $StagingDir"
 Write-Host "  Configuration     : $Configuration"
-if ($FromVsix) { Write-Host "  Source            : VSIX  -->  $VsixPath" -ForegroundColor Yellow }
+if ($FromVsix) { Write-Host "  Source            : VSIX  -->  $VsixPath  (CI+Sync tasks only)" -ForegroundColor Yellow }
 Write-Host ""
 # ---- Clean staging -----------------------------------------------------------
 if (Test-Path $StagingDir) {
     Write-Host "Cleaning previous staging folder..." -ForegroundColor Yellow
     Remove-Item $StagingDir -Recurse -Force
 }
-New-Item -ItemType Directory -Path $StagingDir -Force | Out-Null
-New-Item -ItemType Directory -Path $stagingCi   -Force | Out-Null
-New-Item -ItemType Directory -Path $stagingSync -Force | Out-Null
+New-Item -ItemType Directory -Path $StagingDir       -Force | Out-Null
+New-Item -ItemType Directory -Path $stagingCi        -Force | Out-Null
+New-Item -ItemType Directory -Path $stagingSync      -Force | Out-Null
+New-Item -ItemType Directory -Path $stagingDownload  -Force | Out-Null
 # ---- Helper: extract a task's dist\ + bootstrap index.js from the VSIX ------
 function Extract-TaskFromVsix {
     param(
@@ -130,9 +139,10 @@ function Extract-TaskFromVsix {
     }
     return $extracted
 }
-# ---- Step 1: Obtain dist\ + bootstrap for both tasks -------------------------
-Write-Host "Step 1 -- Obtaining dist\ + bootstrap for both tasks..." -ForegroundColor Yellow
+# ---- Step 1: Obtain dist\ + bootstrap for all three tasks -------------------
+Write-Host "Step 1 -- Obtaining dist\ + bootstrap for all tasks..." -ForegroundColor Yellow
 if ($FromVsix) {
+    # CI + Sync tasks come from the vsix; Download task is always from source tree
     if (-not (Test-Path $VsixPath)) { throw "VSIX not found: $VsixPath" }
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $zip = [System.IO.Compression.ZipFile]::OpenRead($VsixPath)
@@ -143,10 +153,22 @@ if ($FromVsix) {
     if ($nSync -eq 0) { throw "No LreWorkspaceSyncTask files found in VSIX: $VsixPath" }
     Write-Host "  OK  LreCiTask: $nCi files extracted from VSIX." -ForegroundColor Green
     Write-Host "  OK  LreWorkspaceSyncTask: $nSync files extracted from VSIX." -ForegroundColor Green
+    # Download task: always copy from source tree (not in vsix)
+    $dlDistSrc = Join-Path $angularDownloadTask "dist"
+    if (-not (Test-Path $dlDistSrc)) {
+        Write-Host "  LreDownloadScriptsTask dist\ not found — building now..." -ForegroundColor Yellow
+        Push-Location $angularRoot
+        try { npm run build:download; if ($LASTEXITCODE -ne 0) { throw "build:download failed" } }
+        finally { Pop-Location }
+    }
+    Copy-Item $dlDistSrc (Join-Path $stagingDownload "dist") -Recurse -Force
+    Copy-Item (Join-Path $angularDownloadTask "index.js") (Join-Path $stagingDownload "index.js") -Force
+    Write-Host "  OK  LreDownloadScriptsTask staged from source tree." -ForegroundColor Green
 } elseif ($SkipAngularBuild) {
     foreach ($pair in @(
-        @{ Task = "LreCiTask";            Src = $angularCiTask;   Dst = $stagingCi   },
-        @{ Task = "LreWorkspaceSyncTask"; Src = $angularSyncTask; Dst = $stagingSync }
+        @{ Task = "LreCiTask";             Src = $angularCiTask;       Dst = $stagingCi       },
+        @{ Task = "LreWorkspaceSyncTask";  Src = $angularSyncTask;     Dst = $stagingSync     },
+        @{ Task = "LreDownloadScriptsTask";Src = $angularDownloadTask; Dst = $stagingDownload }
     )) {
         $distSrc = Join-Path $pair.Src "dist"
         if (-not (Test-Path $distSrc)) {
@@ -157,7 +179,7 @@ if ($FromVsix) {
         Write-Host "  OK  $($pair.Task) dist\ + bootstrap copied from source tree." -ForegroundColor Green
     }
 } else {
-    Write-Host "  Building both tasks from angular/ root..." -ForegroundColor DarkGray
+    Write-Host "  Building all tasks from angular/ root..." -ForegroundColor DarkGray
     Push-Location $angularRoot
     try {
         npm install 2>&1 | Out-Null
@@ -165,8 +187,9 @@ if ($FromVsix) {
         if ($LASTEXITCODE -ne 0) { throw "npm run build failed (exit $LASTEXITCODE)" }
     } finally { Pop-Location }
     foreach ($pair in @(
-        @{ Task = "LreCiTask";            Src = $angularCiTask;   Dst = $stagingCi   },
-        @{ Task = "LreWorkspaceSyncTask"; Src = $angularSyncTask; Dst = $stagingSync }
+        @{ Task = "LreCiTask";             Src = $angularCiTask;       Dst = $stagingCi       },
+        @{ Task = "LreWorkspaceSyncTask";  Src = $angularSyncTask;     Dst = $stagingSync     },
+        @{ Task = "LreDownloadScriptsTask";Src = $angularDownloadTask; Dst = $stagingDownload }
     )) {
         Copy-Item (Join-Path $pair.Src "dist")     (Join-Path $pair.Dst "dist")     -Recurse -Force
         Copy-Item (Join-Path $pair.Src "index.js") (Join-Path $pair.Dst "index.js") -Force
@@ -189,6 +212,12 @@ Get-ChildItem $publishDir -File | Copy-Item -Destination $StagingDir
 foreach ($sub in @("Assets", "Scripts")) {
     $src = Join-Path $publishDir $sub
     if (Test-Path $src) { Copy-Item $src (Join-Path $StagingDir $sub) -Recurse -Force }
+}
+# Copy UserGuide.html to staging root so it sits next to PluginsUI.exe
+$guideSource = Join-Path $pluginsUiProj "UserGuide.html"
+if (Test-Path $guideSource) {
+    Copy-Item $guideSource (Join-Path $StagingDir "UserGuide.html") -Force
+    Write-Host "  OK  UserGuide.html staged." -ForegroundColor Green
 }
 Remove-Item $publishDir -Recurse -Force
 # ---- Step 3: Install shared production node_modules -------------------------
@@ -223,14 +252,17 @@ function Get-DirSizeMB($path) {
         Measure-Object Length -Sum).Sum / 1MB
 }
 $items = @(
-    @{ Name = "LreCiTask\index.js";         Path = (Join-Path $stagingCi   "index.js") }
-    @{ Name = "LreCiTask\dist\";            Path = (Join-Path $stagingCi   "dist") }
-    @{ Name = "LreWSSyncTask\index.js";     Path = (Join-Path $stagingSync "index.js") }
-    @{ Name = "LreWSSyncTask\dist\";        Path = (Join-Path $stagingSync "dist") }
-    @{ Name = "node_modules\ (shared)";     Path = $nodeModulesDst }
-    @{ Name = "Scripts\";                   Path = (Join-Path $StagingDir  "Scripts") }
-    @{ Name = "Assets\";                    Path = (Join-Path $StagingDir  "Assets") }
-    @{ Name = "PluginsUI.exe";              Path = (Join-Path $StagingDir  "PluginsUI.exe") }
+    @{ Name = "LreCiTask\index.js";           Path = (Join-Path $stagingCi       "index.js") }
+    @{ Name = "LreCiTask\dist\";              Path = (Join-Path $stagingCi       "dist") }
+    @{ Name = "LreWSSyncTask\index.js";       Path = (Join-Path $stagingSync     "index.js") }
+    @{ Name = "LreWSSyncTask\dist\";          Path = (Join-Path $stagingSync     "dist") }
+    @{ Name = "LreDownloadScripts\index.js";  Path = (Join-Path $stagingDownload "index.js") }
+    @{ Name = "LreDownloadScripts\dist\";     Path = (Join-Path $stagingDownload "dist") }
+    @{ Name = "node_modules\ (shared)";       Path = $nodeModulesDst }
+    @{ Name = "Scripts\";                     Path = (Join-Path $StagingDir      "Scripts") }
+    @{ Name = "Assets\";                      Path = (Join-Path $StagingDir      "Assets") }
+    @{ Name = "UserGuide.html";               Path = (Join-Path $StagingDir      "UserGuide.html") }
+    @{ Name = "PluginsUI.exe";                Path = (Join-Path $StagingDir      "PluginsUI.exe") }
 )
 foreach ($i in $items) {
     $mb = if (Test-Path $i.Path) {

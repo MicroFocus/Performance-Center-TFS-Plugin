@@ -52,6 +52,9 @@
                             IsEnabled="False"
                             ToolTip="Stop the running task"/>
                     <Rectangle Width="1" Fill="#DDDDDD" Margin="8,8,8,8"/>
+                    <Button x:Name="HelpButton" Style="{StaticResource MainButton}"
+                            Content="❓  Help" Width="80" Click="Help_Click"
+                            ToolTip="Open the user guide in your default browser"/>
                     <Button x:Name="CloseButton" Style="{StaticResource MainButton}"
                             Content="Close"  Width="80"  Click="Close_Click"/>
                 </StackPanel>
@@ -660,6 +663,147 @@
                                     <TextBox x:Name="SyncDescriptionText" Grid.Row="2" Grid.Column="1"
                                              VerticalAlignment="Center"
                                              ToolTip="Optional free-text description for this sync run"/>
+                                </Grid>
+                            </GroupBox>
+
+                        </StackPanel>
+                    </TabItem>
+
+                    <!-- ══ Tab 3: Download Scripts ══════════════════════ -->
+                    <TabItem Header="  Download Scripts  ">
+                        <StackPanel>
+
+                            <!-- Download -->
+                            <GroupBox Header="Download" Margin="0,4,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="168"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Download directory -->
+                                    <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Download directory:</Label>
+                                    <DockPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource NoChromeButton}"
+                                                Margin="4,0,0,0" VerticalAlignment="Center">
+                                            <Button.ToolTip>
+                                                <TextBlock>
+                                                    Local directory where downloaded scripts (.usz files) will be stored.<LineBreak/>
+                                                    The sub-folder hierarchy mirrors the server-side test-plan path,<LineBreak/>
+                                                    minus the root Subject segment.<LineBreak/>
+                                                    <LineBreak/>
+                                                    Example: a script at Subject\scripts\DevWeb\MyScript<LineBreak/>
+                                                    will be saved as {dir}\scripts\DevWeb\MyScript.usz
+                                                </TextBlock>
+                                            </Button.ToolTip>
+                                            <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                        </Button>
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource BrowseButton}"
+                                                Content="Browse…" Click="BrowseDownloadWorkspace_Click"/>
+                                        <TextBox x:Name="DownloadWorkspaceDir" VerticalAlignment="Center"
+                                                 ToolTip="Root directory where downloaded scripts will be placed"/>
+                                    </DockPanel>
+
+                                    <!-- Parallel downloads -->
+                                    <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">Parallel downloads:</Label>
+                                    <DockPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource NoChromeButton}" Margin="4,0,0,0">
+                                            <Button.ToolTip>
+                                                <TextBlock>
+                                                    Number of concurrent script downloads (1–20). Default: 1 (sequential).<LineBreak/>
+                                                    Increase to speed up downloads when network and server capacity allow.
+                                                </TextBlock>
+                                            </Button.ToolTip>
+                                            <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                        </Button>
+                                        <TextBox x:Name="DownloadParallelDownloads" Width="60"
+                                                 HorizontalAlignment="Left" VerticalAlignment="Center" Text="1"/>
+                                        <TextBlock VerticalAlignment="Center" Style="{StaticResource HintText}"> concurrent downloads (1–20)</TextBlock>
+                                    </DockPanel>
+
+                                    <!-- Success threshold -->
+                                    <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">Success threshold (%):</Label>
+                                    <DockPanel Grid.Row="2" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource NoChromeButton}" Margin="4,0,0,0">
+                                            <Button.ToolTip>
+                                                <TextBlock>
+                                                    Minimum percentage of scripts that must download successfully for the task to pass.<LineBreak/>
+                                                    Leave empty to use the default (50%).<LineBreak/>
+                                                    <LineBreak/>
+                                                    0   = pass even if no script downloads succeed (auth failure still fails the task).<LineBreak/>
+                                                    100 = fail if even one script fails to download.<LineBreak/>
+                                                    Values outside 0–100 fall back to the default (50%).<LineBreak/>
+                                                    <LineBreak/>
+                                                    Note: 5 consecutive download failures always abort the task<LineBreak/>
+                                                    regardless of this setting.
+                                                </TextBlock>
+                                            </Button.ToolTip>
+                                            <Image Source="Assets/qicon.png" Width="16" Height="16"/>
+                                        </Button>
+                                        <TextBox x:Name="DownloadSuccessThreshold" Width="60"
+                                                 HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                 ToolTip="0–100 integer, or leave empty for default (50%)"/>
+                                        <TextBlock VerticalAlignment="Center" Style="{StaticResource HintText}"> % (0–100, empty = default 50%)</TextBlock>
+                                    </DockPanel>
+                                </Grid>
+                            </GroupBox>
+
+                            <!-- Advanced (Download) -->
+                            <GroupBox Header="Advanced">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="168"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                        <RowDefinition Height="38"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Artifacts Directory (Download) -->
+                                    <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">Artifacts directory:</Label>
+                                    <DockPanel Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource BrowseButton}"
+                                                Content="Browse…" Click="BrowseDownloadArtifacts_Click"/>
+                                        <TextBox x:Name="DownloadArtifactsDirectory" VerticalAlignment="Center"
+                                                 ToolTip="Directory where download logs will be stored. Leave blank to use a temp folder."/>
+                                    </DockPanel>
+
+                                    <!-- Node dist path (Download task) -->
+                                    <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">Node dist path:</Label>
+                                    <DockPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource BrowseButton}"
+                                                Content="Browse…" Click="BrowseDownloadNodeDist_Click"/>
+                                        <Button x:Name="DetectDownloadNodeDistButton" DockPanel.Dock="Right"
+                                                Style="{StaticResource BrowseButton}" Content="Detect"
+                                                Click="DetectDownloadNodeDist_Click"
+                                                ToolTip="Auto-detect LreDownloadScriptsTask dist/index.js"/>
+                                        <TextBox x:Name="DownloadNodeDistPath" VerticalAlignment="Center">
+                                            <TextBox.ToolTip>
+                                                <TextBlock>
+                                                    Full path to <Bold>dist\index.js</Bold> from the angular LreDownloadScriptsTask build.<LineBreak/>
+                                                    <LineBreak/>
+                                                    <Bold>Leave blank</Bold> to auto-detect in this order:<LineBreak/>
+                                                    1. LreDownloadScriptsTask\index.js <Italic>next to PluginsUI.exe</Italic> (installer layout)<LineBreak/>
+                                                    2. angular\LreDownloadScriptsTask\index.js <Italic>in the repo root</Italic> (dev layout)<LineBreak/>
+                                                    <LineBreak/>
+                                                    Click <Bold>Detect</Bold> to discover and fill the path automatically.
+                                                </TextBlock>
+                                            </TextBox.ToolTip>
+                                        </TextBox>
+                                    </DockPanel>
+
+                                    <!-- Description (Download) -->
+                                    <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">Description:</Label>
+                                    <TextBox x:Name="DownloadDescriptionText" Grid.Row="2" Grid.Column="1"
+                                             VerticalAlignment="Center"
+                                             ToolTip="Optional free-text description for this download run"/>
                                 </Grid>
                             </GroupBox>
 

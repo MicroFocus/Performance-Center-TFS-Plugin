@@ -50,6 +50,11 @@ export interface IntegrationTestConfig {
         testCleanup: boolean;
         /** When true, run the YAML test creation integration tests (creates/updates real tests). */
         createTestFromYaml: boolean;
+        /**
+         * When true, run download-scripts integration tests (read-only on server).
+         * Each test downloads scripts to a fresh temp directory that is cleaned up afterwards.
+         */
+        downloadScripts: boolean;
     };
     /** YAML test creation settings — only used when behavior.createTestFromYaml=true. */
     yaml?: {
@@ -202,7 +207,8 @@ export class PropertiesLoader {
                 executeRun: props['integration.test.executeRun'] === 'true',
                 downloadReports: props['integration.test.downloadReports'] === 'true',
                 testCleanup: props['integration.test.testCleanup'] !== 'false', // default true
-                createTestFromYaml: props['integration.test.createTestFromYaml'] === 'true'
+                createTestFromYaml: props['integration.test.createTestFromYaml'] === 'true',
+                downloadScripts: props['integration.test.downloadScripts'] === 'true'
             },
             yaml: (props['pc.yaml.scriptPath'] && props['pc.yaml.scriptPath'].trim()) ? {
                 scriptPath:     props['pc.yaml.scriptPath'].trim(),

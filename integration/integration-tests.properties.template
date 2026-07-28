@@ -56,6 +56,10 @@ integration.test.executeRun=false
 integration.test.downloadReports=false
 integration.test.testCleanup=true
 
+# Set downloadScripts=true to test script download + extraction (READ-ONLY on server).
+# A fresh OS temp directory is used as the workspace and deleted after the test.
+integration.test.downloadScripts=false
+
 # ── YAML test creation (new feature) ─────────────────────────────────────────
 # Set createTestFromYaml=true to run the YAML test creation integration tests.
 # These tests CREATE and UPDATE a real test on the server — use with care.
