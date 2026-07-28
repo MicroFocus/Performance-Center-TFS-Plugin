@@ -247,8 +247,8 @@ export class LreScriptDownloadRunner {
      *   → {workspaceDir}\RootScript\
      */
     private resolveExtractDir(script: RemoteScript): string {
-        // Normalise separators to the local OS separator
-        const serverPath = script.testFolderPath.replace(/\//g, path.sep);
+        // Normalise both backslash and forward-slash to the OS separator
+        const serverPath = script.testFolderPath.replace(/[\\/]/g, path.sep);
 
         // Strip the leading "Subject" segment (case-insensitive)
         const segments = serverPath.split(path.sep).filter(s => s.length > 0);
