@@ -227,7 +227,7 @@ describe('Enterprise Performance Engineering Download Scripts Integration Tests'
             await runner.run();
 
             // Build the expected local path
-            const serverPath = target.testFolderPath.replace(/\//g, path.sep);
+            const serverPath = target.testFolderPath.replace(/[\\/]/g, path.sep);
             const segments = serverPath.split(path.sep).filter(Boolean);
             const withoutSubject =
                 segments.length > 0 && segments[0]!.toLowerCase() === 'subject'
