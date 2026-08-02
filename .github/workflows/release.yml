@@ -76,29 +76,33 @@ jobs:
       - name: Update version in task.json (LreCiTask)
         run: |
           VERSION="${{ needs.check-release.outputs.version }}"
+          MAJOR=$(echo $VERSION | cut -d'.' -f1)
+          MINOR=$(echo $VERSION | cut -d'.' -f2)
+          PATCH=$(echo $VERSION | cut -d'.' -f3)
           echo "Updating LreCiTask/task.json to version $VERSION"
           node -e "
             const fs = require('fs');
             const file = 'angular/LreCiTask/task.json';
             const pkg = JSON.parse(fs.readFileSync(file, 'utf8'));
-            const [major, minor, patch] = process.env.VERSION.split('.').map(Number);
-            pkg.version = { Major: major, Minor: minor, Patch: patch };
+            pkg.version = { Major: ${MAJOR}, Minor: ${MINOR}, Patch: ${PATCH} };
             fs.writeFileSync(file, JSON.stringify(pkg, null, 4));
-          " VERSION="$VERSION"
+          "
           node -e "const p=JSON.parse(require('fs').readFileSync('angular/LreCiTask/task.json','utf8')); console.log('version:', JSON.stringify(p.version));"
 
       - name: Update version in task.json (LreWorkspaceSyncTask)
         run: |
           VERSION="${{ needs.check-release.outputs.version }}"
+          MAJOR=$(echo $VERSION | cut -d'.' -f1)
+          MINOR=$(echo $VERSION | cut -d'.' -f2)
+          PATCH=$(echo $VERSION | cut -d'.' -f3)
           echo "Updating LreWorkspaceSyncTask/task.json to version $VERSION"
           node -e "
             const fs = require('fs');
             const file = 'angular/LreWorkspaceSyncTask/task.json';
             const pkg = JSON.parse(fs.readFileSync(file, 'utf8'));
-            const [major, minor, patch] = process.env.VERSION.split('.').map(Number);
-            pkg.version = { Major: major, Minor: minor, Patch: patch };
+            pkg.version = { Major: ${MAJOR}, Minor: ${MINOR}, Patch: ${PATCH} };
             fs.writeFileSync(file, JSON.stringify(pkg, null, 4));
-          " VERSION="$VERSION"
+          "
           node -e "const p=JSON.parse(require('fs').readFileSync('angular/LreWorkspaceSyncTask/task.json','utf8')); console.log('version:', JSON.stringify(p.version));"
 
       - name: Update version in package.json (root)
