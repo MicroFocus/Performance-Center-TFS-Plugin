@@ -44,11 +44,34 @@ The extension ships **two tasks**:
 - Proxy support with optional credentials
 - Upload log saved to the artifacts directory
 
+
 ---
 
 ## Supported Product Versions
 
 This extension supports the **3 latest versions** of OpenText Enterprise Performance Engineering.
+
+---
+
+## What's New in Version 3.4.0
+
+> **August 2026**
+
+### 🔧 Token authentication fixed for Enterprise Performance Engineering Workspace Sync
+
+Token authentication (`varUseTokenForAuthentication = true`) previously failed for **LreWorkspaceSyncTask** with server error `ErrorCode 1101 "Authentication information is missing from request header"`. The root causes were:
+
+| Root cause | Fix |
+|---|---|
+| Missing `X-QC-HIDDEN-SECURITY-ID: 12` header on all HTTP requests | Added to shared `createLreAxiosInstance()` factory — all tasks automatically include it |
+| Token auth XML used `xmlns="http://www.hp.com/PC/REST/API"` namespace (rejected by server) | Fixed to use `<?xml version="1.0" encoding="utf-8"?>` declaration with no namespace |
+
+### 🔧 Auth retry loop no longer hammers the server on bad credentials
+
+When token or password authentication returned HTTP 4xx (invalid credentials), **LreWorkspaceSyncTask** previously entered a 5-attempt exponential-backoff retry loop (5 + 10 + 20 + 40 s = 75 s), risking account lockouts. The retry logic now:
+
+- **Exits immediately** on a clean 4xx response — no retry
+- **Retries** only on thrown exceptions (5xx / network errors) with exponential back-off
 
 ---
 

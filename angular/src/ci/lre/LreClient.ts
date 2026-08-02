@@ -6,8 +6,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { wrapper } from 'axios-cookiejar-support';
-import { CookieJar } from 'tough-cookie';
 import { XMLParser } from 'fast-xml-parser';
 import * as tl from 'azure-pipelines-task-lib/task';
 import {
@@ -39,10 +37,10 @@ import {
     LreTestCreateResponse,
     LreTestPlanFolderRequestXml
 } from '../models';
+import { createLreAxiosInstance } from '../../shared/utils/LreHttpUtils';
 
 export class LreClient {
     private httpClient: AxiosInstance;
-    private cookieJar: CookieJar;
     private xmlParser: XMLParser;
     private baseUrl: string;
     private resourceBaseUrl: string;
@@ -52,31 +50,17 @@ export class LreClient {
      *  Kept as a field so logout() can clear it. */
     private sessionCookieHeader: string | undefined;
 
-    /**
-     * Fixed protocol constant required by every LRE REST API request.
-     * This is a non-secret, publicly-documented header value defined by the
-     * OpenText Enterprise Performance Engineering server API specification.
-     * See docs/LRE-API-Analysis.md — "Required header".
-     */
-    private static readonly LRE_SECURITY_HEADER_VALUE = '12';
 
     constructor(private config: LreConfig) {
-        this.cookieJar = new CookieJar();
-
-        // Setup axios with cookie support
-        this.httpClient = wrapper(axios.create({
-            jar: this.cookieJar,
-            timeout: 60000,
-            withCredentials: true,
-            // Never throw on HTTP error status — we check status codes ourselves in isSuccessResponse()
-            validateStatus: () => true,
-            headers: {
-                'Content-Type': 'application/xml',
-                'Accept': 'application/xml',
-                'X-QC-HIDDEN-SECURITY-ID': LreClient.LRE_SECURITY_HEADER_VALUE
-            },
-            proxy: this.parseProxy()
-        }));
+        // Setup axios with cookie support — createLreAxiosInstance adds the
+        // required X-QC-HIDDEN-SECURITY-ID header and standard Content-Type/Accept.
+        const { httpClient } = createLreAxiosInstance({
+            proxyUrl: config.proxyUrl,
+            proxyUser: config.proxyUser,
+            proxyPassword: config.proxyPassword,
+            timeoutMs: 60_000
+        });
+        this.httpClient = httpClient;
 
         // Setup XML parser
         this.xmlParser = new XMLParser({
@@ -976,31 +960,6 @@ export class LreClient {
         }
     }
 
-    private parseProxy(): false | { host: string; port: number; auth?: { username: string; password: string } } {
-        if (!this.config.proxyUrl) {
-            return false;
-        }
-
-        try {
-            const url = new URL(this.config.proxyUrl);
-            const proxy: { host: string; port: number; auth?: { username: string; password: string } } = {
-                host: url.hostname,
-                port: parseInt(url.port) || 80
-            };
-
-            if (this.config.proxyUser && this.config.proxyPassword) {
-                proxy.auth = {
-                    username: this.config.proxyUser,
-                    password: this.config.proxyPassword
-                };
-            }
-
-            return proxy;
-        } catch {
-            tl.warning(`Invalid proxy URL: ${this.config.proxyUrl}`);
-            return false;
-        }
-    }
 
     private getErrorMessage(error: unknown): string {
         if (axios.isAxiosError(error)) {

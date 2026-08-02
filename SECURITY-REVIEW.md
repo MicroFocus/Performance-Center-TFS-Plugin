@@ -1,3 +1,60 @@
+# Security Review — `Micro-Focus.PCIntegration` 3.4.0
+
+Date: 2026-08-02
+
+## Scope
+
+Security review performed for the TypeScript/Node-based extension under `angular/`.
+
+Reviewed areas:
+- Authentication correctness across all three tasks
+- HTTP client configuration and header hygiene
+- Retry-loop safety (account lockout risk)
+- npm production and development dependencies
+
+## Result Summary
+
+### Authentication fixes in 3.4.0
+
+Two root-cause defects in `LreWorkspaceSyncTask` and `LreDownloadScriptsTask` caused token authentication to fail at the server level:
+
+1. **Missing `X-QC-HIDDEN-SECURITY-ID: 12` HTTP header** — the LRE REST API requires this header on every request, including the authentication endpoint. Without it the server responds `ErrorCode 1101 "Authentication information is missing from request header"`.
+2. **Incorrect token XML format** — the XML body used `xmlns="http://www.hp.com/PC/REST/API"` which the server rejects. The correct format is `<?xml version="1.0" encoding="utf-8"?>` with no namespace.
+
+Both issues only affected `LreWorkspaceSyncTask` and `LreDownloadScriptsTask`; `LreCiTask` had correct auth from the start.
+
+### Fix: shared HTTP utility
+
+A new shared module `angular/src/shared/utils/LreHttpUtils.ts` was created and adopted by all three task clients:
+
+- `createLreAxiosInstance()` — axios instance factory that sets `X-QC-HIDDEN-SECURITY-ID: 12` in default headers
+- `buildTokenAuthXml()` — generates the correct token XML with declaration and no namespace
+
+### Retry-loop safety
+
+`LreWorkspaceSyncTask` and `LreDownloadScriptsTask` previously entered a 5-attempt exponential-backoff retry loop (≈75 s) on any auth failure including clean HTTP 4xx responses. Fixed to exit immediately on 4xx, retrying only on thrown exceptions (5xx/network).
+
+## Validation Performed
+
+### Real-server integration tests — all passed
+
+| Check | Auth mode | Result |
+|---|---|---|
+| LreCiTask authenticate | Token | ✅ PASS |
+| LreCiTask reject bad credentials | Token | ✅ PASS |
+| LreCiTask authenticate | Password | ✅ PASS |
+| LreCiTask reject bad credentials | Password | ✅ PASS |
+| LreWorkspaceSyncTask authenticate | Token | ✅ PASS |
+| LreWorkspaceSyncTask reject bad credentials | Token | ✅ PASS |
+| LreDownloadScriptsTask authenticate | Token | ✅ PASS |
+| LreDownloadScriptsTask reject bad credentials | Token | ✅ PASS |
+| YAML test creation (mb1255.yml) | Token | ✅ PASS |
+| Workspace sync — upload 325 scripts | Token | ✅ PASS |
+| Download scripts — fetchScriptList | Token | ✅ PASS |
+| Download scripts — downloadScriptContent | Token | ✅ PASS |
+
+---
+
 # Security Review — `Micro-Focus.PCIntegration` 3.1.0
 
 Date: 2026-07-21 (updated from original 2026-06-29 review)

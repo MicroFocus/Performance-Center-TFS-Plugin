@@ -28,6 +28,7 @@
     - `angular/LreCiTask/package.json`
     - `angular/LreWorkspaceSyncTask/task.json`
     - `angular/LreWorkspaceSyncTask/package.json`
+    - `angular/LreDownloadScriptsTask/task.json` (versioned independently at `1.x`)
   - Runs full build (linter, tests, compile)
   - Packages VSIX
   - Creates GitHub Release with tag

@@ -1,19 +1,21 @@
 # VSIX Deployment & Version Management Guide
 
-**Current Version**: `3.3.0`
+**Current Version**: `3.4.0`
 
 ---
 
 ## Versioning Convention
 
-Versions follow standard `Major.Minor.Patch` semver. When bumping the version, four files must always be kept in sync:
+Versions follow standard `Major.Minor.Patch` semver. When bumping the version, the following files must always be kept in sync:
 
 | File | Field | Example |
 |---|---|---|
-| `angular/vss-extension.json` | `"version"` | `"3.3.0"` |
-| `angular/LreCiTask/task.json` | `"version".Major/Minor/Patch` | `"Major": 3, "Minor": 3, "Patch": 0` |
-| `angular/package.json` | `"version"` | `"3.3.0"` |
-| `angular/package-lock.json` | `"version"` (root) + `packages[""].version` | `"3.3.0"` |
+| `angular/vss-extension.json` | `"version"` | `"3.4.0"` |
+| `angular/package.json` | `"version"` | `"3.4.0"` |
+| `angular/package-lock.json` | `"version"` (root) + `packages[""].version` | `"3.4.0"` |
+| `angular/LreCiTask/task.json` | `"version".Major/Minor/Patch` | `"Major": 3, "Minor": 4, "Patch": 0` |
+| `angular/LreWorkspaceSyncTask/task.json` | `"version".Major/Minor/Patch` | `"Major": 3, "Minor": 4, "Patch": 0` |
+| `angular/LreDownloadScriptsTask/task.json` | `"version".Major/Minor/Patch` | `"Major": 1, "Minor": 0, "Patch": 0` |
 
 ---
 
@@ -61,7 +63,12 @@ npm run package:vsix
 | `angular/src/ci/yaml/SimplifiedModels.ts` | TypeScript interfaces for all YAML entity types |
 | `angular/src/ci/lre/LreReportDownloader.ts` | Report/PDF download with retry |
 | `angular/src/ci/models/index.ts` | Shared interfaces, XML helper classes |
+| `angular/src/sync/lre/LreScriptUploader.ts` | LRE script upload client (Workspace Sync task) |
+| `angular/src/download/lre/LreScriptDownloader.ts` | LRE script download client (Download Scripts task) |
+| `angular/src/shared/utils/LreHttpUtils.ts` | Shared HTTP factory (`createLreAxiosInstance`) and token XML builder (`buildTokenAuthXml`) — used by all three tasks |
 | `angular/LreCiTask/task.json` | ADO task manifest (inputs, execution handlers, version) |
+| `angular/LreWorkspaceSyncTask/task.json` | ADO task manifest for Workspace Sync |
+| `angular/LreDownloadScriptsTask/task.json` | ADO task manifest for Download Scripts |
 | `angular/vss-extension.json` | VSIX metadata (publisher, version, included files) |
 | `angular/package.json` | npm scripts, dependencies |
 

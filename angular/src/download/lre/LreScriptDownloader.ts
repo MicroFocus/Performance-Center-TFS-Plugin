@@ -13,12 +13,11 @@
  *   http://www.hp.com/PC/REST/API
  */
 
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { wrapper } from 'axios-cookiejar-support';
-import { CookieJar } from 'tough-cookie';
+import { AxiosInstance, AxiosResponse } from 'axios';
 import { XMLParser } from 'fast-xml-parser';
 import { LreDownloadConfig, RemoteScript } from '../models';
 import { Logger } from '../../shared/utils/Logger';
+import { buildTokenAuthXml, createLreAxiosInstance } from '../../shared/utils/LreHttpUtils';
 
 /**
  * Minimal log-sink interface — satisfied by both Logger and DownloadBuffer.
@@ -34,7 +33,6 @@ export interface ILogSink {
 
 export class LreScriptDownloader {
     private httpClient: AxiosInstance;
-    private cookieJar: CookieJar;
     private xmlParser: XMLParser;
     private baseUrl: string;
     private resourceBaseUrl: string;
@@ -46,19 +44,13 @@ export class LreScriptDownloader {
         private config: LreDownloadConfig,
         private logger: Logger
     ) {
-        this.cookieJar = new CookieJar();
-
-        this.httpClient = wrapper(axios.create({
-            jar: this.cookieJar,
-            timeout: 120_000,
-            withCredentials: true,
-            validateStatus: () => true,
-            headers: {
-                'Content-Type': 'application/xml',
-                'Accept': 'application/xml'
-            },
-            proxy: this.parseProxy()
-        }));
+        const { httpClient } = createLreAxiosInstance({
+            proxyUrl: config.proxyUrl,
+            proxyUser: config.proxyUser,
+            proxyPassword: config.proxyPassword,
+            timeoutMs: 120_000
+        });
+        this.httpClient = httpClient;
 
         this.xmlParser = new XMLParser({
             ignoreAttributes: false,
@@ -89,7 +81,12 @@ export class LreScriptDownloader {
                     : await this.authenticateWithPassword();
 
                 if (ok) return true;
+
+                // A clean false return means the server responded with a 4xx
+                // (bad credentials / forbidden) — retrying will not help.
+                return false;
             } catch (error) {
+                // An exception means a 5xx or network error — transient, worth retrying.
                 this.logger.error(
                     `Authentication attempt ${attempt}/${MAX_AUTH_RETRIES} threw: ${this.getErrorMessage(error)}`
                 );
@@ -133,11 +130,10 @@ export class LreScriptDownloader {
 
     private async authenticateWithToken(): Promise<boolean> {
         this.logger.debug(`Authenticating with API token`);
-        const xml =
-            `<AuthenticationClient xmlns="http://www.hp.com/PC/REST/API">` +
-            `<ClientIdKey>${escapeXml(this.config.clientId ?? this.config.username)}</ClientIdKey>` +
-            `<ClientSecretKey>${escapeXml(this.config.clientSecret ?? this.config.password)}</ClientSecretKey>` +
-            `</AuthenticationClient>`;
+        const xml = buildTokenAuthXml(
+            this.config.clientId ?? this.config.username,
+            this.config.clientSecret ?? this.config.password
+        );
 
         const response = await this.httpClient.post(
             `${this.baseUrl}/authentication-point/authenticateclient${this.tenantSuffix}`,
@@ -342,24 +338,6 @@ export class LreScriptDownloader {
         );
     }
 
-    private parseProxy(): false | { host: string; port: number; auth?: { username: string; password: string } } {
-        if (!this.config.proxyUrl) return false;
-        try {
-            const url = new URL(this.config.proxyUrl);
-            const proxy: { host: string; port: number; auth?: { username: string; password: string } } = {
-                host: url.hostname,
-                port: parseInt(url.port) || 80
-            };
-            if (this.config.proxyUser && this.config.proxyPassword) {
-                proxy.auth = { username: this.config.proxyUser, password: this.config.proxyPassword };
-            }
-            return proxy;
-        } catch {
-            this.logger.warning(`Invalid proxy URL: ${this.config.proxyUrl}`);
-            return false;
-        }
-    }
-
     private getErrorMessage(error: unknown): string {
         if (error instanceof Error) return error.message;
         return String(error);
@@ -369,15 +347,6 @@ export class LreScriptDownloader {
 // ============================================================================
 // Utility helpers
 // ============================================================================
-
-function escapeXml(value: string): string {
-    return value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&apos;');
-}
 
 function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));

@@ -55,15 +55,34 @@ export interface IntegrationTestConfig {
          * Each test downloads scripts to a fresh temp directory that is cleaned up afterwards.
          */
         downloadScripts: boolean;
+        /**
+         * When true, run workspace-sync integration tests (uploads scripts to the server).
+         * WARNING: this WRITES data to the LRE project.
+         */
+        syncWorkspace: boolean;
     };
     /** YAML test creation settings — only used when behavior.createTestFromYaml=true. */
     yaml?: {
-        /** Script path as it appears in LRE, e.g. "scripts\\api\\my_script". */
+        /** Root of the git workspace that contains the YAML file. */
+        workspaceDir: string;
+        /** Relative path (within workspaceDir) to the YAML test definition file. */
+        testFile: string;
+        /** Script path as it appears in LRE, e.g. "scripts\\mb1255". */
         scriptPath: string;
         /** Target test-plan folder, e.g. "ci-tests\\yaml-integration". */
         testFolderPath: string;
         /** Test name written into the YAML fixture. */
         testName: string;
+    };
+    /** Workspace sync settings — only used when behavior.syncWorkspace=true. */
+    sync?: {
+        /** Local directory to scan for LRE script folders and upload. */
+        workspaceDir: string;
+    };
+    /** Download scripts settings — always available when downloadScripts=true. */
+    download: {
+        /** Local directory where downloaded scripts are extracted. */
+        workspaceDir: string;
     };
 }
 
@@ -208,13 +227,23 @@ export class PropertiesLoader {
                 downloadReports: props['integration.test.downloadReports'] === 'true',
                 testCleanup: props['integration.test.testCleanup'] !== 'false', // default true
                 createTestFromYaml: props['integration.test.createTestFromYaml'] === 'true',
-                downloadScripts: props['integration.test.downloadScripts'] === 'true'
+                downloadScripts: props['integration.test.downloadScripts'] === 'true',
+                syncWorkspace: props['integration.test.syncWorkspace'] === 'true'
             },
-            yaml: (props['pc.yaml.scriptPath'] && props['pc.yaml.scriptPath'].trim()) ? {
-                scriptPath:     props['pc.yaml.scriptPath'].trim(),
+            yaml: (props['pc.yaml.workspaceDir'] && props['pc.yaml.workspaceDir'].trim() &&
+                   props['pc.yaml.testFile']     && props['pc.yaml.testFile'].trim()) ? {
+                workspaceDir:   props['pc.yaml.workspaceDir'].trim(),
+                testFile:       props['pc.yaml.testFile'].trim(),
+                scriptPath:     (props['pc.yaml.scriptPath'] || '').trim(),
                 testFolderPath: (props['pc.yaml.testFolderPath'] || 'ci-tests\\yaml-integration').trim(),
                 testName:       (props['pc.yaml.testName']       || 'YAML Integration Test').trim()
-            } : undefined
+            } : undefined,
+            sync: (props['pc.sync.workspaceDir'] && props['pc.sync.workspaceDir'].trim()) ? {
+                workspaceDir: props['pc.sync.workspaceDir'].trim()
+            } : undefined,
+            download: {
+                workspaceDir: (props['pc.download.workspaceDir'] || '').trim()
+            }
         };
     }
 

@@ -14,15 +14,14 @@
  *   http://www.hp.com/PC/REST/API
  */
 
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { wrapper } from 'axios-cookiejar-support';
-import { CookieJar } from 'tough-cookie';
+import { AxiosInstance, AxiosResponse } from 'axios';
 import { XMLParser } from 'fast-xml-parser';
 import * as fs from 'fs';
 import * as path from 'path';
 import FormData from 'form-data';
 import { LreSyncConfig } from '../models';
 import { Logger } from '../../shared/utils/Logger';
+import { buildTokenAuthXml, createLreAxiosInstance } from '../../shared/utils/LreHttpUtils';
 
 const PC_API_XMLNS = 'http://www.hp.com/PC/REST/API';
 
@@ -41,7 +40,6 @@ export interface ILogSink {
 
 export class LreScriptUploader {
     private httpClient: AxiosInstance;
-    private cookieJar: CookieJar;
     private xmlParser: XMLParser;
     private baseUrl: string;
     private resourceBaseUrl: string;
@@ -61,20 +59,13 @@ export class LreScriptUploader {
         private config: LreSyncConfig,
         private logger: Logger
     ) {
-        this.cookieJar = new CookieJar();
-
-        this.httpClient = wrapper(axios.create({
-            jar: this.cookieJar,
-            timeout: 120000,
-            withCredentials: true,
-            // Never throw on HTTP error status — we check manually
-            validateStatus: () => true,
-            headers: {
-                'Content-Type': 'application/xml',
-                'Accept': 'application/xml'
-            },
-            proxy: this.parseProxy()
-        }));
+        const { httpClient } = createLreAxiosInstance({
+            proxyUrl: config.proxyUrl,
+            proxyUser: config.proxyUser,
+            proxyPassword: config.proxyPassword,
+            timeoutMs: 120_000
+        });
+        this.httpClient = httpClient;
 
 
         this.xmlParser = new XMLParser({
@@ -113,13 +104,11 @@ export class LreScriptUploader {
 
                 if (ok) return true;
 
-                // authenticateWithPassword/Token already logged the failure.
-                // Only retry on server-side errors (5xx); for 4xx (bad credentials)
-                // there is no point retrying.
-                // We detect 5xx by checking the last response stored in isAuthenticated
-                // path — but since we don't have the status code here, we retry
-                // for any failure and let the inner method decide to log.
+                // A clean false return means the server responded with a 4xx
+                // (bad credentials / forbidden) — retrying will not help.
+                return false;
             } catch (error) {
+                // An exception means a 5xx or network error — transient, worth retrying.
                 this.logger.error(
                     `Authentication attempt ${attempt}/${MAX_AUTH_RETRIES} threw: ${this.getErrorMessage(error)}`
                 );
@@ -171,7 +160,10 @@ export class LreScriptUploader {
 
     private async authenticateWithToken(): Promise<boolean> {
         this.logger.debug(`Authenticating with API token`);
-        const xml = `<AuthenticationClient xmlns="${PC_API_XMLNS}"><ClientIdKey>${escapeXml(this.config.clientId ?? this.config.username)}</ClientIdKey><ClientSecretKey>${escapeXml(this.config.clientSecret ?? this.config.password)}</ClientSecretKey></AuthenticationClient>`;
+        const xml = buildTokenAuthXml(
+            this.config.clientId ?? this.config.username,
+            this.config.clientSecret ?? this.config.password
+        );
 
         const response = await this.httpClient.post(
             `${this.baseUrl}/authentication-point/authenticateclient${this.tenantSuffix}`,
@@ -547,26 +539,6 @@ export class LreScriptUploader {
         );
     }
 
-    private parseProxy(): false | { host: string; port: number; auth?: { username: string; password: string } } {
-        if (!this.config.proxyUrl) return false;
-        try {
-            const url = new URL(this.config.proxyUrl);
-            const proxy: { host: string; port: number; auth?: { username: string; password: string } } = {
-                host: url.hostname,
-                port: parseInt(url.port) || 80
-            };
-            if (this.config.proxyUser && this.config.proxyPassword) {
-                proxy.auth = {
-                    username: this.config.proxyUser,
-                    password: this.config.proxyPassword
-                };
-            }
-            return proxy;
-        } catch {
-            this.logger.warning(`Invalid proxy URL: ${this.config.proxyUrl}`);
-            return false;
-        }
-    }
 
     private getErrorMessage(error: unknown): string {
         if (error instanceof Error) return error.message;

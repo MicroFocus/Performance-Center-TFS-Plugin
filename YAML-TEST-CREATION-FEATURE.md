@@ -3,10 +3,10 @@
 > **Project:** Performance-Center-TFS-Plugin2 (Azure DevOps Extension — LreCiTask)  
 > **Author:** GitHub Copilot assisted implementation  
 > **Created:** 2026-07-23  
-> **Status:** ✅ Implementation Complete — live testing in progress (3 bugs found & fixed)  
-> **Current testing version:** `3.300.2`  
-> **Versioning:** Testing builds ship as `3.300.x` (patch incremented on each ADO on-premises deployment).  
-> Final release will be tagged **`3.3.0`** once integration tests pass.
+> **Status:** ✅ Implementation Complete — released in 3.3.0; token auth fixes shipped in 3.4.0  
+> **Current release version:** `3.4.0`  
+> **Versioning:** Testing builds shipped as `3.300.x` (patch incremented on each ADO on-premises deployment).  
+> Feature was released in **`3.3.0`**. Token authentication fixes for all three tasks shipped in **`3.4.0`**.
 
 ---
 

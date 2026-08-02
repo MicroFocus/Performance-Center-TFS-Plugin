@@ -60,23 +60,45 @@ integration.test.testCleanup=true
 # A fresh OS temp directory is used as the workspace and deleted after the test.
 integration.test.downloadScripts=false
 
-# ── YAML test creation (new feature) ─────────────────────────────────────────
+# Set syncWorkspace=true to upload scripts from pc.sync.workspaceDir to the server.
+# WARNING: this WRITES scripts to the LRE project – use with care.
+integration.test.syncWorkspace=false
+
+# ── YAML test creation (LreCiTask) ────────────────────────────────────────────
 # Set createTestFromYaml=true to run the YAML test creation integration tests.
 # These tests CREATE and UPDATE a real test on the server — use with care.
 integration.test.createTestFromYaml=false
 
-# Script path as it appears in LRE (Subject-relative, e.g. "scripts\api\my_script").
-# The script must already exist in the project before running these tests.
+# Root of the git workspace that contains your YAML test file.
+pc.yaml.workspaceDir=C:\\path\\to\\your\\workspace
+
+# Relative path (within workspaceDir) to the YAML test definition file.
+pc.yaml.testFile=Tests\\yaml\\your-test.yml
+
+# Script path as it appears in LRE (Subject-relative, e.g. "scripts\my_script").
+# The script must already exist in the LRE project before running these tests.
 pc.yaml.scriptPath=YOUR_SCRIPT_PATH
 
-# Target test-plan folder (Subject-relative, will be created if it doesn't exist).
+# Target test-plan folder in LRE (Subject-relative, will be created if missing).
 pc.yaml.testFolderPath=ci-tests\\yaml-integration
 
-# Test name used by the YAML fixture.
+# Display name for the test created/updated on the server.
 pc.yaml.testName=YAML Integration Test
 
-# ── Legacy script paths (used by older test scaffolding) ─────────────────────
+# ── Workspace sync (LreWorkspaceSyncTask) ─────────────────────────────────────
+# Local git workspace root to scan for LRE script folders.
+# Folders containing .usr / .jmx / .scala / .java files are treated as scripts.
+# Sub-folder structure maps to Subject\<relative-path>\<scriptName> in LRE.
+# Example: workspace\scripts\MyScript → Subject\scripts\MyScript in LRE.
+pc.sync.workspaceDir=C:\\path\\to\\your\\jenkins-sync-workspace
+
+# ── Download scripts (LreDownloadScriptsTask) ─────────────────────────────────
+# Local directory where downloaded scripts will be extracted.
+# A unique sub-directory is created per run and cleaned up afterwards.
+pc.download.workspaceDir=C:\\temp\\lre-download-test
+
+# ── Legacy / reference paths ─────────────────────────────────────────────────
 pc.test.folderPath=Subject\\your-folder
-pc.test.scriptPath=src/test/resources/your-script.zip
+pc.test.scriptPath=C:\\path\\to\\your-script.zip
 pc.test.kilimanjaro.scriptPath=/kilimanjaro.zip
 pc.test.kilimanjaro.folderPath=Subject\\scripts

@@ -4,12 +4,13 @@
 ![Release](https://github.com/MicroFocus/Performance-Center-TFS-Plugin/actions/workflows/release.yml/badge.svg)
 
 The **"OpenText Enterprise Performance Engineering CI"** extension integrates performance tests designed in OpenText Enterprise Performance Engineering projects with Azure DevOps Server pipelines.  
-The extension ships **two independent tasks**:
+The extension ships **three independent tasks**:
 
 | Task | Purpose |
 |---|---|
 | **Enterprise Performance Engineering Test** (`LreCiTask`) | Run a performance test from a pipeline and collect results. Accepts a numeric **Test ID** *or* a **path to a `.yaml` file** that defines the test topology — the task creates or updates the test in LRE automatically before running it |
 | **Enterprise Performance Engineering Workspace Sync** (`LreWorkspaceSyncTask`) | Scan a repository for script folders, zip them, and upload to an Enterprise Performance Engineering project |
+| **Enterprise Performance Engineering Download Scripts** (`LreDownloadScriptsTask`) | Connect to an Enterprise Performance Engineering server and download all scripts from a project to a local workspace directory |
 
 ## Active Codebase
 
@@ -27,13 +28,19 @@ angular/
       models/                       # Shared TypeScript interfaces and XML helpers
       yaml/                         # YAML test definition parser, XML builder, simplified models
     sync/                           # Script uploader, sync runner, zip compressor, scanner
-    shared/                         # Shared Logger and server URL parser (used by both tasks)
+    download/                       # Script downloader, download runner
+    shared/                         # Shared Logger, server URL parser, LreHttpUtils (used by all tasks)
   LreCiTask/
     task.json                       # Azure DevOps task definition (inputs, execution handlers)
     index.js / index.ts             # Bootstrap entry point
     dist/                           # Compiled output (generated — do not edit)
     node_modules/                   # Bundled runtime dependencies (copied at package time)
   LreWorkspaceSyncTask/
+    task.json                       # Azure DevOps task definition
+    index.js / index.ts             # Bootstrap entry point
+    dist/                           # Compiled output (generated — do not edit)
+    node_modules/                   # Bundled runtime dependencies (copied at package time)
+  LreDownloadScriptsTask/
     task.json                       # Azure DevOps task definition
     index.js / index.ts             # Bootstrap entry point
     dist/                           # Compiled output (generated — do not edit)
@@ -364,6 +371,40 @@ See [`angular/LOCAL-TESTING-GUIDE.md`](./angular/LOCAL-TESTING-GUIDE.md) for loc
 2. Commit and push to `master` — the `release.yml` workflow updates all version files (both tasks + extension manifest), builds the VSIX, creates a GitHub Release, then resets `enabled=false`
 
 ## What's New
+
+### Version 3.4.0 — August 2026
+
+#### 🆕 Enterprise Performance Engineering Download Scripts task
+
+A new **third task** (`LoadRunnerEnterpriseDownloadScripts`) connects to an OpenText Enterprise Performance Engineering server and downloads all scripts from a configured domain/project to a local workspace directory, mirroring the server-side test-plan folder hierarchy.
+
+**Key inputs:**
+
+| Input | Default | Description |
+|---|---|---|
+| `varWorkspaceDir` | `$(Build.SourcesDirectory)` | Target directory for downloaded scripts |
+| `varParallelDownloads` | `1` | Concurrent downloads (1–20) |
+| `varSuccessThreshold` | *(empty)* | Min % of scripts that must succeed (default 50%). 5 consecutive failures always abort. |
+| `varUseTokenForAuthentication` | `false` | Use API token (required for SSO servers) |
+
+Each script is saved as a `.usz` zip archive in a sub-folder hierarchy that mirrors the server path (root `Subject` folder stripped).
+
+#### 🔧 Token authentication fixed for LreWorkspaceSyncTask and LreDownloadScriptsTask
+
+Token auth (`varUseTokenForAuthentication = true`) previously failed with server error `ErrorCode 1101 "Authentication information is missing from request header"`. Two root causes identified and fixed:
+
+| Root cause | Fix |
+|---|---|
+| Missing `X-QC-HIDDEN-SECURITY-ID: 12` header | Shared `createLreAxiosInstance()` factory adds it automatically to every request in all three tasks |
+| Token XML used `xmlns="http://www.hp.com/PC/REST/API"` namespace (rejected by server) | Fixed to `<?xml version="1.0" encoding="utf-8"?>` with no namespace via shared `buildTokenAuthXml()` |
+
+All three tasks now share `angular/src/shared/utils/LreHttpUtils.ts` to guarantee identical HTTP client setup.
+
+#### 🔧 Auth retry loop no longer retries on 4xx credential failures
+
+When authentication returned HTTP 4xx (bad credentials), `LreWorkspaceSyncTask` and `LreDownloadScriptsTask` entered a 5-attempt exponential-backoff retry loop (≈75 s total), risking account lockouts. Fixed: **exits immediately** on 4xx, retries only on thrown exceptions (5xx / network errors).
+
+---
 
 ### Version 3.3.0 — July 2026
 
