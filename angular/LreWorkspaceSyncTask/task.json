@@ -13,9 +13,9 @@
     "author":  "OpenText",
     "minimumAgentVersion":  "2.144.0",
     "version":  {
-                    "Major":  3,
-                    "Minor":  4,
-                    "Patch":  0
+                    "Major": 3 3,
+                    "Minor": 4 4,
+                    "Patch": 0 0
                 },
     "inputs":  [
                    {
