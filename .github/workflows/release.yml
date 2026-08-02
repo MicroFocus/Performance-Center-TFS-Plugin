@@ -81,9 +81,9 @@ jobs:
           PATCH=$(echo $VERSION | cut -d'.' -f3)
           
           echo "Updating LreCiTask/task.json with version - Major: $MAJOR, Minor: $MINOR, Patch: $PATCH"
-          sed -i "s/\"Major\": [0-9]*/\"Major\": $MAJOR/" angular/LreCiTask/task.json
-          sed -i "s/\"Minor\": [0-9]*/\"Minor\": $MINOR/" angular/LreCiTask/task.json
-          sed -i "s/\"Patch\": [0-9]*/\"Patch\": $PATCH/" angular/LreCiTask/task.json
+          sed -i "s/\"Major\":[[:space:]]*[0-9][0-9]*/\"Major\": $MAJOR/" angular/LreCiTask/task.json
+          sed -i "s/\"Minor\":[[:space:]]*[0-9][0-9]*/\"Minor\": $MINOR/" angular/LreCiTask/task.json
+          sed -i "s/\"Patch\":[[:space:]]*[0-9][0-9]*/\"Patch\": $PATCH/" angular/LreCiTask/task.json
           cat angular/LreCiTask/task.json | grep -A 3 "\"version\":"
 
       - name: Update version in task.json (LreWorkspaceSyncTask)
@@ -94,9 +94,9 @@ jobs:
           PATCH=$(echo $VERSION | cut -d'.' -f3)
           
           echo "Updating LreWorkspaceSyncTask/task.json with version - Major: $MAJOR, Minor: $MINOR, Patch: $PATCH"
-          sed -i "s/\"Major\": [0-9]*/\"Major\": $MAJOR/" angular/LreWorkspaceSyncTask/task.json
-          sed -i "s/\"Minor\": [0-9]*/\"Minor\": $MINOR/" angular/LreWorkspaceSyncTask/task.json
-          sed -i "s/\"Patch\": [0-9]*/\"Patch\": $PATCH/" angular/LreWorkspaceSyncTask/task.json
+          sed -i "s/\"Major\":[[:space:]]*[0-9][0-9]*/\"Major\": $MAJOR/" angular/LreWorkspaceSyncTask/task.json
+          sed -i "s/\"Minor\":[[:space:]]*[0-9][0-9]*/\"Minor\": $MINOR/" angular/LreWorkspaceSyncTask/task.json
+          sed -i "s/\"Patch\":[[:space:]]*[0-9][0-9]*/\"Patch\": $PATCH/" angular/LreWorkspaceSyncTask/task.json
           cat angular/LreWorkspaceSyncTask/task.json | grep -A 3 "\"version\":"
 
       - name: Update version in package.json (root)

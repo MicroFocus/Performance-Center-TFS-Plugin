@@ -7,6 +7,7 @@ PC.TFS.BuildTask\LreCiExtension\LreCiTask\tsconfig.json
 # Integration test credentials (NEVER commit!)
 integration/integration-tests.properties
 integration/test-results/
+angular/coverage/
 integration/*.log
 **/docsLocal/
 **/.vs/

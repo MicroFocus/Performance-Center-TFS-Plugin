@@ -24,6 +24,7 @@
     "lint": "eslint src/**/*.ts",
     "security:audit": "npm audit --audit-level=moderate",
     "package:vsix": "node scripts/package-vsix.js",
+    "stage:pluginui": "node scripts/stage-pluginui.js",
     "test:integration": "tsx ../integration/test-utils/run-integration-tests.ts",
     "test:integration:safe": "cross-env INTEGRATION_SAFE_MODE=true tsx ../integration/test-utils/run-integration-tests.ts"
   },

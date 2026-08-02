@@ -43,87 +43,43 @@
   </ItemGroup>
 
   <!--
-    Copies the Angular task artifacts (bootstrap index.js, compiled dist/, shared
-    node_modules) into the build output directory so PluginsUI.exe can run the
-    Node.js tasks without requiring a separate installation step.
+    Builds the Angular/TypeScript tasks and stages the compiled artifacts into the
+    build output directory so PluginsUI.exe can run the Node.js tasks without a
+    separate installation step.
+
+    Implemented as a Node.js script (angular/scripts/stage-pluginui.js) — the same
+    pattern used by "npm run package:vsix".  The script handles:
+      • npm install  (only when node_modules is absent)
+      • npm run build  (tsc incremental — only recompiles changed files)
+      • Per-task index.js + dist/ copy (mtime-based, skips unchanged files)
+      • Shared node_modules mirror (robocopy /XO — skips files that are up-to-date)
+
+    Skip flags (MSBuild command-line):
+      /p:SkipAngularBuild=true   - passes the skip-build flag to the script (copy only, no tsc)
+      /p:SkipAngularCopy=true    - skips this target entirely
 
     Layout in output:
       <OutputDir>/
-        node_modules/               ← shared production deps (single copy)
-        LreCiTask/
-          index.js                  ← bootstrap (polyfills + loads dist)
-          dist/                     ← compiled TypeScript
-        LreWorkspaceSyncTask/
-          index.js
-          dist/
-        LreDownloadScriptsTask/
-          index.js
-          dist/
-
-    Condition: only runs when the angular source tree is present next to the repo root.
-    Set SkipAngularCopy=true on the command line to suppress (e.g. when running in a
-    CI environment that handles its own staging).
+        node_modules/
+        LreCiTask/        index.js  dist/
+        LreWorkspaceSyncTask/   index.js  dist/
+        LreDownloadScriptsTask/ index.js  dist/
   -->
-  <Target Name="CopyAngularTasks" AfterTargets="Build"
-          Condition="'$(SkipAngularCopy)' != 'true' and Exists('$(MSBuildThisFileDirectory)..\..\angular\LreCiTask\index.js')">
+  <Target Name="StageAngularTasks" AfterTargets="Build"
+          Condition="'$(SkipAngularCopy)' != 'true' and Exists('$(MSBuildThisFileDirectory)..\..\angular\package.json')">
 
     <PropertyGroup>
-      <AngularRoot>$(MSBuildThisFileDirectory)..\..\angular\</AngularRoot>
+      <AngularRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\angular'))</AngularRoot>
+      <!-- Trim trailing backslash before quoting — a path ending in \ followed by " causes
+           the shell to interpret the " as a literal character, corrupting the argument. -->
+      <_OutDir>$([System.IO.Path]::GetFullPath('$(OutputPath)').TrimEnd('\').TrimEnd('/'))</_OutDir>
+      <_StagingArgs>"$(_OutDir)"</_StagingArgs>
+      <_StagingArgs Condition="'$(SkipAngularBuild)' == 'true'">$(_StagingArgs) --skip-build</_StagingArgs>
     </PropertyGroup>
 
-    <Message Importance="high" Text="--- Staging Angular task files into $(OutputPath) ---" />
+    <Exec Command="node &quot;scripts/stage-pluginui.js&quot; $(_StagingArgs)"
+          WorkingDirectory="$(AngularRoot)" />
 
-    <!-- ── LreCiTask bootstrap ── -->
-    <Copy SourceFiles="$(AngularRoot)LreCiTask\index.js"
-          DestinationFolder="$(OutputPath)LreCiTask"
-          SkipUnchangedFiles="true" />
-
-    <!-- ── LreCiTask dist ── -->
-    <ItemGroup>
-      <_CiDistFiles Include="$(AngularRoot)LreCiTask\dist\**\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(_CiDistFiles)"
-          DestinationFiles="@(_CiDistFiles->'$(OutputPath)LreCiTask\dist\%(RecursiveDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
-
-    <!-- ── LreWorkspaceSyncTask bootstrap ── -->
-    <Copy SourceFiles="$(AngularRoot)LreWorkspaceSyncTask\index.js"
-          DestinationFolder="$(OutputPath)LreWorkspaceSyncTask"
-          SkipUnchangedFiles="true" />
-
-    <!-- ── LreWorkspaceSyncTask dist ── -->
-    <ItemGroup>
-      <_SyncDistFiles Include="$(AngularRoot)LreWorkspaceSyncTask\dist\**\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(_SyncDistFiles)"
-          DestinationFiles="@(_SyncDistFiles->'$(OutputPath)LreWorkspaceSyncTask\dist\%(RecursiveDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
-
-    <!-- ── LreDownloadScriptsTask bootstrap ── -->
-    <Copy SourceFiles="$(AngularRoot)LreDownloadScriptsTask\index.js"
-          DestinationFolder="$(OutputPath)LreDownloadScriptsTask"
-          SkipUnchangedFiles="true"
-          Condition="Exists('$(AngularRoot)LreDownloadScriptsTask\index.js')" />
-
-    <!-- ── LreDownloadScriptsTask dist ── -->
-    <ItemGroup>
-      <_DownloadDistFiles Include="$(AngularRoot)LreDownloadScriptsTask\dist\**\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(_DownloadDistFiles)"
-          DestinationFiles="@(_DownloadDistFiles->'$(OutputPath)LreDownloadScriptsTask\dist\%(RecursiveDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
-
-    <!-- ── Shared node_modules (single copy; robocopy mirrors incrementally) ── -->
-    <!--
-      robocopy exit codes: 0 = nothing copied, 1 = files copied — both are success.
-      Exit codes >= 8 indicate errors.  IgnoreExitCode="true" suppresses MSBuild's
-      default "non-zero = failure" behaviour; we check for a real error separately.
-    -->
-    <Exec Command="robocopy &quot;$(AngularRoot)node_modules&quot; &quot;$(OutputPath)node_modules&quot; /E /NFL /NDL /NJH /NJS /nc /ns /np"
-          IgnoreExitCode="true"
-          Condition="Exists('$(AngularRoot)node_modules')" />
-
-    <Message Importance="high" Text="--- Angular task staging complete ---" />
   </Target>
 
   <!--
@@ -141,4 +97,3 @@
   </Target>
 
 </Project>
-

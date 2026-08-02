@@ -10,6 +10,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "./dist",
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
     // rootDir intentionally omitted — TypeScript infers the common ancestor (angular/)
     // so compiled output lands at dist/LreWorkspaceSyncTask/… and dist/shared/…
     // Packages are resolved from the single angular/node_modules/ — no paths hack needed.

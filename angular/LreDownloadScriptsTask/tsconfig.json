@@ -10,6 +10,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "./dist",
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
     // rootDir intentionally omitted — TypeScript infers the common ancestor (angular/)
     // so compiled output lands at dist/LreDownloadScriptsTask/… and dist/shared/…
     "declaration": false,
