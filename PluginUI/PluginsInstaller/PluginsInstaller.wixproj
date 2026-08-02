@@ -13,7 +13,7 @@
     -->
     <SuppressIces>ICE38;ICE43;ICE57</SuppressIces>
     <!-- Version is passed as a preprocessor variable to the WXS files -->
-    <ProductVersion>3.0.0.0</ProductVersion>
+    <ProductVersion>3.1.0.0</ProductVersion>
     <DefineConstants>ProductVersion=$(ProductVersion)</DefineConstants>
     <!-- Place the MSI in PluginUI\out\ next to any VSIX builds -->
     <OutputPath>..\out\$(Configuration)\</OutputPath>

@@ -13,8 +13,8 @@
   "author": "OpenText",
   "minimumAgentVersion": "2.144.0",
   "version": {
-    "Major": 1,
-    "Minor": 0,
+    "Major": 3,
+    "Minor": 4,
     "Patch": 0
   },
   "inputs": [
