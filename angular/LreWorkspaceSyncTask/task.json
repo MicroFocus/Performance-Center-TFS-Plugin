@@ -14,7 +14,7 @@
     "minimumAgentVersion": "2.144.0",
     "version": {
         "Major": 3,
-        "Minor": 5,
+        "Minor": 6,
         "Patch": 0
     },
     "inputs": [
@@ -137,6 +137,14 @@
             "defaultValue": "",
             "required": false,
             "helpMarkDown": "<p>If you use a proxy requiring credentials, enter the password.</p><p><b><u>Note:</u></b> You can create a variable of type secret in the CI build to store the password.</p>"
+        },
+        {
+            "name": "varAllowInsecureTls",
+            "type": "boolean",
+            "label": "Allow insecure TLS connections",
+            "defaultValue": "false",
+            "required": false,
+            "helpMarkDown": "<p>Enable this option <b>only</b> if the Enterprise Performance Engineering server uses an older TLS configuration that is rejected by the agent's Node.js runtime (e.g. TLS 1.0/1.1), or if it presents a self-signed or internally-signed certificate that the agent machine cannot validate.</p><p>When enabled, the task accepts TLS 1.0/1.1 connections and skips certificate validation. <b>This reduces security</b>: man-in-the-middle attacks on the connection between the agent and the server become possible. Do not enable this in production unless you control the network path to the server.</p>"
         },
         {
             "name": "varArtifactsDir",

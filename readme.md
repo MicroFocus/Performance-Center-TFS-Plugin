@@ -372,6 +372,43 @@ See [`angular/LOCAL-TESTING-GUIDE.md`](./angular/LOCAL-TESTING-GUIDE.md) for loc
 
 ## What's New
 
+### Version 3.6.0 — August 2026
+
+#### 🆕 `varAllowInsecureTls` — opt-in relaxed TLS for development/legacy environments
+
+A new optional parameter `varAllowInsecureTls` (default: `false`) is available on all three tasks: **Enterprise Performance Engineering Test**, **Enterprise Performance Engineering Workspace Sync**, and **Enterprise Performance Engineering Download Scripts**.
+
+> **This parameter must be explicitly enabled — it is off by default.** It is intended for development environments or internal deployments where the Enterprise Performance Engineering server has an older TLS configuration that cannot be updated immediately. Do not enable it on production pipelines.
+
+When enabled, the task:
+- Accepts **TLS 1.0 and TLS 1.1** connections (in addition to TLS 1.2/1.3)
+- Skips **certificate chain validation** — self-signed certificates, expired certificates, and certificates from an untrusted internal CA are accepted
+
+| Scenario | Recommended setting |
+|---|---|
+| Production server with a valid TLS 1.2+ certificate from a trusted CA | Leave **unchecked** (default) |
+| Development / lab server with a self-signed certificate | **Check** to skip certificate validation |
+| Server still running on TLS 1.0 or TLS 1.1 | **Check** to lower the minimum accepted TLS version |
+
+> ⚠️ **Security notice:** Enabling this option reduces transport security — man-in-the-middle attacks on the connection between the agent and the server become possible. This option exists to unblock teams whose server infrastructure cannot be immediately updated and should be treated as a temporary workaround.
+
+A warning is emitted in the build log whenever the option is active:
+```
+Allow insecure TLS: enabled — TLS 1.0/1.1 and untrusted certificates are accepted.
+```
+
+#### 🔧 Improved error reporting for connection failures
+
+Authentication errors caused by network-level failures (DNS, TLS handshake, connection refused) now include the **underlying system error code** in the build log, eliminating guesswork when diagnosing connectivity issues:
+
+```
+Authentication failed (exception): No response from server [CERT_HAS_EXPIRED: certificate has expired]. Check network/proxy settings.
+Authentication failed (exception): No response from server [ERR_TLS_PROTOCOL_VERSION]. Check network/proxy settings.
+Authentication failed (exception): No response from server [ECONNREFUSED]. Check network/proxy settings.
+```
+
+---
+
 ### Version 3.4.0 — August 2026
 
 #### 🆕 Enterprise Performance Engineering Download Scripts task

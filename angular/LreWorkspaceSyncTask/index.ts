@@ -57,6 +57,7 @@ export async function runEntrypoint(): Promise<void> {
         const proxyUrl     = tl.getInput('varProxyUrl', false) ?? '';
         const proxyUser    = tl.getInput('varProxyUser', false) ?? '';
         const proxyPassword= tl.getInput('varProxyPassword', false) ?? '';
+        const allowInsecureTls = parseBool(tl.getInput('varAllowInsecureTls', false));
         const artifactsDir = tl.getInput('varArtifactsDir', false)
                              ?? tl.getVariable('Build.ArtifactStagingDirectory')
                              ?? '';
@@ -77,6 +78,7 @@ export async function runEntrypoint(): Promise<void> {
             proxyUrl:     proxyUrl || undefined,
             proxyUser:    proxyUser || undefined,
             proxyPassword: proxyPassword || undefined,
+            allowInsecureTls,
             workspaceDir,
             runtimeOnly,
             artifactsDir,

@@ -48,6 +48,7 @@ export class LreScriptDownloader {
             proxyUrl: config.proxyUrl,
             proxyUser: config.proxyUser,
             proxyPassword: config.proxyPassword,
+            allowInsecureTls: config.allowInsecureTls,
             timeoutMs: 120_000
         });
         this.httpClient = httpClient;

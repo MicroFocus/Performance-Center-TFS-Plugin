@@ -17,6 +17,11 @@ export interface LreDownloadConfig {
     proxyUrl?: string;
     proxyUser?: string;
     proxyPassword?: string;
+    /**
+     * When `true`, relaxes HTTPS security: accepts TLS 1.0/1.1 and
+     * self-signed / untrusted certificates.  Default: `false`.
+     */
+    allowInsecureTls?: boolean;
     /** Local directory where downloaded scripts are written */
     workspaceDir: string;
     artifactsDir: string;

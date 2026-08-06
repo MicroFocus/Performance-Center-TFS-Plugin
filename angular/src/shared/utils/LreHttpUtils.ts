@@ -16,6 +16,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
+import * as https from 'https';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -55,6 +56,19 @@ export interface LreAxiosConfig {
     proxyUser?: string;
     proxyPassword?: string;
     timeoutMs?: number;
+    /**
+     * When `true`, relaxes HTTPS security for connections to the LRE server:
+     *   • Accepts TLS 1.0 / TLS 1.1 (in addition to TLS 1.2+)
+     *   • Skips certificate validation (self-signed / expired / untrusted CA)
+     *
+     * **Default: `false`** — strict TLS 1.2+ with full certificate validation.
+     *
+     * Only enable this when the LRE server uses an older TLS configuration or
+     * a certificate that the agent machine cannot validate.  Using this option
+     * in production is a security trade-off: man-in-the-middle attacks become
+     * possible on the connection between the ADO agent and the LRE server.
+     */
+    allowInsecureTls?: boolean;
 }
 
 /**
@@ -64,6 +78,7 @@ export interface LreAxiosConfig {
  *   • `Content-Type: application/xml` and `Accept: application/xml` defaults
  *   • Optional proxy
  *   • `validateStatus: () => true` — callers check status codes themselves
+ *   • Optional relaxed TLS agent (only when `allowInsecureTls` is `true`)
  */
 export function createLreAxiosInstance(config: LreAxiosConfig): {
     httpClient: AxiosInstance;
@@ -71,11 +86,22 @@ export function createLreAxiosInstance(config: LreAxiosConfig): {
 } {
     const cookieJar = new CookieJar();
 
+    // Build an httpsAgent only when the user has explicitly opted in to
+    // insecure TLS.  The default path uses Node's built-in TLS defaults
+    // (TLS 1.2+ minimum, full certificate validation).
+    const httpsAgent = config.allowInsecureTls
+        ? new https.Agent({
+            minVersion: 'TLSv1',          // accept TLS 1.0 / 1.1 / 1.2 / 1.3
+            rejectUnauthorized: false      // accept self-signed / untrusted certs
+        })
+        : undefined;                       // use Node default (strict)
+
     const httpClient = wrapper(axios.create({
         jar: cookieJar,
         timeout: config.timeoutMs ?? 120_000,
         withCredentials: true,
         validateStatus: () => true,
+        ...(httpsAgent ? { httpsAgent } : {}),
         headers: {
             'Content-Type': 'application/xml',
             'Accept': 'application/xml',
@@ -118,4 +144,3 @@ function parseProxy(config: LreAxiosConfig): false | {
         return false;
     }
 }
-

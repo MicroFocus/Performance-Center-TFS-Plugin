@@ -113,6 +113,7 @@ export async function main(): Promise<void> {
         const varProxyUrl                  = tl.getInput('varProxyUrl',                  false) ?? '';
         const varProxyUser                 = tl.getInput('varProxyUser',                 false) ?? '';
         const varProxyPassword             = tl.getInput('varProxyPassword',             false) ?? '';
+        const varAllowInsecureTls          = tl.getInput('varAllowInsecureTls',          false) ?? 'false';
         const varTrending                  = tl.getInput('varTrending',                  false) ?? 'DoNotTrend';
         const varTrendReportID             = tl.getInput('varTrendReportID',              false) ?? '';
         const varTimeslotDuration          = tl.getInput('varTimeslotDuration',           false) ?? '30';
@@ -162,6 +163,9 @@ export async function main(): Promise<void> {
         logger.info(`Project : ${varDomain}/${varProject}`);
         logger.info(`Test    : ${isYamlFile ? `YAML → ${varTestID}` : `ID ${testId}`}`);
         logger.info(`Auth    : ${useToken ? 'API token' : 'username/password'}`);
+        if (parseBool(varAllowInsecureTls)) {
+            logger.warning('Allow insecure TLS: enabled — TLS 1.0/1.1 and untrusted certificates are accepted.');
+        }
 
         // ── 4. Build config objects ───────────────────────────────────────────
 
@@ -198,7 +202,8 @@ export async function main(): Promise<void> {
             clientSecret:   useToken ? varPassWord : undefined,
             proxyUrl:       resolvedProxyUrl,
             proxyUser:      resolvedProxyUser,
-            proxyPassword:  resolvedProxyPassword
+            proxyPassword:  resolvedProxyPassword,
+            allowInsecureTls: parseBool(varAllowInsecureTls)
         };
 
         const trending = varTrending as LreTestExecutionConfig['trending'];

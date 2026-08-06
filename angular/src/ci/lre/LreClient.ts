@@ -58,6 +58,7 @@ export class LreClient {
             proxyUrl: config.proxyUrl,
             proxyUser: config.proxyUser,
             proxyPassword: config.proxyPassword,
+            allowInsecureTls: config.allowInsecureTls,
             timeoutMs: 60_000
         });
         this.httpClient = httpClient;
@@ -970,7 +971,17 @@ export class LreClient {
                 }
                 return `HTTP ${error.response.status}: ${error.response.statusText}`;
             } else if (error.request) {
-                return `No response from server. Check network/proxy settings.`;
+                // Include the underlying system error code (e.g. ECONNREFUSED, ENOTFOUND,
+                // CERT_HAS_EXPIRED, DEPTH_ZERO_SELF_SIGNED_CERT, ERR_TLS_PROTOCOL_VERSION)
+                // so that users and support can diagnose network / TLS / proxy issues.
+                const code = (error as { code?: string }).code;
+                const detail = error.message && error.message !== error.code ? error.message : undefined;
+                const suffix = code
+                    ? ` [${code}${detail ? `: ${detail}` : ''}]`
+                    : detail
+                        ? ` [${detail}]`
+                        : '';
+                return `No response from server${suffix}. Check network/proxy settings.`;
             }
         }
         return error instanceof Error ? error.message : String(error);

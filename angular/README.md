@@ -53,25 +53,44 @@ This extension supports the **3 latest versions** of OpenText Enterprise Perform
 
 ---
 
-## What's New in Version 3.4.0
+
+## What's New in Version 3.6.0
 
 > **August 2026**
 
-### 🔧 Token authentication fixed for Enterprise Performance Engineering Workspace Sync
+### 🆕 `varAllowInsecureTls` — opt-in relaxed TLS for development/legacy environments
 
-Token authentication (`varUseTokenForAuthentication = true`) previously failed for **LreWorkspaceSyncTask** with server error `ErrorCode 1101 "Authentication information is missing from request header"`. The root causes were:
+A new optional parameter `varAllowInsecureTls` is available on both tasks (**Enterprise Performance Engineering Test** and **Enterprise Performance Engineering Workspace Sync**).
 
-| Root cause | Fix |
+> **This parameter is `false` by default and must be explicitly enabled.** It is intended only for development environments or internal deployments where the Enterprise Performance Engineering server has an older TLS configuration that cannot be updated immediately.
+
+| Scenario | Recommended setting |
 |---|---|
-| Missing `X-QC-HIDDEN-SECURITY-ID: 12` header on all HTTP requests | Added to shared `createLreAxiosInstance()` factory — all tasks automatically include it |
-| Token auth XML used `xmlns="http://www.hp.com/PC/REST/API"` namespace (rejected by server) | Fixed to use `<?xml version="1.0" encoding="utf-8"?>` declaration with no namespace |
+| Production server with a valid TLS 1.2+ certificate from a trusted CA | Leave **unchecked** (default) |
+| Development / lab server with a self-signed certificate | **Check** to skip certificate validation |
+| Server still running on TLS 1.0 or TLS 1.1 | **Check** to lower the minimum accepted TLS version |
 
-### 🔧 Auth retry loop no longer hammers the server on bad credentials
+When enabled, the task:
+- Accepts **TLS 1.0 and TLS 1.1** connections (in addition to the default TLS 1.2/1.3)
+- Skips **certificate chain validation** — self-signed certificates, expired certificates, and certificates from an untrusted internal CA are all accepted
 
-When token or password authentication returned HTTP 4xx (invalid credentials), **LreWorkspaceSyncTask** previously entered a 5-attempt exponential-backoff retry loop (5 + 10 + 20 + 40 s = 75 s), risking account lockouts. The retry logic now:
+> ⚠️ **Security notice:** Enabling this option reduces transport security. Man-in-the-middle attacks on the connection between the Azure DevOps agent and the Enterprise Performance Engineering server become possible. Do not enable this on production pipelines unless you fully control the network path between the agent and the server. This option exists to unblock teams whose server infrastructure cannot be immediately updated — it should be treated as a temporary workaround, not a permanent setting.
 
-- **Exits immediately** on a clean 4xx response — no retry
-- **Retries** only on thrown exceptions (5xx / network errors) with exponential back-off
+A warning line is emitted in the build log whenever the option is active:
+```
+Allow insecure TLS: enabled — TLS 1.0/1.1 and untrusted certificates are accepted.
+```
+
+### 🔧 Improved error reporting for connection failures
+
+Authentication and HTTP errors that result in no server response (network unreachable, DNS failure, TLS handshake rejected, connection refused) now include the **underlying system error code** in the log message, making it easier to diagnose the root cause without requiring a support engagement:
+
+```
+Authentication failed (exception): No response from server [CERT_HAS_EXPIRED: certificate has expired]. Check network/proxy settings.
+Authentication failed (exception): No response from server [ERR_TLS_PROTOCOL_VERSION]. Check network/proxy settings.
+Authentication failed (exception): No response from server [ECONNREFUSED]. Check network/proxy settings.
+Authentication failed (exception): No response from server [ENOTFOUND]. Check network/proxy settings.
+```
 
 ---
 
