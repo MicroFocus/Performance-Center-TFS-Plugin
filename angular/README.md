@@ -54,40 +54,38 @@ This extension supports the **3 latest versions** of OpenText Enterprise Perform
 ---
 
 
-## What's New in Version 3.6.0
+## What's New in Version 3.7.0
 
 > **August 2026**
 
-### 🆕 `varAllowInsecureTls` — opt-in relaxed TLS for development/legacy environments
+### 🆕 `varAllowInsecureTls` — connect to servers with older or self-signed TLS certificates
 
-A new optional parameter `varAllowInsecureTls` is available on both tasks (**Enterprise Performance Engineering Test** and **Enterprise Performance Engineering Workspace Sync**).
+If your Enterprise Performance Engineering server uses a self-signed certificate, an internal CA that the agent doesn't trust, or an older TLS version (1.0 / 1.1), connections will now fail with a certificate error on Node.js 20.
 
-> **This parameter is `false` by default and must be explicitly enabled.** It is intended only for development environments or internal deployments where the Enterprise Performance Engineering server has an older TLS configuration that cannot be updated immediately.
+The new **Allow Insecure TLS** checkbox (available on both tasks) lets you work around this:
 
-| Scenario | Recommended setting |
+| Setting | Behaviour |
 |---|---|
-| Production server with a valid TLS 1.2+ certificate from a trusted CA | Leave **unchecked** (default) |
-| Development / lab server with a self-signed certificate | **Check** to skip certificate validation |
-| Server still running on TLS 1.0 or TLS 1.1 | **Check** to lower the minimum accepted TLS version |
+| **Unchecked** *(default)* | Strict TLS — requires a valid certificate and TLS 1.2 or higher |
+| **Checked** | Accepts self-signed / untrusted certificates and TLS 1.0 / 1.1 |
 
-When enabled, the task:
-- Accepts **TLS 1.0 and TLS 1.1** connections (in addition to the default TLS 1.2/1.3)
-- Skips **certificate chain validation** — self-signed certificates, expired certificates, and certificates from an untrusted internal CA are all accepted
+> ⚠️ **Only enable this for development or lab environments.** Enabling it on a production pipeline weakens transport security between the Azure DevOps agent and the Enterprise Performance Engineering server.
 
-> ⚠️ **Security notice:** Enabling this option reduces transport security. Man-in-the-middle attacks on the connection between the Azure DevOps agent and the Enterprise Performance Engineering server become possible. Do not enable this on production pipelines unless you fully control the network path between the agent and the server. This option exists to unblock teams whose server infrastructure cannot be immediately updated — it should be treated as a temporary workaround, not a permanent setting.
-
-A warning line is emitted in the build log whenever the option is active:
+A warning is printed in the build log whenever the option is active:
 ```
-Allow insecure TLS: enabled — TLS 1.0/1.1 and untrusted certificates are accepted.
+[warning] Allow insecure TLS: enabled — TLS 1.0/1.1 and untrusted certificates are accepted.
 ```
 
-### 🔧 Improved error reporting for connection failures
+### 🔧 Allow Insecure TLS now works correctly (bug fix)
 
-Authentication and HTTP errors that result in no server response (network unreachable, DNS failure, TLS handshake rejected, connection refused) now include the **underlying system error code** in the log message, making it easier to diagnose the root cause without requiring a support engagement:
+In 3.6.0 the flag was introduced but had a defect: enabling it caused an immediate crash with the message `axios-cookiejar-support does not support for use with other http(s).Agent`. This is now fixed — the flag works as described above.
+
+### 🔧 Connection errors now show the exact reason
+
+When a connection attempt fails before the server responds (network unreachable, DNS failure, TLS rejected, certificate problem), the build log now includes the specific error code so you know exactly what to fix:
 
 ```
-Authentication failed (exception): No response from server [CERT_HAS_EXPIRED: certificate has expired]. Check network/proxy settings.
-Authentication failed (exception): No response from server [ERR_TLS_PROTOCOL_VERSION]. Check network/proxy settings.
+Authentication failed (exception): No response from server [UNABLE_TO_VERIFY_LEAF_SIGNATURE]. Check network/proxy settings.
 Authentication failed (exception): No response from server [ECONNREFUSED]. Check network/proxy settings.
 Authentication failed (exception): No response from server [ENOTFOUND]. Check network/proxy settings.
 ```

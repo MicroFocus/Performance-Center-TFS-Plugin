@@ -372,39 +372,38 @@ See [`angular/LOCAL-TESTING-GUIDE.md`](./angular/LOCAL-TESTING-GUIDE.md) for loc
 
 ## What's New
 
-### Version 3.6.0 — August 2026
+### Version 3.7.0 — August 2026
 
-#### 🆕 `varAllowInsecureTls` — opt-in relaxed TLS for development/legacy environments
+#### 🆕 `varAllowInsecureTls` — connect to servers with older or self-signed TLS certificates
 
-A new optional parameter `varAllowInsecureTls` (default: `false`) is available on all three tasks: **Enterprise Performance Engineering Test**, **Enterprise Performance Engineering Workspace Sync**, and **Enterprise Performance Engineering Download Scripts**.
+A new optional parameter `varAllowInsecureTls` (default: `false`) is available on all three tasks.
 
-> **This parameter must be explicitly enabled — it is off by default.** It is intended for development environments or internal deployments where the Enterprise Performance Engineering server has an older TLS configuration that cannot be updated immediately. Do not enable it on production pipelines.
+If the Enterprise Performance Engineering server uses a self-signed certificate, an internal CA the agent doesn't trust, or TLS 1.0 / 1.1, connections will fail on Node.js 20 with a certificate error. Enabling this flag bypasses those checks.
 
-When enabled, the task:
-- Accepts **TLS 1.0 and TLS 1.1** connections (in addition to TLS 1.2/1.3)
-- Skips **certificate chain validation** — self-signed certificates, expired certificates, and certificates from an untrusted internal CA are accepted
-
-| Scenario | Recommended setting |
+| Setting | Behaviour |
 |---|---|
-| Production server with a valid TLS 1.2+ certificate from a trusted CA | Leave **unchecked** (default) |
-| Development / lab server with a self-signed certificate | **Check** to skip certificate validation |
-| Server still running on TLS 1.0 or TLS 1.1 | **Check** to lower the minimum accepted TLS version |
+| **`false`** *(default)* | Strict — requires a valid certificate and TLS 1.2 or higher |
+| **`true`** | Accepts self-signed / untrusted-CA certificates and TLS 1.0 / 1.1 |
 
-> ⚠️ **Security notice:** Enabling this option reduces transport security — man-in-the-middle attacks on the connection between the agent and the server become possible. This option exists to unblock teams whose server infrastructure cannot be immediately updated and should be treated as a temporary workaround.
+> ⚠️ Only enable for development or lab environments. Do not use on production pipelines.
 
-A warning is emitted in the build log whenever the option is active:
+A warning is printed in the build log whenever the option is active:
 ```
-Allow insecure TLS: enabled — TLS 1.0/1.1 and untrusted certificates are accepted.
+[warning] Allow insecure TLS: enabled — TLS 1.0/1.1 and untrusted certificates are accepted.
 ```
 
-#### 🔧 Improved error reporting for connection failures
+#### 🔧 `varAllowInsecureTls` crash fixed
 
-Authentication errors caused by network-level failures (DNS, TLS handshake, connection refused) now include the **underlying system error code** in the build log, eliminating guesswork when diagnosing connectivity issues:
+Enabling the flag previously caused an immediate task failure with `axios-cookiejar-support does not support for use with other http(s).Agent`. The underlying conflict between the custom TLS agent and the cookie-jar library is now resolved — the flag works correctly.
+
+#### 🔧 Connection errors now show the exact reason
+
+Authentication failures caused by network or TLS issues now include the specific system error code in the log output:
 
 ```
-Authentication failed (exception): No response from server [CERT_HAS_EXPIRED: certificate has expired]. Check network/proxy settings.
-Authentication failed (exception): No response from server [ERR_TLS_PROTOCOL_VERSION]. Check network/proxy settings.
+Authentication failed (exception): No response from server [UNABLE_TO_VERIFY_LEAF_SIGNATURE]. Check network/proxy settings.
 Authentication failed (exception): No response from server [ECONNREFUSED]. Check network/proxy settings.
+Authentication failed (exception): No response from server [ENOTFOUND]. Check network/proxy settings.
 ```
 
 ---

@@ -1,6 +1,6 @@
 {
   "name": "lre-extension",
-  "version": "3.6.0",
+  "version": "3.7.0",
   "private": true,
   "description": "Azure DevOps extension for OpenText Enterprise Performance Engineering (LreCiTask + LreWorkspaceSyncTask)",
   "type": "commonjs",
@@ -59,6 +59,12 @@
   "overrides": {
     "brace-expansion": "5.0.9",
     "test-exclude": "^7.0.2",
-    "glob": "^13.0.6"
+    "glob": "^13.0.6",
+    "@eslint/eslintrc": {
+      "js-yaml": "^3.15.1"
+    },
+    "@istanbuljs/load-nyc-config": {
+      "js-yaml": "^4.3.1"
+    }
   }
 }
