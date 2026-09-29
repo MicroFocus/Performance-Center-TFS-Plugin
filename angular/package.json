@@ -35,7 +35,7 @@
     "azure-pipelines-task-lib": "^5.278.0",
     "fast-xml-parser": "^5.9.3",
     "form-data": "^4.0.4",
-    "js-yaml": "^5.2.2",
+    "js-yaml": "^5.4.2",
     "tough-cookie": "^4.1.4"
   },
   "devDependencies": {
