@@ -350,7 +350,7 @@ npm install            # one npm install covers the whole project
 # Type-check both tasks
 npm run typecheck
 
-# Run unit tests (149 tests across 4 suites)
+# Run all configured unit tests
 npm run test:unit
 
 # Run unit tests with coverage
@@ -371,6 +371,14 @@ See [`angular/LOCAL-TESTING-GUIDE.md`](./angular/LOCAL-TESTING-GUIDE.md) for loc
 2. Commit and push to `master` — the `release.yml` workflow updates all version files (both tasks + extension manifest), builds the VSIX, creates a GitHub Release, then resets `enabled=false`
 
 ## What's New
+
+### Version 3.8.0
+
+The two shipped tasks declare `Node24` and `Node20_1` execution handlers.
+The Azure Pipelines agent selects the runtime based on its version and settings.
+Node 20 is out of support; use an up-to-date agent with the Node 24 runner.
+Check older Azure DevOps environments for `Node24` handler compatibility
+before upgrading.
 
 ### Version 3.7.0 — August 2026
 
@@ -519,4 +527,3 @@ See the [Differential sync pipeline example](#differential-sync--upload-only-cha
 #### 🔧 ESLint v9 flat config
 
 The `angular/` workspace now ships with a root-level `eslint.config.mjs` (ESLint v9 flat config format), resolving the `npm run lint` failure introduced when ESLint 9 dropped support for legacy `.eslintrc.*` files.
-

@@ -54,6 +54,20 @@ This extension supports the **3 latest versions** of OpenText Enterprise Perform
 ---
 
 
+## What's New in Version 3.8.0
+
+> **November 2026**
+
+The two shipped tasks declare `Node24` and `Node20_1` execution handlers.
+The Azure Pipelines agent selects the runtime based on its version and settings.
+Node 20 is out of support; use an up-to-date agent with the Node 24 runner.
+
+> [!IMPORTANT]
+> Older Azure DevOps environments should be checked for compatibility with the
+> `Node24` handler before upgrading.
+
+---
+
 ## What's New in Version 3.7.0
 
 > **August 2026**

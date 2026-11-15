@@ -5,7 +5,21 @@ The extension contains **two tasks** — both can be tested locally.
 
 ## Prerequisite
 
-- Install **Node.js 20 or newer** before running the local scripts. The extension targets the Node 20 Azure DevOps task runtime and the local wrappers assume the same baseline.
+- Install **Node.js 20 or newer** before running the local scripts. The extension declares Node 24 and Node 20 Azure DevOps task handlers; Node 20 is out of support, so Node 24 is recommended.
+
+---
+
+## Workspace Sync Unit Tests
+
+From `angular/`, run the offline workspace-sync tests and their coverage report:
+
+```powershell
+npm run test:unit -- --runInBand src/sync --coverage --collectCoverageFrom="src/sync/**/*.ts"
+```
+
+These tests cover script detection, ZIP creation, authentication and upload
+handling, differential sync, concurrency, and error handling. The HTTP calls
+are mocked; these tests do not replace integration testing against an LRE server.
 
 ---
 

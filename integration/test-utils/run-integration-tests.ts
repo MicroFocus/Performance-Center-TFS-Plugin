@@ -514,10 +514,9 @@ async function runWorkspaceSyncChecks(cfg: IntegrationTestConfig): Promise<void>
         });
 
         await check('[sync/task] scan workspace and upload scripts', async () => {
-            const runner = new LreWorkspaceSyncRunner(activeSyncCfg, logger as never, 1, 0);
+            const runner = new LreWorkspaceSyncRunner(activeSyncCfg, logger as never, 1, 99);
             const ok = await runner.run();
-            // threshold=0 means pass even if 0 scripts uploaded (handles empty workspace)
-            assert.equal(ok, true, 'Expected sync runner to complete successfully');
+            assert.equal(ok, true, 'Expected at least 99% of scripts to upload successfully');
         });
     } else {
         skip('[sync/task] workspace sync upload',
@@ -586,4 +585,3 @@ main().catch((error: unknown) => {
     console.error(message);
     process.exit(1);
 });
-

@@ -14,7 +14,7 @@
     "minimumAgentVersion": "2.144.0",
     "version": {
         "Major": 3,
-        "Minor": 7,
+        "Minor": 8,
         "Patch": 0
     },
     "inputs": [
@@ -250,13 +250,7 @@
         "Node20_1": {
             "target": "index.js"
         },
-        "Node20": {
-            "target": "index.js"
-        },
-        "Node16": {
-            "target": "index.js"
-        },
-        "Node": {
+        "Node24": {
             "target": "index.js"
         }
     }
